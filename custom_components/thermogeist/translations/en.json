@@ -185,6 +185,9 @@
       },
       "thermostat_valve_position": {
         "name": "Valve position {thermostat}"
+      },
+      "heat_from_devices": {
+        "name": "Heat from devices"
       }
     },
     "number": {
@@ -228,7 +231,8 @@
             "temperature_entity": "Room temperature sensor",
             "share_mode": "Share of the heat load",
             "design_indoor_temperature": "Design indoor temperature",
-            "window_sensors": "Window and door contacts"
+            "window_sensors": "Window and door contacts",
+            "heat_sources": "Devices that heat the room"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
@@ -236,7 +240,8 @@
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
             "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
             "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
-            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again."
+            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
+            "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
           }
         },
         "reconfigure": {
@@ -248,7 +253,8 @@
             "temperature_entity": "Room temperature sensor",
             "share_mode": "Share of the heat load",
             "design_indoor_temperature": "Design indoor temperature",
-            "window_sensors": "Window and door contacts"
+            "window_sensors": "Window and door contacts",
+            "heat_sources": "Devices that heat the room"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
@@ -256,7 +262,8 @@
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
             "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
             "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
-            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again."
+            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
+            "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
           }
         },
         "geometry": {
@@ -288,6 +295,10 @@
           "data_description": {
             "known_share": "Room heat load divided by house heat load, in percent."
           }
+        },
+        "heat_source_factors": {
+          "title": "How much heat stays in the room?",
+          "description": "Per device: the share of its power that stays in the room as heat ({devices}). 100 % for electronics, lights, fridges and heat pump dryers. Less for devices whose heat leaves with exhaust air or waste water, e.g. vented dryer 10–20 %, washing machine 10–20 %, dishwasher 20–40 %. See the docs: Rooms → Devices that heat the room."
         }
       },
       "error": {

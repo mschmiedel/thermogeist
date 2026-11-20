@@ -86,6 +86,9 @@
       },
       "thermostat_valve_position": {
         "default": "mdi:valve-open"
+      },
+      "heat_from_devices": {
+        "default": "mdi:desktop-tower-monitor"
       }
     },
     "switch": {

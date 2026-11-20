@@ -22,6 +22,7 @@ from .const import (
     CONF_FLOOR_AREA,
     CONF_FLOW_TEMPERATURE_ENTITY,
     CONF_HEAT_LOAD,
+    CONF_HEAT_SOURCES,
     CONF_HEATING_TYPE,
     CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
@@ -34,6 +35,8 @@ from .const import (
     CONF_ROOM,
     CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
+    CONF_SOURCE_ENTITY,
+    CONF_SOURCE_FACTOR,
     CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
@@ -48,8 +51,10 @@ from .core.room import (
     DEFAULT_CEILING_HEIGHT_M,
     DEFAULT_DESIGN_INDOOR_C,
     DEFAULT_EXTERIOR_WALLS,
+    HEAT_SOURCE_FACTOR_DEFAULT_PCT,
     Above,
     Below,
+    HeatSource,
     Room,
     ShareMode,
 )
@@ -93,6 +98,14 @@ def room_from_config(config: Mapping[str, Any]) -> Room:
         design_indoor_temperature_c=_optional_float(config.get(CONF_DESIGN_INDOOR))
         or DEFAULT_DESIGN_INDOOR_C,
         window_entities=tuple(config.get(CONF_WINDOWS) or ()),
+        heat_sources=tuple(
+            HeatSource(
+                entity_id=str(source[CONF_SOURCE_ENTITY]),
+                factor_pct=float(source.get(CONF_SOURCE_FACTOR, HEAT_SOURCE_FACTOR_DEFAULT_PCT)),
+            )
+            for source in config.get(CONF_HEAT_SOURCES) or ()
+            if source.get(CONF_SOURCE_ENTITY)
+        ),
     )
 
 

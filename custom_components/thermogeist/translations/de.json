@@ -185,6 +185,9 @@
       },
       "thermostat_valve_position": {
         "name": "Ventilstellung {thermostat}"
+      },
+      "heat_from_devices": {
+        "name": "Wärme aus Geräten"
       }
     },
     "number": {
@@ -228,7 +231,8 @@
             "temperature_entity": "Raumtemperatursensor",
             "share_mode": "Anteil an der Heizlast",
             "design_indoor_temperature": "Auslegungs-Innentemperatur",
-            "window_sensors": "Fenster- und Türkontakte"
+            "window_sensors": "Fenster- und Türkontakte",
+            "heat_sources": "Geräte, die den Raum heizen"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
@@ -236,7 +240,8 @@
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
             "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
             "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
-            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist."
+            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
+            "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
           }
         },
         "reconfigure": {
@@ -248,7 +253,8 @@
             "temperature_entity": "Raumtemperatursensor",
             "share_mode": "Anteil an der Heizlast",
             "design_indoor_temperature": "Auslegungs-Innentemperatur",
-            "window_sensors": "Fenster- und Türkontakte"
+            "window_sensors": "Fenster- und Türkontakte",
+            "heat_sources": "Geräte, die den Raum heizen"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
@@ -256,7 +262,8 @@
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
             "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
             "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
-            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist."
+            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
+            "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
           }
         },
         "geometry": {
@@ -288,6 +295,10 @@
           "data_description": {
             "known_share": "Heizlast des Raums geteilt durch die Heizlast des Hauses, in Prozent."
           }
+        },
+        "heat_source_factors": {
+          "title": "Wie viel Wärme bleibt im Raum?",
+          "description": "Pro Gerät: der Anteil seiner Leistung, der als Wärme im Raum bleibt ({devices}). 100 % für Elektronik, Licht, Kühlschränke und Wärmepumpentrockner. Weniger für Geräte, deren Wärme mit Abluft oder Abwasser hinausgeht, z. B. Ablufttrockner 10–20 %, Waschmaschine 10–20 %, Spülmaschine 20–40 %. Mehr in der Doku: Räume → Geräte, die den Raum heizen."
         }
       },
       "error": {

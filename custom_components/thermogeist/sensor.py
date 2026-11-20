@@ -139,6 +139,20 @@ ROOM_SENSORS: tuple[RoomSensorDescription, ...] = (
 )
 
 
+HEAT_FROM_DEVICES = RoomSensorDescription(
+    key="heat_from_devices",
+    device_class=SensorDeviceClass.POWER,
+    native_unit_of_measurement=UnitOfPower.WATT,
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=0,
+    value=lambda state: state.heat_from_sources_w,
+    attributes=lambda state, _runtime: {
+        "sources": {s.entity_id: s.factor_pct for s in state.room.heat_sources}
+    },
+)
+"""MDL-044: only for rooms with heat sources."""
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThermogeistConfigEntry,
@@ -149,6 +163,8 @@ async def async_setup_entry(
         sensors: list[SensorEntity] = [
             RoomSensor(entry, room_id, description) for description in ROOM_SENSORS
         ]
+        if state.room.heat_sources:
+            sensors.append(RoomSensor(entry, room_id, HEAT_FROM_DEVICES))
         if state.thermostat_ids:
             sensors.append(PlannedValveSensor(entry, room_id))
         async_add_entities(sensors, config_subentry_id=room_id)
@@ -219,6 +235,13 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
             "return_temperature_used": _rounded(self.runtime.return_used_c),
             "spread_used": _rounded(self.runtime.spread_used_k),
         }
+        sources_w = self.room_state.heat_from_sources_w
+        if sources_w is not None:
+            demand = self.room_state.demand_w
+            attributes["heat_from_devices_w"] = round(sources_w)
+            attributes["demand_covered_by_devices_pct"] = (
+                round(min(100.0, 100 * sources_w / demand)) if demand else None
+            )
         if plan is not None:
             attributes |= {
                 "feed_forward": (

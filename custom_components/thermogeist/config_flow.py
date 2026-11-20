@@ -50,6 +50,7 @@ from .const import (
     CONF_FLOOR_AREA,
     CONF_FLOW_TEMPERATURE_ENTITY,
     CONF_HEAT_LOAD,
+    CONF_HEAT_SOURCES,
     CONF_HEATING_TYPE,
     CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
@@ -62,6 +63,8 @@ from .const import (
     CONF_ROOM,
     CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
+    CONF_SOURCE_ENTITY,
+    CONF_SOURCE_FACTOR,
     CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
@@ -108,6 +111,9 @@ from .core.room import (
     EXTERIOR_WALLS_MIN,
     FLOOR_AREA_M2_MAX,
     FLOOR_AREA_M2_MIN,
+    HEAT_SOURCE_FACTOR_DEFAULT_PCT,
+    HEAT_SOURCE_FACTOR_MAX_PCT,
+    HEAT_SOURCE_FACTOR_MIN_PCT,
     KNOWN_SHARE_PCT_MAX,
     KNOWN_SHARE_PCT_MIN,
     Above,
@@ -293,10 +299,15 @@ def _suggested(defaults: Mapping[str, Any], key: str) -> dict[str, Any] | None:
 
 
 class RoomSubentryFlow(ConfigSubentryFlow):
-    """Add or change a room (HAI-005). Step 1: basics; step 2: geometry or known share."""
+    """Add or change a room (HAI-005).
+
+    Step 1: basics; step 2: geometry or known share; step 3 only with heat sources: factors.
+    """
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
+        self._source_ids: list[str] = []
+        self._factors: dict[str, float] = {}
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         return await self._basics("user", user_input, {})
@@ -319,7 +330,14 @@ class RoomSubentryFlow(ConfigSubentryFlow):
             if design_issue is not None:
                 errors[design_issue.field] = design_issue.code
             if not errors:
+                user_input = dict(user_input)
+                self._source_ids = list(user_input.pop(CONF_HEAT_SOURCES, None) or [])
+                self._factors = {
+                    s[CONF_SOURCE_ENTITY]: s[CONF_SOURCE_FACTOR]
+                    for s in defaults.get(CONF_HEAT_SOURCES) or ()
+                }
                 self._data = {**defaults, **user_input}
+                self._data.pop(CONF_HEAT_SOURCES, None)
                 if user_input.get(CONF_AREA) is None:
                     self._data.pop(CONF_AREA, None)
                 if not user_input.get(CONF_WINDOWS):
@@ -327,7 +345,9 @@ class RoomSubentryFlow(ConfigSubentryFlow):
                 if ShareMode(user_input[CONF_SHARE_MODE]) is ShareMode.KNOWN:
                     return await self.async_step_known_share()
                 return await self.async_step_geometry()
-        values = user_input or defaults
+        values = dict(user_input or defaults)
+        if values.get(CONF_HEAT_SOURCES) and isinstance(values[CONF_HEAT_SOURCES][0], dict):
+            values[CONF_HEAT_SOURCES] = [s[CONF_SOURCE_ENTITY] for s in values[CONF_HEAT_SOURCES]]
         schema = {
             vol.Required(CONF_NAME, default=values.get(CONF_NAME, vol.UNDEFINED)): TextSelector(),
             vol.Optional(CONF_AREA, description=_suggested(values, CONF_AREA)): AreaSelector(),
@@ -352,6 +372,13 @@ class RoomSubentryFlow(ConfigSubentryFlow):
                     multiple=True,
                 )
             ),
+            vol.Optional(
+                CONF_HEAT_SOURCES, description=_suggested(values, CONF_HEAT_SOURCES)
+            ): EntitySelector(
+                EntitySelectorConfig(
+                    domain="sensor", device_class=SensorDeviceClass.POWER, multiple=True
+                )
+            ),
         }
         return self.async_show_form(
             step_id=step_id, data_schema=vol.Schema(schema), errors=errors, last_step=False
@@ -368,7 +395,7 @@ class RoomSubentryFlow(ConfigSubentryFlow):
             errors = _room_errors(candidate)
             if not errors:
                 self._data = candidate
-                return self._finish()
+                return await self._after_share()
         values = user_input or self._data
         schema = {
             vol.Required(CONF_FLOOR_AREA, description=_suggested(values, CONF_FLOOR_AREA)): _number(
@@ -400,7 +427,10 @@ class RoomSubentryFlow(ConfigSubentryFlow):
             ),
         }
         return self.async_show_form(
-            step_id="geometry", data_schema=vol.Schema(schema), errors=errors, last_step=True
+            step_id="geometry",
+            data_schema=vol.Schema(schema),
+            errors=errors,
+            last_step=not self._source_ids,
         )
 
     async def async_step_known_share(
@@ -414,7 +444,7 @@ class RoomSubentryFlow(ConfigSubentryFlow):
                 errors[CONF_KNOWN_SHARE] = "known_shares_exceed_total"
             if not errors:
                 self._data = candidate
-                return self._finish()
+                return await self._after_share()
         values = user_input or self._data
         schema = {
             vol.Required(
@@ -422,8 +452,50 @@ class RoomSubentryFlow(ConfigSubentryFlow):
             ): _number(KNOWN_SHARE_PCT_MIN, KNOWN_SHARE_PCT_MAX, 0.1, PERCENTAGE),
         }
         return self.async_show_form(
-            step_id="known_share", data_schema=vol.Schema(schema), errors=errors, last_step=True
+            step_id="known_share",
+            data_schema=vol.Schema(schema),
+            errors=errors,
+            last_step=not self._source_ids,
         )
+
+    async def _after_share(self) -> SubentryFlowResult:
+        if self._source_ids:
+            return await self.async_step_heat_source_factors()
+        return self._finish()
+
+    async def async_step_heat_source_factors(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """MDL-042: how much of each device's power stays in the room."""
+        if user_input is not None:
+            self._data[CONF_HEAT_SOURCES] = [
+                {
+                    CONF_SOURCE_ENTITY: entity_id,
+                    CONF_SOURCE_FACTOR: float(
+                        user_input.get(entity_id, HEAT_SOURCE_FACTOR_DEFAULT_PCT)
+                    ),
+                }
+                for entity_id in self._source_ids
+            ]
+            return self._finish()
+        schema = {
+            vol.Required(
+                entity_id,
+                default=self._factors.get(entity_id, HEAT_SOURCE_FACTOR_DEFAULT_PCT),
+            ): _number(HEAT_SOURCE_FACTOR_MIN_PCT, HEAT_SOURCE_FACTOR_MAX_PCT, 5, PERCENTAGE)
+            for entity_id in self._source_ids
+        }
+        names = ", ".join(self._source_name(e) for e in self._source_ids)
+        return self.async_show_form(
+            step_id="heat_source_factors",
+            data_schema=vol.Schema(schema),
+            last_step=True,
+            description_placeholders={"devices": names},
+        )
+
+    def _source_name(self, entity_id: str) -> str:
+        state = self.hass.states.get(entity_id)
+        return str(state.name) if state else entity_id
 
     def _known_shares_too_high(self, candidate: Mapping[str, Any]) -> bool:
         entry = self._get_entry()

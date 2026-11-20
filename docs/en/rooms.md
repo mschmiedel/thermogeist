@@ -19,6 +19,7 @@ Open the Thermogeist entry of your house and choose **Add room**.
 | Share of the heat load | *Estimate from size and position* (most people) or *I know the share* (if you have a room-by-room heat load calculation). |
 | Window and door contacts | Optional. If one is open for 30 seconds, the room stops heating until it is closed ([FAQ](faq/window_open.md)). |
 | Design indoor temperature | Planning value from the heat load calculation – not the temperature you heat to. Usually 20 °C, bathrooms 24 °C, heated halls 15 °C. A bathroom designed for 24 °C gets a larger share. |
+| Devices that heat the room | Optional. Power sensors (W) of devices in the room, see [below](#devices-that-heat-the-room). |
 
 ### Step 2a: size and position (estimate)
 
@@ -56,22 +57,24 @@ normal room; few exterior walls give them a small share.
 | Heat demand | Watts the room needs right now to hold its target (needs a heat load on the house). |
 | Share of heat load | The room's share, estimated or entered. |
 | Heat loss coefficient | Watts per kelvin of temperature difference to outside. |
+| Heat from devices | Only with heat sources: watts the devices release into the room (after factors, 10-minute average). |
 
 On the house you additionally see **Heat load not assigned to a room**.
 
 To change a room, open the Thermogeist entry and click the gear icon (⚙) next to the room.
 
 
-## Devices that heat the room (coming soon)
-
-> Planned for a later version. This section explains in advance which factor to choose.
+## Devices that heat the room
 
 Many devices turn their power into heat in the room: a gaming PC at 300 W is a small radiator.
-You will be able to give a room the power sensors (W) of such devices; Thermogeist then
-subtracts their heat from what the radiator has to deliver. The power is averaged over
+Choose their power sensors (W) in the room's first step; Thermogeist then subtracts their heat
+from what the radiator has to deliver. When a device switches off, the radiator takes over within
+minutes. The planned valve position shows `heat_from_devices_w` and
+`demand_covered_by_devices_pct`. The power is averaged over
 10 minutes, so a PC jumping between 80 and 400 W does not move the valve with every load change.
 
-Per device a **factor** says how much of the power really stays in the room as heat.
+In an extra step you set per device a **factor**: how much of the power really stays in the room
+as heat.
 
 **100 % – everything stays in the room** (default)
 

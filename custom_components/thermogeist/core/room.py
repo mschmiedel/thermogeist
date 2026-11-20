@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Room description and its validation (spec MDL-004, MDL-030, MDL-033, MDL-039)."""
+"""Room description and its validation (spec MDL-004, MDL-030, MDL-033, MDL-039, MDL-040)."""
 
 from __future__ import annotations
 
@@ -47,6 +47,11 @@ EXTERIOR_WALLS_MAX = 4
 KNOWN_SHARE_PCT_MIN = 0.0
 KNOWN_SHARE_PCT_MAX = 100.0
 
+# MDL-042: share of a device's power that stays in the room as heat.
+HEAT_SOURCE_FACTOR_MIN_PCT = 0.0
+HEAT_SOURCE_FACTOR_MAX_PCT = 100.0
+HEAT_SOURCE_FACTOR_DEFAULT_PCT = 100.0
+
 FIELD_ROOM_NAME = "name"
 FIELD_KNOWN_SHARE = "known_share"
 FIELD_FLOOR_AREA = "floor_area"
@@ -54,6 +59,14 @@ FIELD_CEILING_HEIGHT = "ceiling_height"
 FIELD_CEILING_LOW = "ceiling_low"
 FIELD_EXTERIOR_WALLS = "exterior_walls"
 FIELD_DESIGN_INDOOR = "design_indoor_temperature"
+
+
+@dataclass(frozen=True, slots=True)
+class HeatSource:
+    """MDL-040, MDL-042: a device whose power heats the room."""
+
+    entity_id: str
+    factor_pct: float = HEAT_SOURCE_FACTOR_DEFAULT_PCT
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,9 +84,11 @@ class Room:
     above: Above = Above.HEATED
     below: Below = Below.HEATED
     design_indoor_temperature_c: float = DEFAULT_DESIGN_INDOOR_C
+    """Planning value only (MDL-039); the setpoint decides how warm the room is heated."""
     window_entities: tuple[str, ...] = ()
     """RUL-010: window or door contacts of the room (optional)."""
-    """Planning value only (MDL-039); the setpoint decides how warm the room is heated."""
+    heat_sources: tuple[HeatSource, ...] = ()
+    """MDL-040: devices whose power heats the room (optional)."""
 
     @property
     def mean_height_m(self) -> float:

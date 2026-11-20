@@ -40,3 +40,15 @@ def test_design_indoor_temperature_changes_heat_loss_not_demand_target() -> None
     heat_loss = room_heat_loss_w_per_k(HOUSE, bathroom, 2.0)
     assert heat_loss == pytest.approx(130.0 / 34.5)
     assert current_demand_w(heat_loss, 21.0, 5.0) == pytest.approx(130.0 / 34.5 * 16)
+
+
+def test_heat_sources_reduce_the_demand() -> None:
+    """Scenario: SCN-HEAT-005"""
+    from custom_components.thermogeist.core.heat import heat_from_sources_w, net_demand_w
+
+    # PC 300 W at 100 %, washing machine 2000 W at 10 %, an unavailable and a negative sensor.
+    sources = heat_from_sources_w([(300.0, 100.0), (2000.0, 10.0), (None, 100.0), (-50.0, 100.0)])
+    assert sources == 500.0
+    assert net_demand_w(800.0, sources) == 300.0
+    assert net_demand_w(400.0, sources) == 0.0
+    assert net_demand_w(None, sources) is None

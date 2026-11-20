@@ -19,6 +19,7 @@
 | Anteil an der Heizlast | *Aus Größe und Lage schätzen* (die meisten) oder *Ich kenne den Anteil* (wenn du eine raumweise Heizlastberechnung hast). |
 | Fenster- und Türkontakte | Optional. Ist einer 30 Sekunden offen, hört der Raum auf zu heizen, bis er geschlossen ist ([Häufige Fragen](faq/window_open.md)). |
 | Auslegungs-Innentemperatur | Planungswert aus der Heizlastberechnung – nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Ein Bad mit 24 °C bekommt einen größeren Anteil. |
+| Geräte, die den Raum heizen | Optional. Leistungssensoren (W) von Geräten im Raum, siehe [unten](#geräte-die-den-raum-heizen). |
 
 ### Schritt 2a: Größe und Lage (Schätzung)
 
@@ -56,23 +57,25 @@ ergeben einen kleinen Anteil.
 | Wärmebedarf | Watt, die der Raum gerade braucht, um sein Ziel zu halten (braucht eine Heizlast beim Haus). |
 | Anteil an der Heizlast | Der Anteil des Raums, geschätzt oder eingetragen. |
 | Wärmeverlustkoeffizient | Watt pro Kelvin Temperaturunterschied nach draußen. |
+| Wärme aus Geräten | Nur mit Wärmequellen: Watt, die die Geräte an den Raum abgeben (nach Faktor, Mittel über 10 Minuten). |
 
 Beim Haus siehst du zusätzlich **Heizlast ohne Raum**.
 
 Um einen Raum zu ändern, öffne den Thermogeist-Eintrag und klick auf das Zahnrad (⚙) neben dem Raum.
 
 
-## Geräte, die den Raum heizen (kommt bald)
-
-> Geplant für eine spätere Version. Dieser Abschnitt erklärt schon vorab, welchen Faktor du wählst.
+## Geräte, die den Raum heizen
 
 Viele Geräte machen aus ihrem Strom Wärme im Raum: Ein Gaming-PC mit 300 W ist ein kleiner
-Heizkörper. Du wirst einem Raum die Leistungssensoren (W) solcher Geräte geben können;
-Thermogeist zieht ihre Wärme dann von dem ab, was der Heizkörper liefern muss. Die Leistung wird
+Heizkörper. Wähl ihre Leistungssensoren (W) im ersten Schritt des Raums; Thermogeist zieht ihre
+Wärme dann von dem ab, was der Heizkörper liefern muss. Geht ein Gerät aus, übernimmt der
+Heizkörper innerhalb von Minuten. Die geplante Ventilstellung zeigt `heat_from_devices_w` und
+`demand_covered_by_devices_pct`. Die Leistung wird
 über 10 Minuten gemittelt, damit ein PC, der zwischen 80 und 400 W springt, das Ventil nicht bei
 jedem Lastwechsel bewegt.
 
-Pro Gerät sagt ein **Faktor**, wie viel der Leistung wirklich als Wärme im Raum bleibt.
+In einem extra Schritt gibst du pro Gerät einen **Faktor** an: wie viel der Leistung wirklich als
+Wärme im Raum bleibt.
 
 **100 % – alles bleibt im Raum** (Standard)
 

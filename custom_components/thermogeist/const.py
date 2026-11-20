@@ -48,6 +48,9 @@ CONF_ABOVE: Final = "above"
 CONF_BELOW: Final = "below"
 CONF_DESIGN_INDOOR: Final = FIELD_DESIGN_INDOOR
 CONF_WINDOWS: Final = "window_sensors"
+CONF_HEAT_SOURCES: Final = "heat_sources"
+CONF_SOURCE_ENTITY: Final = "entity"
+CONF_SOURCE_FACTOR: Final = "factor"
 
 # Thermostat keys.
 SUBENTRY_THERMOSTAT: Final = "thermostat"

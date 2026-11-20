@@ -34,7 +34,12 @@ from .core.controller import (
 )
 from .core.decisions import Decision, ReasonCode, RoomInputs, decide_room
 from .core.estimation import ShareResult, room_shares
-from .core.heat import current_demand_w, room_heat_loss_w_per_k
+from .core.heat import (
+    current_demand_w,
+    heat_from_sources_w,
+    net_demand_w,
+    room_heat_loss_w_per_k,
+)
 from .core.house import CentralMode, House
 from .core.profiles import (
     ControlSetting,
@@ -44,7 +49,7 @@ from .core.profiles import (
 )
 from .core.radiator import time_constant_h, usable_spread_k
 from .core.room import Room
-from .core.smoothing import MovingAverage, plausible_flow
+from .core.smoothing import HEAT_SOURCE_WINDOW, MovingAverage, plausible_flow
 from .core.time_provider import SystemTimeProvider, TimeProvider
 
 REEVALUATE_EVERY = timedelta(minutes=1)
@@ -83,6 +88,10 @@ class RoomState:
     """When the current reason code started (RSN-002)."""
     plan_at: datetime | None = None
     plan_code: ReasonCode | None = None
+    source_averages: dict[str, MovingAverage] = field(default_factory=dict)
+    """MDL-040: power of each heat source, averaged over 10 minutes."""
+    heat_from_sources_w: float | None = None
+    """MDL-044: heat the devices release into the room (after factors), None without sources."""
 
 
 class HouseRuntime:
@@ -163,6 +172,7 @@ class HouseRuntime:
         self.started_at = now
         for state in self.rooms.values():
             self._read_temperature(state, now, initial=True)
+            self._sample_sources(state, now)
         watched = [s.room.temperature_entity for s in self.rooms.values()]
         watched += [w for s in self.rooms.values() for w in s.room.window_entities]
         watched.append(self.house.outdoor_temperature_entity)
@@ -301,7 +311,22 @@ class HouseRuntime:
         now = self._clock.now()
         for state in self.rooms.values():
             self._read_temperature(state, now)
+            self._sample_sources(state, now)
         self._reevaluate()
+
+    def _sample_sources(self, state: RoomState, now: datetime) -> None:
+        """MDL-040: one sample per minute; unavailable or negative readings count as 0 W."""
+        if not state.room.heat_sources:
+            return
+        for source in state.room.heat_sources:
+            average = state.source_averages.setdefault(
+                source.entity_id, MovingAverage(HEAT_SOURCE_WINDOW)
+            )
+            average.add(now, max(0.0, numeric_state(self._hass, source.entity_id) or 0.0))
+        state.heat_from_sources_w = heat_from_sources_w(
+            (state.source_averages[s.entity_id].value(now), s.factor_pct)
+            for s in state.room.heat_sources
+        )
 
     def _read_temperature(self, state: RoomState, now: datetime, *, initial: bool = False) -> None:
         ha_state = self._hass.states.get(state.room.temperature_entity)
@@ -426,7 +451,11 @@ class HouseRuntime:
                 target_c=state.decision.target_setpoint_c,
                 room_c=state.current_temperature_c,
                 feed_forward_pct=feed_forward_pct(
-                    state.demand_w, state.rated_output_w, flow, state.current_temperature_c, spread
+                    net_demand_w(state.demand_w, state.heat_from_sources_w or 0.0),
+                    state.rated_output_w,
+                    flow,
+                    state.current_temperature_c,
+                    spread,
                 ),
                 time_constant_h=time_constant_h(state.room.floor_area_m2, state.heat_loss_w_per_k),
                 safety=state.decision.code is ReasonCode.SAFETY_SENSOR_STALE,

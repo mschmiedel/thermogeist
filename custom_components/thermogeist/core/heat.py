@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: MIT
-"""Heat loss and current demand of a room (spec MDL-010, MDL-011, MDL-036, MDL-039)."""
+"""Heat loss and current demand of a room (spec MDL-010, MDL-011, MDL-036, MDL-039, MDL-043)."""
 
 from __future__ import annotations
+
+from collections.abc import Iterable
 
 from .house import House
 from .room import Room
@@ -27,3 +29,15 @@ def current_demand_w(
     if heat_loss_w_per_k is None or setpoint_c is None or outdoor_c is None:
         return None
     return max(0.0, heat_loss_w_per_k * (setpoint_c - outdoor_c))
+
+
+def heat_from_sources_w(sources: Iterable[tuple[float | None, float]]) -> float:
+    """MDL-042: sum of (power in W, factor in %); unknown or negative power counts as 0."""
+    return sum(max(0.0, power or 0.0) * factor_pct / 100 for power, factor_pct in sources)
+
+
+def net_demand_w(demand_w: float | None, sources_w: float) -> float | None:
+    """MDL-043: what the radiator still has to deliver. Never negative."""
+    if demand_w is None:
+        return None
+    return max(0.0, demand_w - sources_w)

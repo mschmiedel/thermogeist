@@ -7,6 +7,8 @@ from collections import deque
 from datetime import datetime, timedelta
 
 FLOW_WINDOW = timedelta(minutes=30)
+# MDL-040: long enough to smooth load changes of a PC, short enough to follow it switching off.
+HEAT_SOURCE_WINDOW = timedelta(minutes=10)
 FLOW_PLAUSIBLE_MIN_C = 5.0
 FLOW_PLAUSIBLE_MAX_C = 70.0
 
