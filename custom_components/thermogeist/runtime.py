@@ -66,6 +66,8 @@ class RoomState:
     """Planned valve position (observe mode, ACT-014)."""
     rated_output_w: float | None = None
     """Sum of the known radiator outputs of this room, None if none is known."""
+    feed_forward_missing: list[str] = field(default_factory=list)
+    """Inputs the feed-forward is waiting for (CTL-035)."""
 
 
 class HouseRuntime:
@@ -227,6 +229,10 @@ class HouseRuntime:
 
     @callback
     def _reevaluate(self) -> None:
+        if not self._started:
+            # Before start-up the room temperatures are not read yet: deciding now would show a
+            # false "sensor silent" in the logbook and start the controller from a false state.
+            return
         outdoor = self.outdoor_temperature_c()
         flow = self.flow_temperature_c()
         settings = self.controller_settings()
@@ -242,13 +248,23 @@ class HouseRuntime:
             state.demand_w = current_demand_w(
                 state.heat_loss_w_per_k, state.decision.target_setpoint_c, outdoor
             )
-            if state.thermostat_ids and self._started:
+            if state.thermostat_ids:
                 self._plan(state, flow, settings)
         self._notify()
 
     def _plan(self, state: RoomState, flow: float | None, settings: ControllerSettings) -> None:
         """Observe mode: compute what the valves would do, write nothing (ACT-014)."""
         assert state.decision is not None
+        state.feed_forward_missing = [
+            name
+            for name, value in (
+                ("heat_load", state.heat_loss_w_per_k),
+                ("radiator_output", state.rated_output_w),
+                ("flow_temperature", flow),
+                ("room_temperature", state.current_temperature_c),
+            )
+            if value is None
+        ]
         state.plan = state.controller.step(
             ControllerInputs(
                 target_c=state.decision.target_setpoint_c,

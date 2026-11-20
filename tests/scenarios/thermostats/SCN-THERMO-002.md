@@ -12,7 +12,7 @@ As SCN-THERMO-001, but a Bosch BTH-RA "Bath TRV" with pi_heating_demand at 39 %.
 
 ## Expected result
 - Valve position sensor shows 39 %, then 45 %.
-- Without radiator output the planned position has no feed-forward data.
+- Without radiator output the planned position shows `feed_forward: null` and `feed_forward_missing: [radiator_output]`.
 
 ## Why it matters
 You can compare your current regulation with Thermogeist before letting it control anything.

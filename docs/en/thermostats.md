@@ -56,7 +56,7 @@ On each room:
 
 | Entity | Meaning |
 |---|---|
-| Planned valve position | What Thermogeist would set right now. Attributes show the parts: *feed_forward* (from the heat demand), *proportional* (reaction to the temperature difference), *integral* (slow correction), and *limits* that applied. |
+| Planned valve position | What Thermogeist would set right now. Attributes show the parts: *feed_forward* (from the heat demand), *proportional* (reaction to the temperature difference), *integral* (slow correction), and *limits* that applied. If *feed_forward* is empty, *feed_forward_missing* tells you what is missing – usually the flow temperature sensor on the house or the radiator output. |
 | Valve position *thermostat* | The actual valve position, if the thermostat reports it. Put it next to the planned one in a history graph. |
 | Kind *thermostat* | Valve-based or setpoint-based, with profile and roles as attributes. |
 

@@ -56,7 +56,7 @@ Pro Raum:
 
 | Entität | Bedeutung |
 |---|---|
-| Geplante Ventilstellung | Was Thermogeist gerade einstellen würde. Die Attribute zeigen die Anteile: *feed_forward* (aus dem Wärmebedarf), *proportional* (Reaktion auf den Temperaturunterschied), *integral* (langsame Korrektur) und *limits*, die gegriffen haben. |
+| Geplante Ventilstellung | Was Thermogeist gerade einstellen würde. Die Attribute zeigen die Anteile: *feed_forward* (aus dem Wärmebedarf), *proportional* (Reaktion auf den Temperaturunterschied), *integral* (langsame Korrektur) und *limits*, die gegriffen haben. Ist *feed_forward* leer, steht in *feed_forward_missing*, was fehlt – meist der Vorlauf-Sensor am Haus oder die Heizkörperleistung. |
 | Ventilstellung *Thermostat* | Die tatsächliche Ventilstellung, wenn das Thermostat sie meldet. Leg sie in einem Verlaufsdiagramm neben die geplante. |
 | Art *Thermostat* | Über Ventilstellung oder über Sollwert, mit Profil und Rollen als Attribute. |
 

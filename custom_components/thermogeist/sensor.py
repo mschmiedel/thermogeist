@@ -218,7 +218,12 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
         }
         if plan is not None:
             attributes |= {
-                "feed_forward": round(plan.feed_forward_pct, 1),
+                "feed_forward": (
+                    None
+                    if self.room_state.feed_forward_missing
+                    else round(plan.feed_forward_pct, 1)
+                ),
+                "feed_forward_missing": self.room_state.feed_forward_missing,
                 "proportional": round(plan.proportional_pct, 1),
                 "integral": round(plan.integral_pct, 1),
                 "limits": [limit.value for limit in plan.limits],

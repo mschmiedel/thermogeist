@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -121,6 +122,7 @@ async def test_sonoff_is_recognised_and_planned(
     assert planned.attributes["mode"] == "observe"
     assert planned.attributes["strategies"] == ["valve"]
     assert planned.attributes["feed_forward"] == pytest.approx(60.6, abs=0.5)
+    assert planned.attributes["feed_forward_missing"] == []
     assert float(planned.state) == pytest.approx(68, abs=1)
     assert hass.states.get("sensor.living_room_kind_living_trv").state == "valve"
 
@@ -146,7 +148,10 @@ async def test_bosch_shows_actual_next_to_planned(
     hass.states.async_set("number.bath_trv_pi_heating_demand", "45")
     await hass.async_block_till_done()
     assert hass.states.get(actual).state == "45.0"
-    assert hass.states.get(PLANNED).attributes["radiator_output_w"] is None
+    planned = hass.states.get(PLANNED).attributes
+    assert planned["radiator_output_w"] is None
+    assert planned["feed_forward"] is None
+    assert planned["feed_forward_missing"] == ["radiator_output"]
 
 
 async def test_thermostat_needs_a_room(hass: HomeAssistant, outdoor_sensor: str) -> None:
@@ -212,9 +217,17 @@ async def test_plan_is_correct_right_after_restart(
     entry, room_id = await house_with_room(hass)
     await assign(hass, entry.entry_id, room_id, sonoff(hass), 2000.0)
     mock_restore_cache(hass, [State("select.home_central_mode", "auto")])
+    reasons: list[str] = []
+    async_track_state_change_event(
+        hass,
+        ["sensor.living_room_active_reason"],
+        lambda event: reasons.append(event.data["new_state"].state),
+    )
 
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert "safety_sensor_stale" not in reasons
 
     planned = hass.states.get(PLANNED)
     assert planned.attributes["limits"] != ["safety"]
