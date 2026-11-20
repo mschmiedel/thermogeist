@@ -30,7 +30,7 @@
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
           "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
           "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %.",
-          "flow_temperature_entity": "Optional. Die Temperatur des Heizwassers, das zu den Heizkörpern fließt, z. B. von deiner Wärmepumpe. Zusammen mit der Heizkörperleistung kann Thermogeist daraus eine gute Start-Ventilstellung berechnen."
+          "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen."
         }
       }
     },
@@ -64,7 +64,7 @@
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
           "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
           "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %.",
-          "flow_temperature_entity": "Optional. Die Temperatur des Heizwassers, das zu den Heizkörpern fließt, z. B. von deiner Wärmepumpe. Zusammen mit der Heizkörperleistung kann Thermogeist daraus eine gute Start-Ventilstellung berechnen."
+          "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen."
         }
       }
     },

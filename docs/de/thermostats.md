@@ -84,6 +84,43 @@ Temperatur des Wassers, das zu den Heizkörpern fließt, z. B. von deiner Wärme
 mit der Heizkörperleistung und der Heizlast des Hauses berechnet Thermogeist dann eine gute
 Start-Ventilstellung, statt sie langsam zu suchen.
 
+## Den Vorlauf-Sensor wählen
+
+Der Vorlauf ist die empfindlichste Eingabe der Vorsteuerung. Bei Wärmepumpen-Temperaturen liegen
+nur wenige Kelvin zwischen Wasser und Raum, deshalb ändert **1 K Messfehler die berechnete
+Heizkörperleistung um 20–30 %**. Wähle und prüfe den Fühler sorgfältig.
+
+**Wo messen**
+
+| Fühler | Geeignet? | Warum |
+|---|---|---|
+| Heizkreis-Vorlauf nach dem Pufferspeicher (dort, wo die Heizkörper ihr Wasser bekommen) | **ja – empfohlen** | Zeigt, was wirklich an den Heizkörpern ankommt. Beim Warmwasserbereiten sinkt er langsam; Thermogeist öffnet die Ventile dann etwas – der richtige Ausgleich. |
+| Vorlauffühler der Wärmepumpe selbst (Ausgang der Wärmepumpe) | **nur mit Vorsicht** | Beim Warmwasserbereiten zeigt er 45–50 °C. Thermogeist würde die Heizkörper für heiß halten und die Ventile schließen, obwohl sie kühler werden. Mit Pufferspeicher kommt der WP-Vorlauf außerdem nicht direkt an den Heizkörpern an. |
+| Kessel-Vorlauf ohne Puffer | ja | Dasselbe Wasser wie an den Heizkörpern. |
+
+Hast du keinen Heizkreis-Fühler und musst den der Wärmepumpe nehmen: Beobachte die geplante
+Ventilstellung beim Warmwasserbereiten. Eine spätere Version kann den Wert bei Warmwasser und
+Abtauen halten, wenn du ihr die Betriebsart der Wärmepumpe gibst.
+
+**Anlegefühler: kalibrieren**
+
+Fühler, die außen am Rohr anliegen – auch unter der Dämmung –, messen oft **2–4 K zu wenig**,
+weil sie die kühlere Umgebung mitmessen. So findest du den Versatz ohne Ausbau:
+
+1. Warte einen Zeitraum ab, in dem die Wärmepumpe steht (kein Heizen, kein Warmwasser, kein
+   Abtauen), die Heizkreispumpe aber weiterläuft – nachts oder an einem milden Nachmittag,
+   30–60 Minuten.
+2. Dann hat das Wasser im Puffer, in der Wärmepumpe und im Heizkreis-Vorlauf fast dieselbe
+   Temperatur. Vergleiche deinen Fühler mit dem der Wärmepumpe oder des Puffers.
+3. Trag die Differenz in Home Assistant als Versatz (Offset) für deinen Fühler ein.
+
+Beispiel aus einer echten Anlage: WP-Vorlauf 28,9 °C, WP-Rücklauf 28,2 °C, Puffer 28,5 °C,
+Anlegefühler Heizkreis-Vorlauf 25,6 °C → Versatz etwa +3 K.
+
+**Gar kein Fühler?** Thermogeist funktioniert trotzdem: Ohne Vorsteuerung findet es die richtige
+Ventilstellung über die langsame Korrektur, das dauert etwa einen Tag statt Stunden. Die
+geplante Ventilstellung zeigt dann `feed_forward_missing: flow_temperature`.
+
 ## Was du siehst
 
 Pro Raum:

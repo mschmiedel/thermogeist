@@ -30,7 +30,7 @@
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
           "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
-          "flow_temperature_entity": "Optional. The heating water temperature going to the radiators, e.g. from your heat pump. Together with radiator outputs it lets Thermogeist calculate a good starting valve position."
+          "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor."
         }
       }
     },
@@ -64,7 +64,7 @@
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
           "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
-          "flow_temperature_entity": "Optional. The heating water temperature going to the radiators, e.g. from your heat pump. Together with radiator outputs it lets Thermogeist calculate a good starting valve position."
+          "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor."
         }
       }
     },

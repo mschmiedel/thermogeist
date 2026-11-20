@@ -36,6 +36,7 @@ Jedes Feld darf leer bleiben. Je mehr du ausfüllst, desto besser startet Thermo
 |---|---|
 | Heizlast | Die Wärme, die dein Haus am kältesten Auslegungstag braucht, in kW. Sie steht in der Heizlastberechnung deines Heizungsbauers oder Energieberaters. |
 | Normaußentemperatur | Die Außentemperatur, für die die Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. |
+| Vorlauftemperatursensor | Optional. Die Wassertemperatur zu den Heizkörpern – sorgfältig wählen, siehe [Den Vorlauf-Sensor wählen](thermostats.md#den-vorlauf-sensor-wählen). |
 | Beheizte Wohnfläche | Die gesamte beheizte Fläche, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe: Ein Raum mit 20 m² in einem Haus mit 160 m² startet bei etwa 12,5 %. Empfohlen. |
 | Anteil außerhalb von Thermogeist | Teil der Heizlast in Räumen, die Thermogeist nicht regeln soll, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. |
 

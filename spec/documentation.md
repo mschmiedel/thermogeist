@@ -12,6 +12,7 @@ screenshots, technical terms explained on first use.
 | DOC-003 | `docs/en/` and `docs/de/` share the same file structure and file names. | implemented |
 | DOC-004 | Every reason code and every diagnosis has an FAQ entry in both languages (see RSN-005). | in progress |
 | DOC-005 | A change to user-facing text updates both languages in the same change. A test checks that both doc trees contain the same files. | implemented |
+| DOC-007 | The choice of the flow temperature sensor is documented where it is chosen (help text) and in the user docs: heating circuit after the buffer recommended, heat pump outlet only with care (hot-water charging), strap-on sensors calibrated with a worked example. | implemented |
 | DOC-006 | HA UI texts come from `translations/en.json` and `translations/de.json` with identical keys. | implemented |
 
 ## Planned structure

@@ -82,6 +82,42 @@ the water going to the radiators, e.g. from your heat pump. Together with the ra
 and the house heat load, Thermogeist then calculates a good starting valve position instead of
 finding it slowly.
 
+## Choosing the flow temperature sensor
+
+The flow temperature is the most sensitive input of the feed-forward. At heat-pump temperatures
+there are only a few kelvin between water and room, so **1 K measurement error changes the
+calculated radiator output by 20–30 %**. Choose and check the sensor carefully.
+
+**Where to measure**
+
+| Sensor | Suitable? | Why |
+|---|---|---|
+| Heating circuit flow, after the buffer tank (where the radiators get their water) | **yes – recommended** | Shows what the radiators really get. During hot-water charging it drops slowly; Thermogeist then opens the valves a little – the right compensation. |
+| Heat pump's own flow sensor (outlet of the heat pump) | **only with care** | During hot-water charging it shows 45–50 °C. Thermogeist would think the radiators are hot and close the valves, although they get cooler. With a buffer tank the heat pump's flow is also not what reaches the radiators. |
+| Boiler flow without buffer | yes | Same water as the radiators. |
+
+If you have no heating-circuit sensor and must use the heat pump's sensor: watch the planned
+valve position during hot-water charging. A future version can hold the value during hot water
+and defrost if you give it the heat pump's operating mode.
+
+**Strap-on sensors: calibrate them**
+
+Sensors strapped onto the pipe – even under insulation – often read **2–4 K too low**, because
+they also feel the cooler surroundings. To find the offset without dismantling anything:
+
+1. Wait for a time when the heat pump stands still (no heating, no hot water, no defrost) while
+   the heating circuit pump keeps running – at night or on a mild afternoon, 30–60 minutes.
+2. Then water in the buffer, the heat pump and the heating circuit flow has almost the same
+   temperature. Compare your sensor with the heat pump's or the buffer's sensor.
+3. Enter the difference as an offset for your sensor in Home Assistant.
+
+Example from a real installation: heat pump flow 28.9 °C, heat pump return 28.2 °C, buffer
+28.5 °C, heating-circuit strap-on sensor 25.6 °C → offset about +3 K.
+
+**No sensor at all?** Thermogeist still works: without the feed-forward it finds the right valve
+position through slow correction, which takes about a day instead of hours. The planned valve
+position then shows `feed_forward_missing: flow_temperature`.
+
 ## What you see
 
 On each room:
