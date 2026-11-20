@@ -70,6 +70,7 @@ whose fan runs on a smart plug, an infrared panel or an electric towel rail.
 | ACT-063 | Base heat: a *heating circuit* heater through which water keeps flowing while the fan is off still releases heat by natural convection. A base output (W, or % of stage 1, default estimate) is counted as heat in the room while off. | planned |
 | ACT-064 | Control by time-proportional switching: duty cycle = demand / output of the active stage (corrected by the slow controller), over a cycle of 20 min (named constant) with minimum on and off times of 5 min each (named constant), so fan and relay do not switch every minute. Window, stop and safety switch off at once; the frost guard (RUL-015) switches on. | planned |
 | ACT-065 | Fan convectors follow the radiator formula with a lower exponent (about 1.1 instead of 1.3, EN 16430 typical); the exponent is part of the heater type, not a user input. | planned |
+| ACT-067 | Not heating although switched on: if the switch has been on for 3 minutes (named constant) and the measured power stays below half of stage 1, the heater reports a problem – stage switch at 0, fan blocked, or plug faulty. Visible as a problem binary sensor (for the user's own notifications), a repair issue and a logbook entry; while the problem lasts, no heat is counted for this heater, so the room is not assumed warmer than it is. Cleared as soon as power is measured again. | planned |
 | ACT-066 | The heater shows `stage` (off / 1 / 2), `duty_cycle_pct`, `on_since`/`off_since` and the output used. | planned |
 
 ## Control mode (M4)
