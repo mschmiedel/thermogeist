@@ -344,7 +344,10 @@
         }
       },
       "error": {
-        "climate_required": "The climate entity is required."
+        "climate_required": "The climate entity is required.",
+        "role_needs_percent": "This entity does not report a percentage. Choose the valve position entity (unit %).",
+        "role_needs_temperature": "This entity is not a temperature input.",
+        "role_needs_setpoint_source": "This entity does not report where a setpoint came from (manual, schedule, externally). Leave the field empty if your thermostat has none."
       },
       "abort": {
         "no_rooms": "Add a room first, then assign thermostats to it.",

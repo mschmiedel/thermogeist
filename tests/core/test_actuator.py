@@ -4,8 +4,10 @@ from pathlib import Path
 
 from custom_components.thermogeist.core.actuator import (
     DeviceEntity,
+    EntityFacts,
     Kind,
     Role,
+    check_role,
     find_profile,
     kind_for,
     parse_profile,
@@ -77,3 +79,18 @@ def test_unknown_device_falls_back_to_setpoint_kind() -> None:
 
     assert roles == {Role.CLIMATE: "climate.office"}
     assert kind_for(roles) is Kind.SETPOINT
+
+
+def test_role_assignments_are_checked_for_plausibility() -> None:
+    """Scenario: SCN-ACT-005"""
+    temperature = EntityFacts(state="24.4", unit="°C", device_class="temperature")
+    percent = EntityFacts(state="24", unit="%")
+    source = EntityFacts(state="manual", options=("manual", "schedule", "externally"))
+
+    assert check_role(Role.SETPOINT_SOURCE, temperature) == "role_needs_setpoint_source"
+    assert check_role(Role.SETPOINT_SOURCE, source) is None
+    assert check_role(Role.VALVE_READ, temperature) == "role_needs_percent"
+    assert check_role(Role.VALVE_READ, percent) is None
+    assert check_role(Role.EXTERNAL_TEMPERATURE, percent) == "role_needs_temperature"
+    assert check_role(Role.EXTERNAL_TEMPERATURE, temperature) is None
+    assert check_role(Role.CHILD_LOCK, temperature) is None

@@ -69,7 +69,15 @@ from .const import (
     SUBENTRY_ROOM,
     SUBENTRY_THERMOSTAT,
 )
-from .core.actuator import DeviceEntity, Role, Source, find_profile, resolve_roles
+from .core.actuator import (
+    DeviceEntity,
+    EntityFacts,
+    Role,
+    Source,
+    check_role,
+    find_profile,
+    resolve_roles,
+)
 from .core.estimation import known_shares_exceed_total
 from .core.house import (
     DESIGN_TEMP_C_MAX,
@@ -520,7 +528,8 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
             roles = {role: entity for role, entity in user_input.items() if entity}
             if Role.CLIMATE.value not in roles:
                 errors[Role.CLIMATE.value] = "climate_required"
-            else:
+            errors |= self._implausible_roles(roles)
+            if not errors:
                 return self._finish(roles)
         schema: dict[vol.Marker, Any] = {}
         for role, domains in ROLE_DOMAINS.items():
@@ -540,6 +549,22 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
                 "notes": self._notes,
             },
         )
+
+    def _implausible_roles(self, roles: dict[str, str]) -> dict[str, str]:
+        """ACT-035: e.g. a temperature sensor chosen as valve position is rejected."""
+        errors: dict[str, str] = {}
+        for role_key, entity_id in roles.items():
+            state = self.hass.states.get(entity_id)
+            attributes = state.attributes if state else {}
+            facts = EntityFacts(
+                state=state.state if state else None,
+                unit=attributes.get("unit_of_measurement"),
+                device_class=attributes.get("device_class"),
+                options=tuple(attributes.get("options") or ()),
+            )
+            if (code := check_role(Role(role_key), facts)) is not None:
+                errors[role_key] = code
+        return errors
 
     def _finish(self, roles: dict[str, str]) -> SubentryFlowResult:
         title = str(self._data.pop("_device_name"))

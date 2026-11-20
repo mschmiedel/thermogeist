@@ -344,7 +344,10 @@
         }
       },
       "error": {
-        "climate_required": "Die Klima-Entität wird benötigt."
+        "climate_required": "Die Klima-Entität wird benötigt.",
+        "role_needs_percent": "Diese Entität meldet keinen Prozentwert. Wähle die Ventilstellung (Einheit %).",
+        "role_needs_temperature": "Diese Entität ist kein Temperatureingang.",
+        "role_needs_setpoint_source": "Diese Entität meldet nicht, woher ein Sollwert kam (manuell, Zeitplan, extern). Lass das Feld leer, wenn dein Thermostat so etwas nicht hat."
       },
       "abort": {
         "no_rooms": "Leg zuerst einen Raum an und ordne ihm dann Thermostate zu.",

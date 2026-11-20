@@ -149,3 +149,33 @@ class Thermostat:
 def kind_for(roles: Mapping[Role, str]) -> Kind:
     """Valve-based as soon as the valve can be written (ACT-021)."""
     return Kind.VALVE if Role.VALVE_WRITE in roles else Kind.SETPOINT
+
+
+@dataclass(frozen=True, slots=True)
+class EntityFacts:
+    """What the dialog knows about an entity chosen for a role."""
+
+    state: str | None
+    unit: str | None = None
+    device_class: str | None = None
+    options: tuple[str, ...] = ()
+
+
+PERCENT_ROLES = frozenset({Role.VALVE_READ, Role.VALVE_WRITE, Role.VALVE_MIN})
+TEMPERATURE_UNITS = frozenset({"°C", "°F", "K"})
+SETPOINT_SOURCE_VALUES = frozenset({"manual", "schedule", "externally"})
+
+
+def check_role(role: Role, facts: EntityFacts) -> str | None:
+    """Plausibility check for a role assignment (ACT-035). Returns an error code or None."""
+    if role in PERCENT_ROLES and facts.unit != "%":
+        return "role_needs_percent"
+    if role is Role.EXTERNAL_TEMPERATURE and not (
+        facts.unit in TEMPERATURE_UNITS or facts.device_class == "temperature"
+    ):
+        return "role_needs_temperature"
+    if role is Role.SETPOINT_SOURCE:
+        values = set(facts.options) | ({facts.state} if facts.state else set())
+        if not values & SETPOINT_SOURCE_VALUES:
+            return "role_needs_setpoint_source"
+    return None

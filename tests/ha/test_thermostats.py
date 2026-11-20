@@ -37,7 +37,7 @@ def z2m_device(
         name=name,
     )
     registry = er.async_get(hass)
-    for expose, (domain, state) in exposes.items():
+    for expose, (domain, state, *unit) in exposes.items():
         entity = registry.async_get_or_create(
             domain,
             "mqtt",
@@ -46,7 +46,8 @@ def z2m_device(
             config_entry=mqtt,
             suggested_object_id=f"{name.lower().replace(' ', '_')}_{expose}",
         )
-        hass.states.async_set(entity.entity_id, state)
+        attributes = {"unit_of_measurement": unit[0]} if unit else {}
+        hass.states.async_set(entity.entity_id, state, attributes)
     return device.id
 
 
@@ -58,9 +59,9 @@ def sonoff(hass: HomeAssistant) -> str:
         "TRVZB",
         {
             "climate": ("climate", "heat"),
-            "valve_opening_degree": ("number", "100"),
-            "valve_closing_degree": ("number", "100"),
-            "external_temperature_input": ("number", "20"),
+            "valve_opening_degree": ("number", "100", "%"),
+            "valve_closing_degree": ("number", "100", "%"),
+            "external_temperature_input": ("number", "20", "°C"),
             "child_lock": ("switch", "off"),
         },
     )
@@ -137,7 +138,7 @@ async def test_bosch_shows_actual_next_to_planned(
         "Bath TRV",
         "Bosch",
         "BTH-RA",
-        {"climate": ("climate", "heat"), "pi_heating_demand": ("number", "39")},
+        {"climate": ("climate", "heat"), "pi_heating_demand": ("number", "39", "%")},
     )
 
     roles_form = await assign(hass, entry.entry_id, room_id, device_id, None)
@@ -145,7 +146,7 @@ async def test_bosch_shows_actual_next_to_planned(
     assert roles_form["description_placeholders"]["profile"].startswith("Bosch")
     actual = "sensor.living_room_valve_position_bath_trv"
     assert hass.states.get(actual).state == "39.0"
-    hass.states.async_set("number.bath_trv_pi_heating_demand", "45")
+    hass.states.async_set("number.bath_trv_pi_heating_demand", "45", {"unit_of_measurement": "%"})
     await hass.async_block_till_done()
     assert hass.states.get(actual).state == "45.0"
     planned = hass.states.get(PLANNED).attributes
@@ -242,7 +243,7 @@ async def test_roles_may_come_from_another_device(
     climate_device = z2m_device(
         hass, "Room climate Roy", "Bosch", "Room climate", {"climate": ("climate", "heat")}
     )
-    z2m_device(hass, "Roy TRV", "Bosch", "TRV", {"valve_tappet": ("sensor", "24")})
+    z2m_device(hass, "Roy TRV", "Bosch", "TRV", {"valve_tappet": ("sensor", "24", "%")})
 
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
@@ -294,3 +295,31 @@ async def test_reconfigure_thermostat(
     assert result["reason"] == "reconfigure_successful"
     kind = hass.states.get("sensor.living_room_kind_living_trv")
     assert kind.attributes["radiator_output_w"] == 1500.0
+
+
+async def test_implausible_role_is_rejected(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-009"""
+    entry, room_id = await house_with_room(hass)
+    device_id = z2m_device(
+        hass,
+        "Roy TRV",
+        "Bosch",
+        "TRV",
+        {"climate": ("climate", "heat"), "temperature": ("sensor", "24.4", "°C")},
+    )
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"room": room_id, "device": device_id}
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"climate": "climate.roy_trv_climate", "setpoint_source": "sensor.roy_trv_temperature"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"setpoint_source": "role_needs_setpoint_source"}
