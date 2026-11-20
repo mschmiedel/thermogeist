@@ -69,10 +69,11 @@ corrects only after hours – and again in the other direction when the device i
 
 | ID | Requirement | Status |
 |---|---|---|
-| MDL-040 | Rooms may list heat sources: power sensors (W) of devices in the room, optional, changeable later via the room's gear icon. | planned |
+| MDL-040 | Rooms may list heat sources: power sensors (W) of devices in the room, optional, changeable later via the room's gear icon. Each source's power is averaged over 10 minutes, so a fluctuating load (a gaming PC jumping between 80 and 400 W) does not move the valve with every load change. | planned |
 | MDL-041 | If the room has an HA area, power sensors in that area are pre-filled as suggestions; the user keeps only what really heats the room. Later: hint when a new power sensor appears in the area. | planned |
-| MDL-042 | Per heat source a factor 0–100 % (default 100 %) for devices that release only part of their power into the room (e.g. a vented dryer). | planned |
+| MDL-042 | Per heat source a factor 0–100 % (default 100 %) for devices that release only part of their power into the room: the rest leaves the room with exhaust air or waste water, or the sensor measures devices elsewhere. Examples in the user docs: vented dryer, washing machine and dishwasher, extractor hood, smart plug feeding devices in another room. | planned |
 | MDL-043 | The feed-forward uses `demand − heat from sources`, never below 0. When a source switches off, the feed-forward rises at once without waiting for the integral. | planned |
+| MDL-047 | Stretch: a switch or binary sensor with a fixed power as heat source (e.g. aquarium heater on = 100 W), for devices without power measurement. | planned |
 | MDL-044 | Per room a sensor "Heat from devices" (W); the planned valve position shows how much of the demand the sources cover. | planned |
 | MDL-045 | Learning (LRN-001) accounts for known heat sources so they do not distort the learned heat loss. | planned |
 | MDL-046 | Room coverage on the house: how much of the house heat load the configured rooms cover (sum of room shares plus the outside share, in %), with what is missing as attributes – missing share and, with a living area, the floor area not yet in any room. Helps users see that rooms are still missing before trusting the model. | planned |
