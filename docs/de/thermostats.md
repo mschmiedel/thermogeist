@@ -42,7 +42,7 @@ Bekannte Modelle bisher:
 |---|---|---|
 | Sonoff TRVZB | Über Ventilstellung | Firmware 1.1.4 oder neuer. *Smart temperature control* ausschalten. |
 | Sonoff TRV-ZBT (Gen2) | Über Ventilstellung | *Smart temperature control* ausschalten. |
-| Bosch Heizkörperthermostat II (BTH-RA) | Über Ventilstellung | Keine Mindestöffnung im Gerät. Ob es eine geschriebene Ventilstellung hält, wird noch getestet. |
+| Bosch Heizkörperthermostat II (BTH-RA) | Über Ventilstellung | Keine Mindestöffnung im Gerät. Hält eine geschriebene Ventilstellung nur 15 Minuten; Thermogeist bestätigt sie alle 10 Minuten. |
 
 Alle anderen Thermostate funktionieren **über den Sollwert**: Thermogeist regelt sie über die
 Zieltemperatur (ab der nächsten Version).

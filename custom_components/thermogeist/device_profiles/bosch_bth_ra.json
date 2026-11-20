@@ -38,7 +38,7 @@
   "notes": [
     "No minimum opening on the device: if Home Assistant stops, the thermostat regulates on its own.",
     "remote_temperature must be sent at least every 30 minutes.",
-    "Whether the device holds a written valve position is still being tested."
+    "A written valve position is only kept for 15 minutes; Thermogeist confirms it every 10 minutes."
   ],
   "control_settings": {
     "z2m": [
@@ -47,5 +47,6 @@
         "value": "manual"
       }
     ]
-  }
+  },
+  "valve_write_refresh_minutes": 10
 }

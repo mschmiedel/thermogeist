@@ -46,8 +46,8 @@ Test setup: pipe probe (e.g. SNZB-02LD) on the flow pipe at the valve, values in
 
 ## Control mode (M4) – to verify on real devices
 
-- Bosch BTH-RA: does `operating_mode: manual` keep a written `pi_heating_demand`? If not,
-  write verification (ACT-043) switches the room back to observe and says so.
+- Bosch BTH-RA: answered in the field – it keeps a written `pi_heating_demand` for 15 minutes,
+  then its own regulation takes over. Confirmed every 10 minutes since ACT-047.
 - Sonoff TRVZB / TRV-ZBT: control is implemented through the same roles but not yet tested on a
   real device.
 - Override duration options (OVR-010) follow with schedules; until then a manual change is the

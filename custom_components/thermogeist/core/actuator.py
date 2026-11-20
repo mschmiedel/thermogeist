@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import timedelta
 from enum import StrEnum
 from typing import Any
 
@@ -60,6 +61,8 @@ class DeviceProfile:
     roles: Mapping[Source, Mapping[Role, RoleMapping]]
     notes: tuple[str, ...] = field(default_factory=tuple)
     control_settings: Mapping[Source, tuple[tuple[str, str], ...]] = field(default_factory=dict)
+    valve_refresh: timedelta | None = None
+    """ACT-047: some devices drop an external valve position after a while (Bosch: 15 min)."""
     """ACT-042: (expose, value) pairs applied when control starts, restored when it stops."""
 
     def matches(self, manufacturer: str | None, model_id: str | None) -> bool:
@@ -92,6 +95,11 @@ def parse_profile(data: Mapping[str, Any]) -> DeviceProfile:
         model_ids=tuple(data["match"]["model_id"]),
         roles=roles,
         notes=tuple(data.get("notes", ())),
+        valve_refresh=(
+            timedelta(minutes=float(data["valve_write_refresh_minutes"]))
+            if data.get("valve_write_refresh_minutes")
+            else None
+        ),
         control_settings={
             Source(source): tuple((s["expose"], str(s["value"])) for s in settings)
             for source, settings in data.get("control_settings", {}).items()

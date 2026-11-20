@@ -9,13 +9,14 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
 )
 
-from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, setup_house
+from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, setup_house
 from .test_thermostats import FLOW_SENSOR, assign, z2m_device
 
 SWITCH = "switch.living_room_control"
@@ -198,3 +199,50 @@ async def test_setpoint_only_room_cannot_be_controlled(
     with pytest.raises(HomeAssistantError):
         await switch(hass, True)
     assert hass.states.get(SWITCH).state == "off"
+
+
+async def test_bosch_valve_is_confirmed_before_it_times_out(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-008"""
+    _, calls = await controlled_bosch(hass)
+    await switch(hass, True)
+    await tick(hass, freezer, 91)
+    last_write = dt_util.utcnow()
+    seen = len(Calls.values(calls.number, VALVE, "value"))
+
+    for _ in range(60):
+        report_room_temperature(hass, 19.5)
+        await tick(hass, freezer, 60)
+        written = Calls.values(calls.number, VALVE, "value")
+        if len(written) > seen:
+            seen, last_write = len(written), dt_util.utcnow()
+            hass.states.async_set(VALVE, str(written[-1]), {"unit_of_measurement": "%"})
+        elif dt_util.utcnow() - last_write >= timedelta(minutes=15):
+            # Like the real Bosch: an external valve position is dropped after 15 minutes.
+            hass.states.async_set(VALVE, "0", {"unit_of_measurement": "%"})
+
+    written = Calls.values(calls.number, VALVE, "value")
+    assert len(written) >= 6  # first write + confirmations every 10 minutes
+    assert hass.states.get(VALVE).state != "0"
+    assert hass.states.get(SWITCH).state == "on"
+    assert not ir.async_get(hass).issues
+
+
+async def test_plan_is_not_recomputed_on_sensor_noise(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-THERMO-010"""
+    await controlled_bosch(hass)
+    changes = async_capture_events(hass, "state_changed")
+
+    for i in range(10):
+        hass.states.async_set(
+            FLOW_SENSOR, "40.0" if i % 2 else "40.25", {"device_class": "temperature"}
+        )
+        await tick(hass, freezer, 5)
+
+    planned = [
+        e for e in changes if e.data["entity_id"] == "sensor.living_room_planned_valve_position"
+    ]
+    assert len(planned) <= 1

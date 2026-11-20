@@ -47,6 +47,7 @@ from .core.room import Room
 from .core.time_provider import SystemTimeProvider, TimeProvider
 
 REEVALUATE_EVERY = timedelta(minutes=1)
+PLAN_EVERY = timedelta(seconds=55)
 # ACT-045: devices need a moment after a restart before Thermogeist writes to them.
 STARTUP_HOLD = timedelta(seconds=90)
 WINDOW_RECHECK_S = 31
@@ -79,6 +80,8 @@ class RoomState:
     """Inputs the feed-forward is waiting for (CTL-035)."""
     reason_since: datetime | None = None
     """When the current reason code started (RSN-002)."""
+    plan_at: datetime | None = None
+    plan_code: ReasonCode | None = None
 
 
 class HouseRuntime:
@@ -340,8 +343,20 @@ class HouseRuntime:
             ir.async_delete_issue(self._hass, DOMAIN, issue_id)
 
     def _plan(self, state: RoomState, flow: float | None, settings: ControllerSettings) -> None:
-        """Observe mode: compute what the valves would do, write nothing (ACT-014)."""
+        """Compute what the valves should do (CTL-042: at most once per minute)."""
         assert state.decision is not None
+        now = self._clock.now()
+        if (
+            state.plan is not None
+            and state.plan_at is not None
+            and state.plan_code is state.decision.code
+            and now - state.plan_at < PLAN_EVERY
+        ):
+            # Sensor noise (e.g. a flow sensor toggling every few seconds) must not recompute
+            # and rewrite the plan; a changed reason (window, stop, safety) is applied at once.
+            return
+        state.plan_at = now
+        state.plan_code = state.decision.code
         state.feed_forward_missing = [
             name
             for name, value in (

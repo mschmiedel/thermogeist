@@ -49,6 +49,8 @@ class ThermostatControl:
     settings_applied: bool = False
     pending_override: CALLBACK_TYPE | None = None
     last_write_urgent: bool = False
+    last_sent_at: datetime | None = None
+    """Last time any valve value was sent, including confirmations (ACT-047)."""
     """Leaving an urgent state (window closed again) is just as urgent as entering it."""
 
 
@@ -167,6 +169,14 @@ class ControlManager:
             await self._async_write_number(tid, write_entity, output_pct)
             supervisor.written(output_pct, now)
             control.last_write_urgent = urgent_now
+            control.last_sent_at = now
+            return True
+        if self._refresh_due(thermostat, control, now) and supervisor.last_written_pct is not None:
+            # Confirm the unchanged value before the device drops it; no motor movement.
+            await self._async_call(
+                "number", "set_value", write_entity, value=supervisor.last_written_pct
+            )
+            control.last_sent_at = now
             return True
         read_entity = thermostat.roles.get(Role.VALVE_READ, write_entity)
         verdict = supervisor.check(self._number(read_entity), now)
@@ -179,6 +189,14 @@ class ControlManager:
             await self._async_give_up(room_id, tid, thermostat)
             return False
         return True
+
+    def _refresh_due(
+        self, thermostat: Thermostat, control: ThermostatControl, now: datetime
+    ) -> bool:
+        profile = self._profiles.get(thermostat.profile_id or "")
+        if profile is None or profile.valve_refresh is None or control.last_sent_at is None:
+            return False
+        return now - control.last_sent_at >= profile.valve_refresh
 
     async def _async_min_opening(self, tid: str, thermostat: Thermostat) -> None:
         entity = thermostat.roles.get(Role.VALVE_MIN)

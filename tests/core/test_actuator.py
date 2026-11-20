@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MIT
 import json
+from datetime import timedelta
 from pathlib import Path
 
 from custom_components.thermogeist.core.actuator import (
@@ -94,3 +95,12 @@ def test_role_assignments_are_checked_for_plausibility() -> None:
     assert check_role(Role.EXTERNAL_TEMPERATURE, percent) == "role_needs_temperature"
     assert check_role(Role.EXTERNAL_TEMPERATURE, temperature) is None
     assert check_role(Role.CHILD_LOCK, temperature) is None
+
+
+def test_bosch_profile_asks_for_valve_confirmation() -> None:
+    """Scenario: SCN-ACT-006"""
+    bosch = find_profile(PROFILES, "Bosch", "BTH-RA")
+    sonoff = find_profile(PROFILES, "SONOFF", "TRVZB")
+
+    assert bosch.valve_refresh == timedelta(minutes=10)
+    assert sonoff.valve_refresh is None

@@ -42,7 +42,7 @@ Known models today:
 |---|---|---|
 | Sonoff TRVZB | Valve-based | Firmware 1.1.4 or newer. Switch off *smart temperature control*. |
 | Sonoff TRV-ZBT (Gen2) | Valve-based | Switch off *smart temperature control*. |
-| Bosch Radiator Thermostat II (BTH-RA) | Valve-based | No minimum opening on the device. Whether it holds a written valve position is still being tested. |
+| Bosch Radiator Thermostat II (BTH-RA) | Valve-based | No minimum opening on the device. Keeps a written valve position for 15 minutes only; Thermogeist confirms it every 10 minutes. |
 
 Every other thermostat works **setpoint-based**: Thermogeist controls it through the target
 temperature (from the next version on).
