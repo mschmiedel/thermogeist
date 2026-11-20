@@ -46,6 +46,7 @@ CONF_EXTERIOR_WALLS: Final = FIELD_EXTERIOR_WALLS
 CONF_ABOVE: Final = "above"
 CONF_BELOW: Final = "below"
 CONF_DESIGN_INDOOR: Final = FIELD_DESIGN_INDOOR
+CONF_WINDOWS: Final = "window_sensors"
 
 # Thermostat keys.
 SUBENTRY_THERMOSTAT: Final = "thermostat"

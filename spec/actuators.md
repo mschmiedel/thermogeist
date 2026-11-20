@@ -40,12 +40,23 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 
 | ID | Strategy | When | Status |
 |---|---|---|---|
-| ACT-010 | Direct valve control | `valve_write` available | planned |
+| ACT-010 | Direct valve control | `valve_write` available | implemented |
 | ACT-011 | Setpoint modulation | setpoint only, but device temperature readable; gain k is learned | planned |
 | ACT-012 | Time-proportional | setpoint only, nothing else reliable | planned |
 | ACT-013 | The active strategy and its resolution are visible per room (e.g. "setpoint modulation, ±15 %") | always | planned |
 | ACT-014 | Observe mode (default for new rooms): the controller runs and shows the planned position and reason, but nothing is written to the device. Control is switched on per room (M4). | always | implemented |
 | ACT-015 | In observe mode each thermostat with `valve_read` shows its actual valve position next to the planned one, so users can compare Thermogeist with their current regulation. | always | implemented |
+
+## Control mode (M4)
+
+| ID | Requirement | Status |
+|---|---|---|
+| ACT-040 | Per room a switch "Control" (default off = observe). Only rooms with control on write to their thermostats. The state survives restarts. | implemented |
+| ACT-041 | Valve-based thermostats get, while controlled: the planned position on `valve_write` (only when it differs by at least 1 %), the minimum opening on `valve_min` (inverted if the profile says so), the room temperature on `external_temperature` (on change by ≥ 0.1 K and at least every 20 min), and the room target as setpoint on the climate entity so the display stays honest. Central stop sets the valve to 0 %. | implemented |
+| ACT-042 | Profiles may list device settings needed for control (e.g. Bosch `operating_mode: manual`, Sonoff `smart_temperature_control: off`, `temperature_sensor_select: remote_temperature`). They are applied when control starts; the previous values are stored and restored when control stops or the thermostat is removed (ACT-008). | implemented |
+| ACT-043 | Write verification: if a valve-based thermostat reports a position more than 5 % away from the last written one for longer than 5 minutes, Thermogeist writes again, at most 3 times per hour. If that is exceeded, the room switches back to observe, the logbook explains why (`device_overrides_valve`) and a repair issue appears. | implemented |
+| ACT-044 | Setpoint-based thermostats are not controlled yet in M4; their rooms cannot be switched to control (the switch explains why). | implemented |
+| ACT-045 | Writes only start 90 s after Home Assistant started (`startup_hold`), so devices are available and no stale values are sent. | implemented |
 
 ## Devices
 
@@ -53,11 +64,11 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 
 | ID | Implementation | Status |
 |---|---|---|
-| ACT-100 | Setpoint on the TRV = room setpoint (display stays honest). | planned |
-| ACT-101 | `valve_opening_degree` = position while heating (from the controller). | planned |
-| ACT-102 | `valve_closing_degree` = 100 − minimum opening (fallback, works without HA). | planned |
-| ACT-103 | `external_temperature_input` + `temperature_sensor_select: remote_temperature`, fallback via `remote_source_offline`. | planned |
-| ACT-104 | `smart_temperature_control` off, built-in schedule off, built-in window detection off. | planned |
+| ACT-100 | Setpoint on the TRV = room setpoint (display stays honest). | implemented |
+| ACT-101 | `valve_opening_degree` = position while heating (from the controller). | implemented |
+| ACT-102 | `valve_closing_degree` = 100 − minimum opening (fallback, works without HA). | implemented |
+| ACT-103 | `external_temperature_input` + `temperature_sensor_select: remote_temperature`, fallback via `remote_source_offline`. | implemented |
+| ACT-104 | `smart_temperature_control` off, built-in schedule off, built-in window detection off. | implemented |
 | ACT-105 | Firmware ≥ 1.1.4 for valve degrees, ≥ 1.3.0 for `temperature_accuracy`. Older firmware is detected and reported. | planned |
 
 ### Sonoff TRV-ZBT (Gen2, Zigbee2MQTT)
@@ -70,8 +81,8 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 
 | ID | Implementation | Status |
 |---|---|---|
-| ACT-120 | Valve position via `pi_heating_demand` (read and write). Whether the device holds the position is open (see open-questions.md). | planned |
-| ACT-121 | Send `remote_temperature` at least every 30 min, otherwise the device falls back to its own sensor. | planned |
+| ACT-120 | Valve position via `pi_heating_demand` (read and write). Whether the device holds the position is open (see open-questions.md). | implemented |
+| ACT-121 | Send `remote_temperature` at least every 30 min, otherwise the device falls back to its own sensor. | implemented |
 | ACT-122 | Calibration via `valve_adapt_process`, status via `valve_adapt_status`. | planned |
 | ACT-123 | No minimum opening on the device: when HA is down, the device regulates on its own. Shown as a limitation in the UI. | planned |
 | ACT-124 | Detect manual operation via `setpoint_change_source`. | planned |

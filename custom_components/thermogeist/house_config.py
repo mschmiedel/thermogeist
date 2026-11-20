@@ -16,6 +16,7 @@ from .const import (
     CONF_CEILING_LOW,
     CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
+    CONF_DEVICE,
     CONF_EXTERIOR_WALLS,
     CONF_FLOOR_AREA,
     CONF_FLOW_TEMPERATURE_ENTITY,
@@ -33,6 +34,7 @@ from .const import (
     CONF_SHARE_OUTSIDE,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
+    CONF_WINDOWS,
     SUBENTRY_ROOM,
     SUBENTRY_THERMOSTAT,
 )
@@ -85,6 +87,7 @@ def room_from_config(config: Mapping[str, Any]) -> Room:
         below=Below(config.get(CONF_BELOW, Below.HEATED)),
         design_indoor_temperature_c=_optional_float(config.get(CONF_DESIGN_INDOOR))
         or DEFAULT_DESIGN_INDOOR_C,
+        window_entities=tuple(config.get(CONF_WINDOWS) or ()),
     )
 
 
@@ -108,6 +111,7 @@ def thermostat_from_config(config: Mapping[str, Any], name: str) -> Thermostat:
         name=name,
         roles=roles,
         rated_output_w=_optional_float(config.get(CONF_RATED_OUTPUT)),
+        device_id=config.get(CONF_DEVICE) or None,
         profile_id=config.get(CONF_PROFILE) or None,
         valve_min_inverted=bool(config.get(CONF_VALVE_MIN_INVERTED, False)),
     )

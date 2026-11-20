@@ -144,7 +144,10 @@
           "setpoint": "Hält den Sollwert",
           "central_stop": "Heizung aus (Zentralmodus)",
           "frost_protection": "Frostschutz (Zentralmodus)",
-          "safety_sensor_stale": "Temperatursensor meldet sich nicht"
+          "safety_sensor_stale": "Temperatursensor meldet sich nicht",
+          "window_open": "Fenster offen",
+          "startup_hold": "Wartet nach Neustart",
+          "device_overrides_valve": "Thermostat regelt selbst"
         }
       },
       "target_setpoint": {
@@ -191,6 +194,11 @@
       "reset_control_settings": {
         "name": "Regelwerte auf Profil zurücksetzen"
       }
+    },
+    "switch": {
+      "control": {
+        "name": "Regeln"
+      }
     }
   },
   "config_subentries": {
@@ -208,14 +216,16 @@
             "area": "Bereich",
             "temperature_entity": "Raumtemperatursensor",
             "share_mode": "Anteil an der Heizlast",
-            "design_indoor_temperature": "Auslegungs-Innentemperatur"
+            "design_indoor_temperature": "Auslegungs-Innentemperatur",
+            "window_sensors": "Fenster- und Türkontakte"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
             "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
             "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
-            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert."
+            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
+            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist."
           }
         },
         "reconfigure": {
@@ -226,14 +236,16 @@
             "area": "Bereich",
             "temperature_entity": "Raumtemperatursensor",
             "share_mode": "Anteil an der Heizlast",
-            "design_indoor_temperature": "Auslegungs-Innentemperatur"
+            "design_indoor_temperature": "Auslegungs-Innentemperatur",
+            "window_sensors": "Fenster- und Türkontakte"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
             "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
             "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
-            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert."
+            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
+            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist."
           }
         },
         "geometry": {
@@ -353,6 +365,27 @@
         "no_rooms": "Leg zuerst einen Raum an und ordne ihm dann Thermostate zu.",
         "reconfigure_successful": "Das Thermostat wurde geändert."
       }
+    }
+  },
+  "exceptions": {
+    "no_valve_thermostat": {
+      "message": "Dieser Raum hat kein Thermostat, dessen Ventil Thermogeist stellen kann. Regeln ist mit Thermostaten über Ventilstellung möglich (z. B. Sonoff TRVZB, Bosch Heizkörperthermostat II)."
+    },
+    "logbook_manual_setpoint": {
+      "message": "an {thermostat} auf {setpoint} °C gestellt; neuer Raum-Sollwert"
+    },
+    "logbook_device_overrides_valve": {
+      "message": "{thermostat} verstellt seine Ventilstellung immer wieder selbst; Raum zurück auf Beobachten"
+    }
+  },
+  "issues": {
+    "sensor_stale": {
+      "title": "Raumtemperatursensor von {room} meldet sich nicht",
+      "description": "Der Sensor {sensor} hat seit 60 Minuten keinen gültigen Wert gemeldet. Thermogeist hält das Ventil auf der Mindestöffnung, bis er sich wieder meldet. Prüf Batterie und Verbindung."
+    },
+    "device_overrides_valve": {
+      "title": "{thermostat} regelt immer wieder selbst",
+      "description": "Thermogeist hat die Ventilstellung von {thermostat} mehrmals geschrieben, aber das Thermostat hat sie jedes Mal zurückgestellt. Regeln für {room} wurde ausgeschaltet; das Thermostat regelt wieder selbst. In den häufigen Fragen steht, was du prüfen kannst; danach Regeln wieder einschalten."
     }
   }
 }

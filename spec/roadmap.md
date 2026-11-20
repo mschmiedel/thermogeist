@@ -56,13 +56,13 @@ without writing to the devices.
 | Room simulator for controller tests | TST-010, TST-011, TST-013 |
 | Control quality metrics in tests | TST-030 |
 
-## M4 – Thermostats, control (MVP complete)
+## M4 – Thermostats, control (MVP complete, done)
 
 Thermogeist controls Sonoff TRVZB thermostats.
 
 | Scope | Requirements |
 |---|---|
-| Sonoff TRVZB adapter: direct valve control, minimum opening on the device, external temperature | ACT-010, ACT-100 to ACT-105 |
+| Control switch per room; direct valve control for valve-based thermostats (Bosch BTH-RA first, Sonoff TRVZB/TRV-ZBT), device setup and restore, write verification | ACT-008, ACT-010, ACT-040 to ACT-045, ACT-100 to ACT-103, ACT-120, ACT-121 |
 | Switch per room between observe and control | ACT-014 |
 | Window rule | RUL-010 |
 | Manual change on the thermostat or in HA becomes an override | OVR-001 to OVR-004, OVR-010, OVR-011 |

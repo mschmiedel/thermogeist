@@ -63,6 +63,7 @@ from .const import (
     CONF_SHARE_OUTSIDE,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
+    CONF_WINDOWS,
     DOMAIN,
     RATED_OUTPUT_W_MAX,
     RATED_OUTPUT_W_MIN,
@@ -313,6 +314,8 @@ class RoomSubentryFlow(ConfigSubentryFlow):
                 self._data = {**defaults, **user_input}
                 if user_input.get(CONF_AREA) is None:
                     self._data.pop(CONF_AREA, None)
+                if not user_input.get(CONF_WINDOWS):
+                    self._data.pop(CONF_WINDOWS, None)
                 if ShareMode(user_input[CONF_SHARE_MODE]) is ShareMode.KNOWN:
                     return await self.async_step_known_share()
                 return await self.async_step_geometry()
@@ -332,6 +335,15 @@ class RoomSubentryFlow(ConfigSubentryFlow):
                 CONF_DESIGN_INDOOR,
                 default=values.get(CONF_DESIGN_INDOOR, DEFAULT_DESIGN_INDOOR_C),
             ): _number(DESIGN_INDOOR_C_MIN, DESIGN_INDOOR_C_MAX, 0.5, UnitOfTemperature.CELSIUS),
+            vol.Optional(
+                CONF_WINDOWS, description=_suggested(values, CONF_WINDOWS)
+            ): EntitySelector(
+                EntitySelectorConfig(
+                    domain="binary_sensor",
+                    device_class=["window", "door", "opening"],
+                    multiple=True,
+                )
+            ),
         }
         return self.async_show_form(
             step_id=step_id, data_schema=vol.Schema(schema), errors=errors, last_step=False

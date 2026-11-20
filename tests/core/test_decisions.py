@@ -74,3 +74,45 @@ def test_never_reported_is_stale() -> None:
 
     assert decision.code is ReasonCode.SAFETY_SENSOR_STALE
     assert "silent_minutes" not in decision.params
+
+
+def test_window_counts_after_30_seconds() -> None:
+    """Scenario: SCN-DEC-006"""
+    clock = FakeTimeProvider(START)
+    clock.advance(timedelta(minutes=5))
+    opened = clock.now()
+
+    clock.advance(timedelta(seconds=29))
+    assert decide_room(inputs_with(window=opened), clock).code is ReasonCode.SETPOINT
+
+    clock.advance(timedelta(seconds=1))
+    window = decide_room(inputs_with(window=opened), clock)
+    assert window.code is ReasonCode.WINDOW_OPEN
+    assert window.target_setpoint_c == 7.0
+
+    stopped = decide_room(inputs_with(window=opened, mode=CentralMode.STOP), clock)
+    assert stopped.code is ReasonCode.CENTRAL_STOP
+
+
+def test_startup_hold_is_shown_until_writes_start() -> None:
+    """Scenario: SCN-DEC-007"""
+    clock = FakeTimeProvider(START)
+    clock.advance(timedelta(minutes=1))
+
+    held = decide_room(inputs_with(startup_hold=True), clock)
+    assert held.code is ReasonCode.STARTUP_HOLD
+    assert held.target_setpoint_c == 21.0
+
+
+def inputs_with(
+    window: datetime | None = None,
+    mode: CentralMode = CentralMode.AUTO,
+    startup_hold: bool = False,
+) -> RoomInputs:
+    return RoomInputs(
+        user_setpoint_c=21.0,
+        central_mode=mode,
+        temperature_valid_since=START,
+        window_open_since=window,
+        startup_hold=startup_hold,
+    )

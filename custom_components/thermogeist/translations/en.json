@@ -144,7 +144,10 @@
           "setpoint": "Holding the setpoint",
           "central_stop": "Heating stopped (central mode)",
           "frost_protection": "Frost protection (central mode)",
-          "safety_sensor_stale": "Temperature sensor silent"
+          "safety_sensor_stale": "Temperature sensor silent",
+          "window_open": "Window open",
+          "startup_hold": "Waiting after restart",
+          "device_overrides_valve": "Thermostat regulates on its own"
         }
       },
       "target_setpoint": {
@@ -191,6 +194,11 @@
       "reset_control_settings": {
         "name": "Reset control settings to profile"
       }
+    },
+    "switch": {
+      "control": {
+        "name": "Control"
+      }
     }
   },
   "config_subentries": {
@@ -208,14 +216,16 @@
             "area": "Area",
             "temperature_entity": "Room temperature sensor",
             "share_mode": "Share of the heat load",
-            "design_indoor_temperature": "Design indoor temperature"
+            "design_indoor_temperature": "Design indoor temperature",
+            "window_sensors": "Window and door contacts"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
             "area": "Optional. The room device is placed in this Home Assistant area.",
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
             "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
-            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets."
+            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
+            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again."
           }
         },
         "reconfigure": {
@@ -226,14 +236,16 @@
             "area": "Area",
             "temperature_entity": "Room temperature sensor",
             "share_mode": "Share of the heat load",
-            "design_indoor_temperature": "Design indoor temperature"
+            "design_indoor_temperature": "Design indoor temperature",
+            "window_sensors": "Window and door contacts"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
             "area": "Optional. The room device is placed in this Home Assistant area.",
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
             "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
-            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets."
+            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
+            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again."
           }
         },
         "geometry": {
@@ -353,6 +365,27 @@
         "no_rooms": "Add a room first, then assign thermostats to it.",
         "reconfigure_successful": "The thermostat was updated."
       }
+    }
+  },
+  "exceptions": {
+    "no_valve_thermostat": {
+      "message": "This room has no thermostat whose valve Thermogeist can set. Control is available for valve-based thermostats (e.g. Sonoff TRVZB, Bosch Radiator Thermostat II)."
+    },
+    "logbook_manual_setpoint": {
+      "message": "set to {setpoint} °C on {thermostat}; new room setpoint"
+    },
+    "logbook_device_overrides_valve": {
+      "message": "{thermostat} keeps changing its valve position on its own; room switched back to observe"
+    }
+  },
+  "issues": {
+    "sensor_stale": {
+      "title": "Room temperature sensor of {room} is silent",
+      "description": "The sensor {sensor} has not reported a valid value for 60 minutes. Thermogeist keeps the valve at its minimum opening until it reports again. Check its battery and connection."
+    },
+    "device_overrides_valve": {
+      "title": "{thermostat} keeps regulating on its own",
+      "description": "Thermogeist wrote the valve position of {thermostat} several times, but the thermostat changed it back each time. Control for {room} was switched off; the thermostat regulates on its own again. See the FAQ for what to check, then switch control on again."
     }
   }
 }

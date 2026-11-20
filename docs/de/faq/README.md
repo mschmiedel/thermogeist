@@ -8,3 +8,6 @@ Jede Seite erklärt einen Grund, den Thermogeist für einen Raum anzeigen kann.
 - [Heizung aus (Zentralmodus)](central_stop.md) – `central_stop`
 - [Frostschutz (Zentralmodus)](frost_protection.md) – `frost_protection`
 - [Temperatursensor meldet sich nicht](safety_sensor_stale.md) – `safety_sensor_stale`
+- [Fenster offen](window_open.md) – `window_open`
+- [Wartet nach Neustart](startup_hold.md) – `startup_hold`
+- [Thermostat regelt selbst](device_overrides_valve.md) – `device_overrides_valve`

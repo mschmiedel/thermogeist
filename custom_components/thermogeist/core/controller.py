@@ -47,6 +47,7 @@ class Limit(StrEnum):
 
     STOPPED = "stopped"
     SAFETY = "safety"
+    WINDOW = "window"
     SATURATED = "saturated"
     MIN_OPENING = "min_opening"
     MIN_OPENING_RELAXED = "min_opening_relaxed"
@@ -72,6 +73,8 @@ class ControllerInputs:
     time_constant_h: float | None
     safety: bool
     settings: ControllerSettings
+    window_open: bool = False
+    """RUL-010: close at once, and resume from the previous position afterwards."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,6 +93,7 @@ class ControllerState:
     last_reported_pct: float | None = None
     last_time: datetime | None = None
     min_opening_relaxed: bool = False
+    before_window_pct: float | None = None
 
 
 def feed_forward_pct(
@@ -132,6 +136,21 @@ class RoomController:
     def step(self, inputs: ControllerInputs, now: datetime) -> ControllerResult:
         elapsed_h = self._elapsed_h(now)
         settings = inputs.settings
+
+        if inputs.window_open:
+            if self.state.before_window_pct is None:
+                self.state.before_window_pct = self.state.last_output_pct
+            result = ControllerResult(
+                0.0, 0.0, 0.0, self.state.integral_pct or 0.0, (Limit.WINDOW,)
+            )
+            self.state.last_time = now
+            self.state.last_reported_pct = 0.0
+            return result
+        if self.state.before_window_pct is not None:
+            # Window closed again: continue where we were instead of ramping up slowly.
+            self.state.last_output_pct = self.state.before_window_pct
+            self.state.last_reported_pct = None
+            self.state.before_window_pct = None
 
         if inputs.target_c is None:
             result = ControllerResult(

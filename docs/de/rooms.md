@@ -17,6 +17,7 @@
 | Bereich | Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet. |
 | Raumtemperatursensor | Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne. |
 | Anteil an der Heizlast | *Aus Größe und Lage schätzen* (die meisten) oder *Ich kenne den Anteil* (wenn du eine raumweise Heizlastberechnung hast). |
+| Fenster- und Türkontakte | Optional. Ist einer 30 Sekunden offen, hört der Raum auf zu heizen, bis er geschlossen ist ([Häufige Fragen](faq/window_open.md)). |
 | Auslegungs-Innentemperatur | Planungswert aus der Heizlastberechnung – nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Ein Bad mit 24 °C bekommt einen größeren Anteil. |
 
 ### Schritt 2a: Größe und Lage (Schätzung)

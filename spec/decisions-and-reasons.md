@@ -21,8 +21,8 @@ is created as a `Decision` at one central place.
 |---|---|---|
 | RSN-001 | All reason codes live in one central catalogue (`core/decisions.py`) with severity, translated state names (en/de) and an FAQ page per language. Text templates with parameters follow with the logbook (RSN-003). | implemented |
 | RSN-002 | One sensor `active_reason` (enum) per room with the currently effective reason; attributes: severity, since, FAQ link, parameters. | implemented |
-| RSN-003 | Every decision with `severity ≥ notice` appears in the HA logbook as a readable sentence. | planned |
-| RSN-004 | Decisions with `severity = safety` additionally raise a repair issue that only disappears once the cause is resolved. | planned |
+| RSN-003 | Every change of a room's reason with `severity ≥ notice`, every adopted manual setpoint and every fallback to observe appears in the HA logbook as a readable sentence. | implemented |
+| RSN-004 | A silent room sensor (`safety_sensor_stale`) and a thermostat that overrides its valve (`device_overrides_valve`) raise a repair issue; it disappears once the cause is resolved. | implemented |
 | RSN-005 | A test ensures that every code in the catalogue has a translation and an FAQ entry in both languages. | implemented |
 
 ## Catalogue (initial set)
@@ -38,6 +38,7 @@ is created as a `Decision` at one central place.
 | `central_stop` | notice | "Heating stopped for the whole house" |
 | `frost_protection` | notice | "Frost protection active: 7.0 °C" |
 | `safety_sensor_stale` | safety | "Temperature sensor silent for 62 min (limit 60 min): valve set to minimum opening" |
+| `device_overrides_valve` | safety | "Thermostat Gästebad keeps changing its valve position: room switched back to observe" |
 | `device_overtemp_guard` | notice | "Room above setpoint: thermostat limits on its own" |
 | `learning_paused` | info | "Learning paused (by user)" |
 | `calibration_running` | info | "Calibration running: step 4 of 16" |

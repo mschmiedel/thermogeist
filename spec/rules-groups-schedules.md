@@ -14,9 +14,9 @@
 
 | ID | Rule | Status |
 |---|---|---|
-| RUL-010 | Window: open for a configurable time (default 30 s) → frost protection. After closing, back with its own delay. | planned |
+| RUL-010 | Window: rooms may have window contacts (binary sensors, optional). Any contact open for 30 s → reason `window_open`, target frost protection, valve 0 % at once (no rate limit). Closed again → back to the previous valve position without slow ramp-up. | implemented |
 | RUL-011 | Away: setback, limited to max. 2 K in the heat-pump profile. | planned |
-| RUL-012 | Start-up delay after an HA restart until devices are available (`startup_hold`). | planned |
+| RUL-012 | Start-up delay after an HA restart until devices are available (`startup_hold`). | implemented |
 | RUL-013 | Sensor failure: if the room temperature sensor has not reported a valid value for 60 min (named constant; configurable later), the room's reason is `safety_sensor_stale`. A sensor that is unavailable at start-up gets the full 60 min grace period. From M4 the safe state is the minimum opening. | implemented |
 
 ## Schedules

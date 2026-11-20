@@ -87,3 +87,20 @@ def test_output_does_not_twitch_on_rounding() -> None:
     clock.advance(timedelta(minutes=10))  # long enough for the rate limit
     outputs.append(controller.step(inputs(feed_forward_pct=61.2), clock.now()).output_pct)
     assert outputs == [60.0, 60.0, 60.0, 60.0, 61.0]
+
+
+def test_window_closes_at_once_and_resumes_where_it_was() -> None:
+    """Scenario: SCN-CTL-010"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    before = controller.step(inputs(feed_forward_pct=60.0), clock.now())
+    assert before.output_pct == 60.0
+
+    clock.advance(timedelta(minutes=1))
+    window = controller.step(inputs(window_open=True), clock.now())
+    assert window.output_pct == 0.0
+    assert window.limits == (Limit.WINDOW,)
+
+    clock.advance(timedelta(minutes=20))
+    after = controller.step(inputs(feed_forward_pct=60.0), clock.now())
+    assert after.output_pct == 60.0

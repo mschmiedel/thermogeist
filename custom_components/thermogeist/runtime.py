@@ -13,12 +13,18 @@ from typing import Any
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
+from homeassistant.helpers.event import (
+    async_call_later,
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
-from .core.actuator import Thermostat
+from .const import DOCS_URL, DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
+from .control import ControlManager
+from .core.actuator import DeviceProfile, Thermostat
 from .core.controller import (
     ControllerInputs,
     ControllerResult,
@@ -41,6 +47,9 @@ from .core.room import Room
 from .core.time_provider import SystemTimeProvider, TimeProvider
 
 REEVALUATE_EVERY = timedelta(minutes=1)
+# ACT-045: devices need a moment after a restart before Thermogeist writes to them.
+STARTUP_HOLD = timedelta(seconds=90)
+WINDOW_RECHECK_S = 31
 
 
 def update_signal(entry_id: str) -> str:
@@ -81,6 +90,7 @@ class HouseRuntime:
         rooms: dict[str, Room],
         thermostats: dict[str, Thermostat] | None = None,
         clock: TimeProvider | None = None,
+        profiles: list[DeviceProfile] | None = None,
     ) -> None:
         self._hass = hass
         self._entry_id = entry_id
@@ -115,6 +125,9 @@ class HouseRuntime:
                 if self.thermostats[t].rated_output_w
             ]
             state.rated_output_w = sum(outputs) if outputs else None
+        self.started_at: datetime | None = None
+        self.docs_url = DOCS_URL
+        self.control = ControlManager(hass, self, profiles or [])
 
     # ----- lifecycle -------------------------------------------------------------------------
 
@@ -128,6 +141,7 @@ class HouseRuntime:
         for room_id, setpoint in stored.get("setpoints", {}).items():
             if room_id in self.rooms:
                 self.rooms[room_id].user_setpoint_c = float(setpoint)
+        self.control.load(stored)
 
     @callback
     def async_start(self) -> None:
@@ -135,9 +149,11 @@ class HouseRuntime:
         # the controller would start from a false safe state (seen when restoring central mode).
         self._started = True
         now = self._clock.now()
+        self.started_at = now
         for state in self.rooms.values():
             self._read_temperature(state, now, initial=True)
         watched = [s.room.temperature_entity for s in self.rooms.values()]
+        watched += [w for s in self.rooms.values() for w in s.room.window_entities]
         watched.append(self.house.outdoor_temperature_entity)
         if self.house.flow_temperature_entity:
             watched.append(self.house.flow_temperature_entity)
@@ -147,6 +163,13 @@ class HouseRuntime:
         self._unsubscribe.append(
             async_track_time_interval(self._hass, self._on_interval, REEVALUATE_EVERY)
         )
+        self._unsubscribe += self.control.async_start()
+        self._unsubscribe.append(
+            async_call_later(self._hass, STARTUP_HOLD.total_seconds() + 1, self._on_delayed)
+        )
+        # Devices of thermostats that were removed while controlled get their settings back.
+        for orphan in [tid for tid in self.control.restore if tid not in self.thermostats]:
+            self._hass.async_create_task(self.control.async_restore_orphan(orphan))
         self._reevaluate()
 
     @callback
@@ -156,6 +179,24 @@ class HouseRuntime:
 
     async def async_remove(self) -> None:
         await self._store.async_remove()
+
+    def now(self) -> datetime:
+        return self._clock.now()
+
+    def startup_hold(self) -> bool:
+        return self.started_at is None or self.now() - self.started_at < STARTUP_HOLD
+
+    @callback
+    def reevaluate(self) -> None:
+        self._reevaluate()
+
+    @callback
+    def _on_delayed(self, _now: datetime) -> None:
+        """Delayed re-check (startup hold, window delay); must run in the event loop."""
+        self._reevaluate()
+
+    async def async_save(self) -> None:
+        await self._save()
 
     # ----- settings --------------------------------------------------------------------------
 
@@ -205,6 +246,14 @@ class HouseRuntime:
     @callback
     def _on_state_change(self, event: Event[EventStateChangedData]) -> None:
         now = self._clock.now()
+        new_state = event.data["new_state"]
+        if (
+            new_state is not None
+            and new_state.state == "on"
+            and any(event.data["entity_id"] in s.room.window_entities for s in self.rooms.values())
+        ):
+            # Check again once the 30 s window delay has passed (RUL-010).
+            async_call_later(self._hass, WINDOW_RECHECK_S, self._on_delayed)
         for state in self.rooms.values():
             if state.room.temperature_entity == event.data["entity_id"]:
                 self._read_temperature(state, now)
@@ -236,12 +285,14 @@ class HouseRuntime:
         outdoor = self.outdoor_temperature_c()
         flow = self.flow_temperature_c()
         settings = self.controller_settings()
-        for state in self.rooms.values():
+        for room_id, state in self.rooms.items():
             state.decision = decide_room(
                 RoomInputs(
                     user_setpoint_c=state.user_setpoint_c,
                     central_mode=self.central_mode,
                     temperature_valid_since=state.temperature_valid_since,
+                    window_open_since=self._window_open_since(state),
+                    startup_hold=self.startup_hold() and self.control.is_enabled(room_id),
                 ),
                 self._clock,
             )
@@ -250,7 +301,38 @@ class HouseRuntime:
             )
             if state.thermostat_ids:
                 self._plan(state, flow, settings)
+            self._update_sensor_issue(room_id, state)
         self._notify()
+        if not self.startup_hold():
+            self.control.schedule_apply()
+
+    def _window_open_since(self, state: RoomState) -> datetime | None:
+        opened = [
+            s.last_changed
+            for entity in state.room.window_entities
+            if (s := self._hass.states.get(entity)) is not None and s.state == "on"
+        ]
+        return min(opened) if opened else None
+
+    def _update_sensor_issue(self, room_id: str, state: RoomState) -> None:
+        """RSN-004: a silent room sensor shows up under Settings > Repairs."""
+        issue_id = f"sensor_stale_{room_id}"
+        if state.decision is not None and state.decision.code is ReasonCode.SAFETY_SENSOR_STALE:
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="sensor_stale",
+                translation_placeholders={
+                    "room": state.room.name,
+                    "sensor": state.room.temperature_entity,
+                },
+                learn_more_url=f"{DOCS_URL}/en/faq/safety_sensor_stale.md",
+            )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, issue_id)
 
     def _plan(self, state: RoomState, flow: float | None, settings: ControllerSettings) -> None:
         """Observe mode: compute what the valves would do, write nothing (ACT-014)."""
@@ -275,6 +357,7 @@ class HouseRuntime:
                 time_constant_h=time_constant_h(state.room.floor_area_m2, state.heat_loss_w_per_k),
                 safety=state.decision.code is ReasonCode.SAFETY_SENSOR_STALE,
                 settings=settings,
+                window_open=state.decision.code is ReasonCode.WINDOW_OPEN,
             ),
             self._clock.now(),
         )
@@ -288,6 +371,7 @@ class HouseRuntime:
             {
                 "overrides": {key.value: value for key, value in self.overrides.items()},
                 "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
+                **self.control.dump(),
             }
         )
 

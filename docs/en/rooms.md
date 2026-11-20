@@ -17,6 +17,7 @@ Open the Thermogeist entry of your house and choose **Add room**.
 | Area | Optional. The room device is placed in this Home Assistant area. |
 | Room temperature sensor | A sensor in the room, ideally away from the radiator and out of direct sunlight. |
 | Share of the heat load | *Estimate from size and position* (most people) or *I know the share* (if you have a room-by-room heat load calculation). |
+| Window and door contacts | Optional. If one is open for 30 seconds, the room stops heating until it is closed ([FAQ](faq/window_open.md)). |
 | Design indoor temperature | Planning value from the heat load calculation – not the temperature you heat to. Usually 20 °C, bathrooms 24 °C, heated halls 15 °C. A bathroom designed for 24 °C gets a larger share. |
 
 ### Step 2a: size and position (estimate)

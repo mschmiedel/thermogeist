@@ -8,3 +8,6 @@ Each page explains one reason Thermogeist can show for a room.
 - [Heating stopped (central mode)](central_stop.md) – `central_stop`
 - [Frost protection (central mode)](frost_protection.md) – `frost_protection`
 - [Temperature sensor silent](safety_sensor_stale.md) – `safety_sensor_stale`
+- [Window open](window_open.md) – `window_open`
+- [Waiting after restart](startup_hold.md) – `startup_hold`
+- [Thermostat regulates on its own](device_overrides_valve.md) – `device_overrides_valve`

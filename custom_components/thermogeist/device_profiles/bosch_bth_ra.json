@@ -39,5 +39,13 @@
     "No minimum opening on the device: if Home Assistant stops, the thermostat regulates on its own.",
     "remote_temperature must be sent at least every 30 minutes.",
     "Whether the device holds a written valve position is still being tested."
-  ]
+  ],
+  "control_settings": {
+    "z2m": [
+      {
+        "expose": "operating_mode",
+        "value": "manual"
+      }
+    ]
+  }
 }

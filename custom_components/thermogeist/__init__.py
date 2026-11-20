@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, MANUFACTURER
+from .device_profiles import async_get_profiles
 from .house_config import house_from_entry, rooms_from_entry, thermostats_from_entry
 from .runtime import HouseRuntime
 
@@ -23,6 +24,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 type ThermogeistConfigEntry = ConfigEntry[HouseRuntime]
@@ -36,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) 
         house_from_entry(entry),
         rooms_from_entry(entry),
         thermostats_from_entry(entry),
+        profiles=await async_get_profiles(hass),
     )
     await runtime.async_load()
     runtime.house_device_id = _house_device(hass, entry).id

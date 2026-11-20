@@ -34,5 +34,17 @@
   },
   "notes": [
     "Switch off smart_temperature_control: it disables manual valve positions."
-  ]
+  ],
+  "control_settings": {
+    "z2m": [
+      {
+        "expose": "smart_temperature_control",
+        "value": "off"
+      },
+      {
+        "expose": "temperature_sensor_select",
+        "value": "remote_temperature"
+      }
+    ]
+  }
 }

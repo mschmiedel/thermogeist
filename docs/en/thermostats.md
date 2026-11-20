@@ -2,9 +2,8 @@
 
 **English** | [Deutsch](../de/thermostats.md)
 
-> **Observe mode.** Thermogeist calculates what it would do with each valve and shows it – it
-> does not write anything to your thermostats yet. Use this phase to compare its plan with
-> what your thermostats do today.
+> **Observe first, then control.** New rooms start in observe mode: Thermogeist only shows
+> what it would do. When you are happy with the plan, switch **Control** on for the room.
 
 ## Add a thermostat
 
@@ -47,6 +46,34 @@ Known models today:
 
 Every other thermostat works **setpoint-based**: Thermogeist controls it through the target
 temperature (from the next version on).
+
+## Control
+
+Each room has a switch **Control**. Off (default): observe only. On: Thermogeist writes to the
+room's valve-based thermostats.
+
+What happens when you switch it on:
+
+1. For 90 seconds after a Home Assistant restart nothing is written (*Waiting after restart*).
+2. Device settings needed for control are applied – e.g. Bosch `operating_mode` → *manual*,
+   Sonoff *smart temperature control* off. The previous values are remembered.
+3. Every minute: planned valve position, minimum opening (Sonoff), room temperature as external
+   temperature, and the room target as the thermostat's setpoint, so its display stays honest.
+
+What happens when you switch it off: all remembered device settings and the valve position are
+put back. The thermostat regulates on its own again.
+
+**Turning the knob** on a controlled thermostat sets the room setpoint (after 20 seconds without
+further turning). You see it in the logbook.
+
+**If a thermostat keeps changing its valve on its own**, Thermogeist writes again up to three
+times per hour, then switches the room back to observe and shows a repair issue
+([FAQ](faq/device_overrides_valve.md)).
+
+Rooms with only setpoint-based thermostats cannot be controlled yet.
+
+Before you switch control on, retarget your own automations, dashboards and voice assistants
+from the thermostat to the room's climate entity – otherwise two regulators fight.
 
 ## Flow temperature (optional)
 

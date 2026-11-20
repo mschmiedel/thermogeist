@@ -44,6 +44,15 @@ Test setup: pipe probe (e.g. SNZB-02LD) on the flow pipe at the valve, values in
 - Oversized radiators (guest bathroom) cycle between about 12 % and 40 % a few times a day with
   the heat-pump profile. Check on the real device whether this is acceptable.
 
+## Control mode (M4) – to verify on real devices
+
+- Bosch BTH-RA: does `operating_mode: manual` keep a written `pi_heating_demand`? If not,
+  write verification (ACT-043) switches the room back to observe and says so.
+- Sonoff TRVZB / TRV-ZBT: control is implemented through the same roles but not yet tested on a
+  real device.
+- Override duration options (OVR-010) follow with schedules; until then a manual change is the
+  new room setpoint.
+
 ## Open domain questions
 
 - Thresholds for "significant jump" in the learning state (LRN-011).

@@ -56,7 +56,10 @@
           "setpoint": "mdi:check-circle-outline",
           "central_stop": "mdi:power",
           "frost_protection": "mdi:snowflake",
-          "safety_sensor_stale": "mdi:alert-outline"
+          "safety_sensor_stale": "mdi:alert-outline",
+          "window_open": "mdi:window-open-variant",
+          "startup_hold": "mdi:timer-sand",
+          "device_overrides_valve": "mdi:alert-circle-outline"
         }
       },
       "target_setpoint": {
@@ -83,6 +86,15 @@
       },
       "thermostat_valve_position": {
         "default": "mdi:valve-open"
+      }
+    },
+    "switch": {
+      "control": {
+        "default": "mdi:eye-outline",
+        "state": {
+          "on": "mdi:radiator",
+          "off": "mdi:eye-outline"
+        }
       }
     }
   }

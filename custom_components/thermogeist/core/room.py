@@ -71,6 +71,8 @@ class Room:
     above: Above = Above.HEATED
     below: Below = Below.HEATED
     design_indoor_temperature_c: float = DEFAULT_DESIGN_INDOOR_C
+    window_entities: tuple[str, ...] = ()
+    """RUL-010: window or door contacts of the room (optional)."""
     """Planning value only (MDL-039); the setpoint decides how warm the room is heated."""
 
     @property

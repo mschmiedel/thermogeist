@@ -59,6 +59,8 @@ class DeviceProfile:
     model_ids: tuple[str, ...]
     roles: Mapping[Source, Mapping[Role, RoleMapping]]
     notes: tuple[str, ...] = field(default_factory=tuple)
+    control_settings: Mapping[Source, tuple[tuple[str, str], ...]] = field(default_factory=dict)
+    """ACT-042: (expose, value) pairs applied when control starts, restored when it stops."""
 
     def matches(self, manufacturer: str | None, model_id: str | None) -> bool:
         if not model_id:
@@ -90,6 +92,10 @@ def parse_profile(data: Mapping[str, Any]) -> DeviceProfile:
         model_ids=tuple(data["match"]["model_id"]),
         roles=roles,
         notes=tuple(data.get("notes", ())),
+        control_settings={
+            Source(source): tuple((s["expose"], str(s["value"])) for s in settings)
+            for source, settings in data.get("control_settings", {}).items()
+        },
     )
 
 
@@ -136,6 +142,7 @@ class Thermostat:
     room_id: str
     name: str
     roles: Mapping[Role, str]
+    device_id: str | None = None
     rated_output_w: float | None = None
     """MDL-006: radiator rated output at 75/65/20 °C."""
     profile_id: str | None = None

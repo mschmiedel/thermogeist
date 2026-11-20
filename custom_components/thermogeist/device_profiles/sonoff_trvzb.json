@@ -31,5 +31,17 @@
     "Firmware 1.1.4 or newer is needed for valve_opening_degree and valve_closing_degree.",
     "Set temperature_sensor_select to remote_temperature to use the external temperature.",
     "Switch off smart_temperature_control: it disables manual valve positions."
-  ]
+  ],
+  "control_settings": {
+    "z2m": [
+      {
+        "expose": "smart_temperature_control",
+        "value": "off"
+      },
+      {
+        "expose": "temperature_sensor_select",
+        "value": "remote_temperature"
+      }
+    ]
+  }
 }
