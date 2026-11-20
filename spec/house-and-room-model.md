@@ -16,8 +16,8 @@ truth: learning corrects it (see [learning.md](learning.md)).
 | MDL-006 | Radiator: rated output (W at 75/65/20) or type + dimensions | radiator | optional | planned |
 | MDL-007 | Flow temperature: sensor entity or heating curve as two points | house | optional | planned |
 | MDL-008 | Outdoor temperature: sensor entity with device class temperature (e.g. weather station, heat pump outdoor sensor) | house | yes | implemented |
-| MDL-009 | Share of the heat load outside Thermogeist in %, 0–100 (rooms it does not control, e.g. a bathroom with floor heating). Default 0 %. | house | optional | implemented |
-| MDL-016 | Heated living area in m², 10–10 000. Only used to suggest MDL-009 from the area not covered by rooms (suggestion follows in M2). | house | optional | implemented |
+| MDL-009 | Share of the heat load outside Thermogeist in %, 0–100 (rooms it does not control, e.g. a bathroom with floor heating). Only needed when the value is known from a heat load calculation; otherwise it follows from MDL-016 as the part not covered by rooms. Default 0 %. | house | optional | implemented |
+| MDL-016 | Heated living area in m², 10–10 000. Reference for estimating room shares (MDL-031): a room's share starts at its floor area divided by the living area. Input implemented; used from M2. | house | recommended | implemented |
 | MDL-017 | Heat output of the heat generator: sensor entity (W), plus an indicator for domestic hot water and defrost phases so they can be excluded. Measurement only, never controlled. | house | optional | planned |
 
 The room share in % is the default rather than W/m² because it also works with differing room
@@ -31,12 +31,14 @@ gets to it.
 | ID | Requirement | Status |
 |---|---|---|
 | MDL-030 | **Known:** the user enters the room's value from a room-by-room heat load calculation (EN 12831), as % or W. Most accurate. | planned |
-| MDL-031 | **Estimated (default):** Thermogeist estimates a weight from geometry and position (MDL-033) and distributes the house heat load by weight. | planned |
+| MDL-031 | **Estimated (default):** a room's share = its floor area / heated living area (MDL-016), adjusted by a weight from height and position (MDL-033). Each room can be estimated on its own, before all rooms are entered. | planned |
 | MDL-032 | **Learned:** learning (LRN-001) measures the real heat loss per room and shows the deviation from the entered or estimated share (LRN-012). The input stays the starting point; a good start means less to learn. | planned |
 | MDL-033 | Geometry and position per room: floor area; ceiling height, or lowest and highest point for sloped ceilings (mean height is used); number of exterior walls (0–3); what is above (heated / unheated / roof) and below (heated / unheated / ground). Galleries and open spaces count their floor area once with the full height. | planned |
 | MDL-034 | The weighting is simple and explainable: its factors are named constants documented in this spec. The UI shows the result ("Living room: estimated 31 % ≈ 2.5 kW"), and the user can accept or override it. | planned |
-| MDL-035 | Estimated weights are distributed over the share Thermogeist controls: 100 % minus MDL-009. Known shares (MDL-030) are taken as entered; estimated rooms share the rest. | planned |
+| MDL-035 | The part of the heat load not covered by any room is shown on the house ("18 % not assigned to a room"). If MDL-009 is entered, the difference to it is shown as a plausibility hint. Without a living area, estimated rooms share 100 % minus MDL-009 by weight (fallback). | planned |
 | MDL-036 | Without a house heat load, weights still give relative shares; absolute watts are missing and the controller starts cautiously (MDL-020). | planned |
+| MDL-037 | Halls, corridors and stairwells: without a thermostat they may be left out (their part stays "not assigned") or entered as rooms without a thermostat to complete the house balance (DIA-040). With a thermostat they are normal rooms; few exterior walls give them a small weight. | planned |
+| MDL-038 | The heated living area excludes balconies and terraces, even though residential floor area rules count them partly. | implemented |
 
 The weighting factors for MDL-034 are defined when M2 is built and recorded here.
 

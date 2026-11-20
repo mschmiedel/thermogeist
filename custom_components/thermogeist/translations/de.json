@@ -21,14 +21,14 @@
         "data": {
           "heat_load": "Heizlast",
           "design_outdoor_temperature": "Normaußentemperatur",
-          "share_outside": "Anteil außerhalb von Thermogeist",
-          "living_area": "Beheizte Wohnfläche"
+          "living_area": "Beheizte Wohnfläche",
+          "share_outside": "Anteil außerhalb von Thermogeist"
         },
         "data_description": {
           "heat_load": "Wärme, die das Haus am kältesten Auslegungstag braucht, aus deiner Heizlastberechnung (Heizungsbauer oder Energieberater). Leer lassen, wenn unbekannt.",
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
-          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Leer lassen für 0 %.",
-          "living_area": "Optional. Hilft später, den Anteil außerhalb von Thermogeist vorzuschlagen."
+          "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
+          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %."
         }
       }
     },
@@ -51,16 +51,16 @@
           "outdoor_temperature_entity": "Außentemperatursensor",
           "heat_load": "Heizlast",
           "design_outdoor_temperature": "Normaußentemperatur",
-          "share_outside": "Anteil außerhalb von Thermogeist",
-          "living_area": "Beheizte Wohnfläche"
+          "living_area": "Beheizte Wohnfläche",
+          "share_outside": "Anteil außerhalb von Thermogeist"
         },
         "data_description": {
           "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
           "outdoor_temperature_entity": "Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler der Wärmepumpe.",
           "heat_load": "Wärme, die das Haus am kältesten Auslegungstag braucht, aus deiner Heizlastberechnung (Heizungsbauer oder Energieberater). Leer lassen, wenn unbekannt.",
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
-          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Leer lassen für 0 %.",
-          "living_area": "Optional. Hilft später, den Anteil außerhalb von Thermogeist vorzuschlagen."
+          "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
+          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %."
         }
       }
     },

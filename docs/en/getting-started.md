@@ -35,8 +35,8 @@ Every field may stay empty. The more you fill in, the better Thermogeist starts.
 |---|---|
 | Heat load | The heat your house needs on the coldest design day, in kW. You find it in the heat load calculation from your heating installer or energy consultant. |
 | Design outdoor temperature | The outdoor temperature the heat load was calculated for. Required if you enter a heat load. |
-| Share outside Thermogeist | Part of the heat load in rooms Thermogeist will not control, e.g. a bathroom with floor heating. |
-| Heated living area | Total heated floor area. Later used to suggest the share outside Thermogeist. |
+| Heated living area | Total heated floor area, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size – a 20 m² room in a 160 m² house starts at about 12.5 %. Recommended. |
+| Share outside Thermogeist | Part of the heat load in rooms Thermogeist will not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise it follows from the living area. |
 
 > **Tip: finding the design outdoor temperature.** It depends on where you live. Search the
 > web for "design outdoor temperature" together with your postcode – in Germany for

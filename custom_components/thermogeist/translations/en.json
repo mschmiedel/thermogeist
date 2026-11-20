@@ -21,14 +21,14 @@
         "data": {
           "heat_load": "Heat load",
           "design_outdoor_temperature": "Design outdoor temperature",
-          "share_outside": "Share outside Thermogeist",
-          "living_area": "Heated living area"
+          "living_area": "Heated living area",
+          "share_outside": "Share outside Thermogeist"
         },
         "data_description": {
           "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
-          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Leave empty for 0 %.",
-          "living_area": "Optional. Later helps to suggest the share outside Thermogeist."
+          "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %."
         }
       }
     },
@@ -51,16 +51,16 @@
           "outdoor_temperature_entity": "Outdoor temperature sensor",
           "heat_load": "Heat load",
           "design_outdoor_temperature": "Design outdoor temperature",
-          "share_outside": "Share outside Thermogeist",
-          "living_area": "Heated living area"
+          "living_area": "Heated living area",
+          "share_outside": "Share outside Thermogeist"
         },
         "data_description": {
           "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
           "outdoor_temperature_entity": "Any sensor measuring the outdoor temperature, e.g. a weather station or the heat pump's outdoor sensor.",
           "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
-          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Leave empty for 0 %.",
-          "living_area": "Optional. Later helps to suggest the share outside Thermogeist."
+          "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %."
         }
       }
     },

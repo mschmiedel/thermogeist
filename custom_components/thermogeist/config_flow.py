@@ -109,10 +109,10 @@ def _detail_schema(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
         optional(CONF_DESIGN_TEMPERATURE): _number(
             DESIGN_TEMP_C_MIN, DESIGN_TEMP_C_MAX, 0.5, UnitOfTemperature.CELSIUS
         ),
-        optional(CONF_SHARE_OUTSIDE): _number(SHARE_PCT_MIN, SHARE_PCT_MAX, 1, PERCENTAGE),
         optional(CONF_LIVING_AREA): _number(
             LIVING_AREA_M2_MIN, LIVING_AREA_M2_MAX, 1, UnitOfArea.SQUARE_METERS
         ),
+        optional(CONF_SHARE_OUTSIDE): _number(SHARE_PCT_MIN, SHARE_PCT_MAX, 1, PERCENTAGE),
     }
 
 
