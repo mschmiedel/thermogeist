@@ -22,7 +22,12 @@ du mindestens einen Raum.
 ### Schritt 2: Was macht was?
 
 Bekannte Modelle erkennt Thermogeist und trägt vor, welche Entität was macht. Prüfe die Liste
-und ändere, was nicht passt; leere Felder werden einfach nicht genutzt.
+und ändere, was nicht passt; leere Felder werden einfach nicht genutzt. Du kannst auch Entitäten
+anderer Geräte wählen – manche Integrationen (z. B. Bosch Smart Home) legen Klima und
+Ventilposition auf getrennte Geräte.
+
+Um ein Thermostat später zu ändern, öffne den Thermogeist-Eintrag, such das Thermostat unter
+dem Haus und klick auf sein Zahnrad (⚙).
 
 | Rolle | Bedeutung |
 |---|---|

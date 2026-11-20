@@ -58,6 +58,6 @@ ergeben einen kleinen Anteil.
 
 Beim Haus siehst du zusätzlich **Heizlast ohne Raum**.
 
-Um einen Raum zu ändern, öffne ihn im Thermogeist-Eintrag und wähle **Neu konfigurieren**.
+Um einen Raum zu ändern, öffne den Thermogeist-Eintrag und klick auf das Zahnrad (⚙) neben dem Raum.
 
 Weiter: [Thermostate zuordnen](thermostats.md).

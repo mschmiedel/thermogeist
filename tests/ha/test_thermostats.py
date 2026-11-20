@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -232,3 +232,65 @@ async def test_plan_is_correct_right_after_restart(
     planned = hass.states.get(PLANNED)
     assert planned.attributes["limits"] != ["safety"]
     assert float(planned.state) == pytest.approx(68, abs=1)
+
+
+async def test_roles_may_come_from_another_device(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-007"""
+    entry, room_id = await house_with_room(hass)
+    climate_device = z2m_device(
+        hass, "Room climate Roy", "Bosch", "Room climate", {"climate": ("climate", "heat")}
+    )
+    z2m_device(hass, "Roy TRV", "Bosch", "TRV", {"valve_tappet": ("sensor", "24")})
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"room": room_id, "device": climate_device}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "climate": "climate.room_climate_roy_climate",
+            "valve_read": "sensor.roy_trv_valve_tappet",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert hass.states.get("sensor.living_room_valve_position_room_climate_roy").state == "24.0"
+    assert hass.states.get("sensor.living_room_kind_room_climate_roy").state == "setpoint"
+
+
+async def test_reconfigure_thermostat(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-008"""
+    entry, room_id = await house_with_room(hass)
+    device_id = sonoff(hass)
+    await assign(hass, entry.entry_id, room_id, device_id, 2000.0)
+    thermostat_id = next(
+        sid for sid, s in entry.subentries.items() if s.subentry_type == "thermostat"
+    )
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "thermostat"),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": thermostat_id},
+    )
+    assert result["step_id"] == "reconfigure"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"room": room_id, "device": device_id, "rated_output": 1500.0}
+    )
+    assert result["step_id"] == "roles"
+    assert suggested(result)["valve_write"] == "number.living_trv_valve_opening_degree"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], suggested(result)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    kind = hass.states.get("sensor.living_room_kind_living_trv")
+    assert kind.attributes["radiator_output_w"] == 1500.0

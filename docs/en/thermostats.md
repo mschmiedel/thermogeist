@@ -22,7 +22,12 @@ room first.
 ### Step 2: what does what?
 
 Thermogeist recognises known models and pre-fills which entity does what. Check the list and
-change anything that looks wrong; empty fields are simply not used.
+change anything that looks wrong; empty fields are simply not used. You can pick entities of
+other devices too – some integrations (e.g. Bosch Smart Home) split climate and valve
+position across separate devices.
+
+To change a thermostat later, open the Thermogeist entry, find the thermostat below the house
+and click its gear icon (⚙).
 
 | Role | Meaning |
 |---|---|

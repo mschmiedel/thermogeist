@@ -434,7 +434,6 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
-        self._entity_ids: list[str] = []
         self._detected: dict[str, str] = {}
         self._profile_name: str | None = None
         self._notes: str = ""
@@ -488,7 +487,6 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
         """Find profile and roles for the device (ACT-031, ACT-032)."""
         device = dr.async_get(self.hass).async_get(device_id)
         entries = er.async_entries_for_device(er.async_get(self.hass), device_id)
-        self._entity_ids = [e.entity_id for e in entries]
         profiles = await async_get_profiles(self.hass)
         profile = find_profile(profiles, device.manufacturer, device.model_id) if device else None
         detected = resolve_roles(
@@ -520,10 +518,10 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
         schema: dict[vol.Marker, Any] = {}
         for role, domains in ROLE_DOMAINS.items():
             marker = vol.Required if role is Role.CLIMATE else vol.Optional
+            # Any entity of a fitting domain may be chosen: some integrations (e.g. Bosch SHC)
+            # put the climate entity on a different device than the valve sensor (ACT-033).
             schema[marker(role.value, description=_suggested(self._detected, role.value))] = (
-                EntitySelector(
-                    EntitySelectorConfig(domain=domains, include_entities=self._entity_ids)
-                )
+                EntitySelector(EntitySelectorConfig(domain=domains))
             )
         return self.async_show_form(
             step_id="roles",

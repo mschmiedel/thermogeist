@@ -30,7 +30,7 @@ applied.
 | ACT-030 | Profiles are JSON files in `custom_components/thermogeist/device_profiles/`, one per model: matching rules (manufacturer, model id), kind, role mapping per source (`z2m`; `zha` later), quirks and documentation notes. Contributions via pull request. | implemented |
 | ACT-031 | When a thermostat is assigned, Thermogeist reads manufacturer and model id from the HA device registry and picks the matching profile; without a match it suggests the setpoint-based kind. | implemented |
 | ACT-032 | Roles are resolved to entities of that device: the `climate` role by domain, the others by the Zigbee2MQTT expose name contained in the entity's unique id (`<ieee>_<expose>_zigbee2mqtt`). | implemented |
-| ACT-033 | Every resolved role is shown pre-filled in the dialog and can be changed or cleared by the user. The chosen profile is shown on the thermostat. | implemented |
+| ACT-033 | Every resolved role is shown pre-filled in the dialog and can be changed or cleared by the user. Any entity of a fitting domain may be chosen, also from another device (some integrations, e.g. Bosch Smart Home, put climate and valve entities on separate devices). The chosen profile is shown on the thermostat. | implemented |
 | ACT-034 | Later: read the full expose list from Zigbee2MQTT (`zigbee2mqtt/bridge/devices`) to suggest profiles for unknown devices. Requires the MQTT integration. | planned |
 
 Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
