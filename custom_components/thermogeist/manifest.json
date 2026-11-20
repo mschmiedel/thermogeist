@@ -1,0 +1,13 @@
+{
+  "domain": "thermogeist",
+  "name": "Thermogeist",
+  "codeowners": ["@mschmiedel"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/mschmiedel/thermogeist",
+  "integration_type": "hub",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/mschmiedel/thermogeist/issues",
+  "requirements": [],
+  "version": "0.0.0"
+}

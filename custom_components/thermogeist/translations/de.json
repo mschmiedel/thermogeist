@@ -1,0 +1,128 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Beschreibe dein Haus",
+        "description": "Drei Angaben reichen für den Start. Alles lässt sich später ändern.",
+        "data": {
+          "name": "Name",
+          "heating_type": "Heizungsart",
+          "outdoor_temperature_entity": "Außentemperatursensor"
+        },
+        "data_description": {
+          "name": "Wird als Gerätename angezeigt, z. B. „Haus“ oder „Einliegerwohnung“.",
+          "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
+          "outdoor_temperature_entity": "Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler der Wärmepumpe."
+        }
+      },
+      "details": {
+        "title": "Details (optional)",
+        "description": "Je mehr Thermogeist weiß, desto besser startet es. Jedes Feld darf leer bleiben.",
+        "data": {
+          "heat_load": "Heizlast",
+          "design_outdoor_temperature": "Normaußentemperatur",
+          "share_outside": "Anteil außerhalb von Thermogeist",
+          "living_area": "Beheizte Wohnfläche"
+        },
+        "data_description": {
+          "heat_load": "Wärme, die das Haus am kältesten Auslegungstag braucht, aus deiner Heizlastberechnung (Heizungsbauer oder Energieberater). Leer lassen, wenn unbekannt.",
+          "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
+          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Leer lassen für 0 %.",
+          "living_area": "Optional. Hilft später, den Anteil außerhalb von Thermogeist vorzuschlagen."
+        }
+      }
+    },
+    "error": {
+      "name_empty": "Bitte gib einen Namen ein.",
+      "design_temperature_required": "Zur Heizlast gehört die Normaußentemperatur, für die sie berechnet wurde.",
+      "heat_load_out_of_range": "Die Heizlast muss zwischen 0,5 und 100 kW liegen.",
+      "design_outdoor_temperature_out_of_range": "Die Normaußentemperatur muss zwischen −40 und +10 °C liegen.",
+      "share_outside_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
+      "living_area_out_of_range": "Die Wohnfläche muss zwischen 10 und 10.000 m² liegen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Haus-Einstellungen",
+        "description": "Ändere die Beschreibung deines Hauses. Thermogeist lädt danach neu.",
+        "data": {
+          "heating_type": "Heizungsart",
+          "outdoor_temperature_entity": "Außentemperatursensor",
+          "heat_load": "Heizlast",
+          "design_outdoor_temperature": "Normaußentemperatur",
+          "share_outside": "Anteil außerhalb von Thermogeist",
+          "living_area": "Beheizte Wohnfläche"
+        },
+        "data_description": {
+          "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
+          "outdoor_temperature_entity": "Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler der Wärmepumpe.",
+          "heat_load": "Wärme, die das Haus am kältesten Auslegungstag braucht, aus deiner Heizlastberechnung (Heizungsbauer oder Energieberater). Leer lassen, wenn unbekannt.",
+          "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
+          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Leer lassen für 0 %.",
+          "living_area": "Optional. Hilft später, den Anteil außerhalb von Thermogeist vorzuschlagen."
+        }
+      }
+    },
+    "error": {
+      "name_empty": "Bitte gib einen Namen ein.",
+      "design_temperature_required": "Zur Heizlast gehört die Normaußentemperatur, für die sie berechnet wurde.",
+      "heat_load_out_of_range": "Die Heizlast muss zwischen 0,5 und 100 kW liegen.",
+      "design_outdoor_temperature_out_of_range": "Die Normaußentemperatur muss zwischen −40 und +10 °C liegen.",
+      "share_outside_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
+      "living_area_out_of_range": "Die Wohnfläche muss zwischen 10 und 10.000 m² liegen."
+    }
+  },
+  "selector": {
+    "heating_type": {
+      "options": {
+        "heat_pump": "Wärmepumpe",
+        "boiler": "Kessel (Gas, Öl, Pellets) oder Fernwärme",
+        "direct_electric": "Elektro-Direktheizung"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "central_mode": {
+        "name": "Zentralmodus",
+        "state": {
+          "auto": "Automatisch",
+          "stop": "Aus",
+          "frost_protection": "Frostschutz"
+        }
+      }
+    },
+    "sensor": {
+      "heating_type": {
+        "name": "Heizungsart",
+        "state": {
+          "heat_pump": "Wärmepumpe",
+          "boiler": "Kessel (Gas, Öl, Pellets) oder Fernwärme",
+          "direct_electric": "Elektro-Direktheizung"
+        }
+      },
+      "heat_load": {
+        "name": "Heizlast"
+      },
+      "design_outdoor_temperature": {
+        "name": "Normaußentemperatur"
+      },
+      "share_outside": {
+        "name": "Anteil außerhalb von Thermogeist"
+      },
+      "min_valve_opening": {
+        "name": "Mindestöffnung Ventil"
+      },
+      "dead_band": {
+        "name": "Totband"
+      },
+      "max_valve_change": {
+        "name": "Max. Ventiländerung pro 30 min"
+      },
+      "max_setback": {
+        "name": "Max. Absenkung"
+      }
+    }
+  }
+}

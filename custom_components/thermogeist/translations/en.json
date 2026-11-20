@@ -1,0 +1,128 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Describe your house",
+        "description": "Three answers are enough to start. You can change everything later.",
+        "data": {
+          "name": "Name",
+          "heating_type": "Heating type",
+          "outdoor_temperature_entity": "Outdoor temperature sensor"
+        },
+        "data_description": {
+          "name": "Shown as the device name, e.g. \"Home\" or \"Granny flat\".",
+          "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
+          "outdoor_temperature_entity": "Any sensor measuring the outdoor temperature, e.g. a weather station or the heat pump's outdoor sensor."
+        }
+      },
+      "details": {
+        "title": "Details (optional)",
+        "description": "The more Thermogeist knows, the better it starts. Every field can stay empty.",
+        "data": {
+          "heat_load": "Heat load",
+          "design_outdoor_temperature": "Design outdoor temperature",
+          "share_outside": "Share outside Thermogeist",
+          "living_area": "Heated living area"
+        },
+        "data_description": {
+          "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
+          "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Leave empty for 0 %.",
+          "living_area": "Optional. Later helps to suggest the share outside Thermogeist."
+        }
+      }
+    },
+    "error": {
+      "name_empty": "Please enter a name.",
+      "design_temperature_required": "A heat load needs the design outdoor temperature it was calculated for.",
+      "heat_load_out_of_range": "Heat load must be between 0.5 and 100 kW.",
+      "design_outdoor_temperature_out_of_range": "Design outdoor temperature must be between −40 and +10 °C.",
+      "share_outside_out_of_range": "Share must be between 0 and 100 %.",
+      "living_area_out_of_range": "Living area must be between 10 and 10,000 m²."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "House settings",
+        "description": "Change your house description. Thermogeist reloads afterwards.",
+        "data": {
+          "heating_type": "Heating type",
+          "outdoor_temperature_entity": "Outdoor temperature sensor",
+          "heat_load": "Heat load",
+          "design_outdoor_temperature": "Design outdoor temperature",
+          "share_outside": "Share outside Thermogeist",
+          "living_area": "Heated living area"
+        },
+        "data_description": {
+          "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
+          "outdoor_temperature_entity": "Any sensor measuring the outdoor temperature, e.g. a weather station or the heat pump's outdoor sensor.",
+          "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
+          "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Leave empty for 0 %.",
+          "living_area": "Optional. Later helps to suggest the share outside Thermogeist."
+        }
+      }
+    },
+    "error": {
+      "name_empty": "Please enter a name.",
+      "design_temperature_required": "A heat load needs the design outdoor temperature it was calculated for.",
+      "heat_load_out_of_range": "Heat load must be between 0.5 and 100 kW.",
+      "design_outdoor_temperature_out_of_range": "Design outdoor temperature must be between −40 and +10 °C.",
+      "share_outside_out_of_range": "Share must be between 0 and 100 %.",
+      "living_area_out_of_range": "Living area must be between 10 and 10,000 m²."
+    }
+  },
+  "selector": {
+    "heating_type": {
+      "options": {
+        "heat_pump": "Heat pump",
+        "boiler": "Boiler (gas, oil, pellets) or district heating",
+        "direct_electric": "Direct electric heating"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "central_mode": {
+        "name": "Central mode",
+        "state": {
+          "auto": "Auto",
+          "stop": "Stop",
+          "frost_protection": "Frost protection"
+        }
+      }
+    },
+    "sensor": {
+      "heating_type": {
+        "name": "Heating type",
+        "state": {
+          "heat_pump": "Heat pump",
+          "boiler": "Boiler (gas, oil, pellets) or district heating",
+          "direct_electric": "Direct electric heating"
+        }
+      },
+      "heat_load": {
+        "name": "Heat load"
+      },
+      "design_outdoor_temperature": {
+        "name": "Design outdoor temperature"
+      },
+      "share_outside": {
+        "name": "Share outside Thermogeist"
+      },
+      "min_valve_opening": {
+        "name": "Minimum valve opening"
+      },
+      "dead_band": {
+        "name": "Dead band"
+      },
+      "max_valve_change": {
+        "name": "Max. valve change per 30 min"
+      },
+      "max_setback": {
+        "name": "Max. setback"
+      }
+    }
+  }
+}

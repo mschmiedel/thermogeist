@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: MIT
+# Attach the integration zip to every published release (spec DST-001 to DST-003).
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Build zip
+        run: scripts/build_zip.sh "${GITHUB_REF_NAME#v}"
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" dist/thermogeist.zip --clobber
