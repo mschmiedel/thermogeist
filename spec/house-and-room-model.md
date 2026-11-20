@@ -78,6 +78,13 @@ corrects only after hours – and again in the other direction when the device i
 | MDL-046 | Room coverage on the house: how much of the house heat load the configured rooms and the share outside Thermogeist cover (100 % − heat load not assigned to a room), with attributes `missing_pct` and, with a living area, `floor_area_not_in_rooms_m2` (living area minus the floor area of all rooms that have one, never negative) and the number of rooms. Helps users see that rooms are still missing before trusting the model. | implemented |
 | MDL-047 | Stretch: a switch or binary sensor with a fixed power as heat source (e.g. aquarium heater on = 100 W), for devices without power measurement. | planned |
 
+## Disturbances and hybrid systems
+
+| ID | Requirement | Status |
+|---|---|---|
+| MDL-050 | Wood stove or fireplace: not modelled as a heater (its output can neither be estimated nor controlled). Optional per room a "stove on" sensor (binary sensor, or a flue temperature with a threshold): while on, the radiators of the room stay at the minimum, with its own reason code and logbook entry. Without the sensor the existing limits (`hold_when_warm`, slow correction) handle the extra heat. | planned |
+| MDL-051 | Hybrid systems (e.g. heat pump + pellet boiler on the same heating circuit): optional entity "active heat generator" on the house whose state is a heating type (`heat_pump`, `boiler`, `direct_electric`); the profile (minimum opening, dead band, valve speed) follows it. Typically a template sensor built by the user. Separate heating circuits are deliberately not modelled. | planned |
+
 ## Derived quantities
 
 | ID | Quantity | Formula / derivation | Status |

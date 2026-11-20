@@ -57,6 +57,21 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 | ACT-053 | Setpoint writes are bundled like valve writes: only changes of at least 0.5 K, at most every 10 minutes; window, stop and safety at once (window/stop: 5 °C). | implemented |
 | ACT-054 | Limits of the setpoint strategy are explicit: no minimum opening and no calm valve movement – the device's own controller decides. Shown on the thermostat (`strategy: setpoint`). | implemented |
 
+## On/off heaters with stages
+
+Heaters that are only switched on or off, e.g. a water-based plinth heater (kick-space heater)
+whose fan runs on a smart plug, an infrared panel or an electric towel rail.
+
+| ID | Requirement | Status |
+|---|---|---|
+| ACT-060 | A new thermostat kind *on/off*: a switch entity (required) and optionally a power sensor of the same circuit. Added through the room's gear menu like every thermostat. | planned |
+| ACT-061 | Energy source per heater: *heating circuit* (output depends on the flow temperature; the house's heating type, minimum values and flow sensor apply) or *direct* (fixed output from the type plate, independent of the flow temperature, e.g. infrared or a fan heater). Without it the feed-forward and the house balance would mix up heating water and electricity. | planned |
+| ACT-062 | Stages: up to 2 stages, each with its heat output (W) at the stated conditions (for *heating circuit*: flow/return/room as in the manual, e.g. 55/45/20 °C) and its electrical power as measured. Thermogeist reads the active stage from the measured power (nearest stage; field values of a plinth heater fan: off 0 W, stage 1 ≈ 11 W, stage 2 ≈ 23 W) and does not switch stages itself; a stage changed by hand, a foot or a vacuum robot is simply followed. | planned |
+| ACT-063 | Base heat: a *heating circuit* heater through which water keeps flowing while the fan is off still releases heat by natural convection. A base output (W, or % of stage 1, default estimate) is counted as heat in the room while off. | planned |
+| ACT-064 | Control by time-proportional switching: duty cycle = demand / output of the active stage (corrected by the slow controller), over a cycle of 20 min (named constant) with minimum on and off times of 5 min each (named constant), so fan and relay do not switch every minute. Window, stop and safety switch off at once; the frost guard (RUL-015) switches on. | planned |
+| ACT-065 | Fan convectors follow the radiator formula with a lower exponent (about 1.1 instead of 1.3, EN 16430 typical); the exponent is part of the heater type, not a user input. | planned |
+| ACT-066 | The heater shows `stage` (off / 1 / 2), `duty_cycle_pct`, `on_since`/`off_since` and the output used. | planned |
+
 ## Control mode (M4)
 
 | ID | Requirement | Status |
