@@ -201,6 +201,7 @@ class ThermogeistConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_details()
         return self.async_show_form(
             step_id="user",
+            last_step=False,
             data_schema=vol.Schema(_required_schema(user_input or {})),
             errors=errors,
         )
@@ -216,6 +217,7 @@ class ThermogeistConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=candidate[CONF_NAME].strip(), data=candidate)
         return self.async_show_form(
             step_id="details",
+            last_step=True,
             data_schema=vol.Schema(_detail_schema(user_input or {})),
             errors=errors,
         )
@@ -252,6 +254,7 @@ class ThermogeistOptionsFlow(OptionsFlow):
         defaults = user_input or current
         return self.async_show_form(
             step_id="init",
+            last_step=True,
             data_schema=vol.Schema(
                 _required_schema(defaults, include_name=False) | _detail_schema(defaults)
             ),
@@ -322,7 +325,9 @@ class RoomSubentryFlow(ConfigSubentryFlow):
                 default=values.get(CONF_DESIGN_INDOOR, DEFAULT_DESIGN_INDOOR_C),
             ): _number(DESIGN_INDOOR_C_MIN, DESIGN_INDOOR_C_MAX, 0.5, UnitOfTemperature.CELSIUS),
         }
-        return self.async_show_form(step_id=step_id, data_schema=vol.Schema(schema), errors=errors)
+        return self.async_show_form(
+            step_id=step_id, data_schema=vol.Schema(schema), errors=errors, last_step=False
+        )
 
     async def async_step_geometry(
         self, user_input: dict[str, Any] | None = None
@@ -367,7 +372,7 @@ class RoomSubentryFlow(ConfigSubentryFlow):
             ),
         }
         return self.async_show_form(
-            step_id="geometry", data_schema=vol.Schema(schema), errors=errors
+            step_id="geometry", data_schema=vol.Schema(schema), errors=errors, last_step=True
         )
 
     async def async_step_known_share(
@@ -389,7 +394,7 @@ class RoomSubentryFlow(ConfigSubentryFlow):
             ): _number(KNOWN_SHARE_PCT_MIN, KNOWN_SHARE_PCT_MAX, 0.1, PERCENTAGE),
         }
         return self.async_show_form(
-            step_id="known_share", data_schema=vol.Schema(schema), errors=errors
+            step_id="known_share", data_schema=vol.Schema(schema), errors=errors, last_step=True
         )
 
     def _known_shares_too_high(self, candidate: Mapping[str, Any]) -> bool:
@@ -481,7 +486,9 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
                 CONF_RATED_OUTPUT, description=_suggested(values, CONF_RATED_OUTPUT)
             ): _number(RATED_OUTPUT_W_MIN, RATED_OUTPUT_W_MAX, 10, "W"),
         }
-        return self.async_show_form(step_id=step_id, data_schema=vol.Schema(schema))
+        return self.async_show_form(
+            step_id=step_id, data_schema=vol.Schema(schema), last_step=False
+        )
 
     async def _detect(self, device_id: str, defaults: Mapping[str, Any]) -> None:
         """Find profile and roles for the device (ACT-031, ACT-032)."""
@@ -525,6 +532,7 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
             )
         return self.async_show_form(
             step_id="roles",
+            last_step=True,
             data_schema=vol.Schema(schema),
             errors=errors,
             description_placeholders={

@@ -12,9 +12,11 @@ async def _start_with_required(hass: HomeAssistant, answers: dict) -> dict:
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["last_step"] is False  # button reads "Next"
     result = await hass.config_entries.flow.async_configure(result["flow_id"], answers)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "details"
+    assert result["last_step"] is True
     return result
 
 
