@@ -7,7 +7,6 @@ from typing import Any
 import pytest
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import (
@@ -187,18 +186,100 @@ async def test_window_closes_valve_and_reopens(
     assert Calls.values(calls.number, VALVE, "value")[-1] == pytest.approx(before, abs=1)
 
 
-async def test_setpoint_only_room_cannot_be_controlled(
-    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
-) -> None:
-    """Scenario: SCN-CONTROL-007"""
-    entry = await setup_house(hass, HOUSE_WITH_LOAD, [LIVING_ROOM])
+OLD_CLIMATE = "climate.old_trv_climate"
+
+
+async def controlled_old_trv(hass: HomeAssistant, windows: bool = False) -> Calls:
+    """A thermostat without valve access and without external input."""
+    room = {**LIVING_ROOM, "window_sensors": [WINDOW]} if windows else LIVING_ROOM
+    if windows:
+        hass.states.async_set(WINDOW, "off", {"device_class": "window"})
+    entry = await setup_house(hass, HOUSE_WITH_LOAD, [room])
     room_id = next(iter(entry.subentries))
     device_id = z2m_device(hass, "Old TRV", "Acme", "X1", {"climate": ("climate", "heat")})
+    hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 20.0, "current_temperature": 22.0})
     await assign(hass, entry.entry_id, room_id, device_id, None)
+    return Calls(hass)
 
-    with pytest.raises(HomeAssistantError):
-        await switch(hass, True)
-    assert hass.states.get(SWITCH).state == "off"
+
+async def test_setpoint_thermostat_aims_at_the_room_temperature(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-010"""
+    calls = await controlled_old_trv(hass)
+
+    await switch(hass, True)
+    await tick(hass, freezer, 91)
+
+    # Device reads 22.0, room 19.5: +2.5 K offset on the 20 °C target.
+    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature") == [22.5]
+    assert calls.number == []
+    kind = hass.states.get("sensor.living_room_kind_old_trv").attributes
+    assert kind["strategy"] == "automatic"
+    assert kind["last_write_value"] == 22.5
+    assert kind["setpoint_offset"] == 2.5
+
+    await switch(hass, False)
+    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 20.0
+
+
+async def test_setpoint_thermostat_window_and_knob(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-011"""
+    calls = await controlled_old_trv(hass, windows=True)
+    await switch(hass, True)
+    await tick(hass, freezer, 91)
+    hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 22.5, "current_temperature": 22.0})
+
+    hass.states.async_set(WINDOW, "on", {"device_class": "window"})
+    await tick(hass, freezer, 31)
+    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 5.0
+    hass.states.async_set(WINDOW, "off", {"device_class": "window"})
+    await hass.async_block_till_done()
+    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 22.5
+    hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 22.5, "current_temperature": 22.0})
+    await hass.async_block_till_done()
+
+    # Turning the knob to 23.5 means one degree more in the room, not 23.5 °C.
+    hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 23.5, "current_temperature": 22.0})
+    await tick(hass, freezer, 21)
+    assert hass.states.get("climate.living_room").attributes["temperature"] == 21.0
+
+
+async def test_bosch_can_be_controlled_by_setpoint(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-012"""
+    hass.states.async_set(FLOW_SENSOR, "40.0", {"device_class": "temperature"})
+    entry = await setup_house(
+        hass, {**HOUSE_WITH_LOAD, "flow_temperature_entity": FLOW_SENSOR}, [LIVING_ROOM]
+    )
+    room_id = next(iter(entry.subentries))
+    device_id = z2m_device(
+        hass,
+        "Bath TRV",
+        "Bosch",
+        "BTH-RA",
+        {
+            "climate": ("climate", "heat"),
+            "pi_heating_demand": ("number", "39", "%"),
+            "remote_temperature": ("number", "20", "°C"),
+            "operating_mode": ("select", "schedule"),
+        },
+    )
+    hass.states.async_set(DEVICE_CLIMATE, "heat", {"temperature": 18.0})
+    await assign(hass, entry.entry_id, room_id, device_id, 700.0, strategy="setpoint")
+    calls = Calls(hass)
+
+    await switch(hass, True)
+    await tick(hass, freezer, 91)
+
+    assert hass.states.get("sensor.living_room_kind_bath_trv").state == "setpoint"
+    assert Calls.values(calls.number, VALVE, "value") == []
+    assert Calls.values(calls.number, REMOTE, "value") == [19.5]
+    assert Calls.values(calls.select, MODE, "option") == ["manual"]
+    assert Calls.values(calls.climate, DEVICE_CLIMATE, "temperature") == [20.0]
 
 
 async def test_bosch_valve_is_confirmed_before_it_times_out(

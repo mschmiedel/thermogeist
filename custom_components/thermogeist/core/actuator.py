@@ -31,6 +31,14 @@ class Kind(StrEnum):
     VALVE = "valve"
 
 
+class Strategy(StrEnum):
+    """ACT-050: how a thermostat is controlled, chosen per thermostat."""
+
+    AUTOMATIC = "automatic"
+    VALVE = "valve"
+    SETPOINT = "setpoint"
+
+
 class Source(StrEnum):
     """Where the device comes from; entity naming differs per source."""
 
@@ -61,9 +69,13 @@ class DeviceProfile:
     roles: Mapping[Source, Mapping[Role, RoleMapping]]
     notes: tuple[str, ...] = field(default_factory=tuple)
     control_settings: Mapping[Source, tuple[tuple[str, str], ...]] = field(default_factory=dict)
+    """ACT-042: (expose, value) pairs applied when control starts, restored when it stops."""
+    setpoint_control_settings: Mapping[Source, tuple[tuple[str, str], ...]] = field(
+        default_factory=dict
+    )
+    """ACT-054: the same for the setpoint strategy, where the device's own controller works."""
     valve_refresh: timedelta | None = None
     """ACT-047: some devices drop an external valve position after a while (Bosch: 15 min)."""
-    """ACT-042: (expose, value) pairs applied when control starts, restored when it stops."""
 
     def matches(self, manufacturer: str | None, model_id: str | None) -> bool:
         if not model_id:
@@ -100,11 +112,16 @@ def parse_profile(data: Mapping[str, Any]) -> DeviceProfile:
             if data.get("valve_write_refresh_minutes")
             else None
         ),
-        control_settings={
-            Source(source): tuple((s["expose"], str(s["value"])) for s in settings)
-            for source, settings in data.get("control_settings", {}).items()
-        },
+        control_settings=_settings(data.get("control_settings", {})),
+        setpoint_control_settings=_settings(data.get("setpoint_control_settings", {})),
     )
+
+
+def _settings(data: Mapping[str, Any]) -> dict[Source, tuple[tuple[str, str], ...]]:
+    return {
+        Source(source): tuple((s["expose"], str(s["value"])) for s in settings)
+        for source, settings in data.items()
+    }
 
 
 def find_profile(
@@ -157,14 +174,21 @@ class Thermostat:
     valve_min_inverted: bool = False
     valve_refresh: timedelta | None = None
     """ACT-047: resend the unchanged valve position at this interval; None = off."""
+    strategy: Strategy = Strategy.AUTOMATIC
 
     @property
     def kind(self) -> Kind:
-        return kind_for(self.roles)
+        return kind_for(self.roles, self.strategy)
 
 
-def kind_for(roles: Mapping[Role, str]) -> Kind:
-    """Valve-based as soon as the valve can be written (ACT-021)."""
+def kind_for(roles: Mapping[Role, str], strategy: Strategy = Strategy.AUTOMATIC) -> Kind:
+    """Valve-based as soon as the valve can be written (ACT-021), unless chosen otherwise.
+
+    ACT-050: *setpoint* is always possible; *valve* only works with a writable valve, so
+    without one it falls back to setpoint.
+    """
+    if strategy is Strategy.SETPOINT:
+        return Kind.SETPOINT
     return Kind.VALVE if Role.VALVE_WRITE in roles else Kind.SETPOINT
 
 

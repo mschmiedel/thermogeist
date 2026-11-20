@@ -215,9 +215,9 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
             "mode": "observe",
             "strategies": sorted({t.kind.value for t in thermostats}),
             "radiator_output_w": self.room_state.rated_output_w,
-            "flow_temperature_used": (
-                round(self.runtime.flow_used_c, 1) if self.runtime.flow_used_c is not None else None
-            ),
+            "flow_temperature_used": _rounded(self.runtime.flow_used_c),
+            "return_temperature_used": _rounded(self.runtime.return_used_c),
+            "spread_used": _rounded(self.runtime.spread_used_k),
         }
         if plan is not None:
             attributes |= {
@@ -232,6 +232,10 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
                 "limits": [limit.value for limit in plan.limits],
             }
         return attributes
+
+
+def _rounded(value: float | None) -> float | None:
+    return round(value, 1) if value is not None else None
 
 
 class ThermostatKindSensor(ThermostatEntity, SensorEntity):
@@ -251,6 +255,7 @@ class ThermostatKindSensor(ThermostatEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return {
+            "strategy": self.thermostat.strategy.value,
             "profile": self.thermostat.profile_id,
             "radiator_output_w": self.thermostat.rated_output_w,
             "roles": {role.value: entity for role, entity in self.thermostat.roles.items()},

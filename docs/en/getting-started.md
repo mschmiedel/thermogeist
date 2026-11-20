@@ -2,8 +2,9 @@
 
 **English** | [Deutsch](../de/getting-started.md)
 
-> Thermogeist is in an early stage. You can describe your house and its [rooms](rooms.md).
-> Controlling thermostats follows in the next versions.
+> Thermogeist is in an early stage (alpha). You can describe your house and its
+> [rooms](rooms.md), assign [thermostats](thermostats.md) and let Thermogeist control them room
+> by room.
 
 ## Install
 
@@ -36,6 +37,7 @@ Every field may stay empty. The more you fill in, the better Thermogeist starts.
 | Heat load | The heat your house needs on the coldest design day, in kW. You find it in the heat load calculation from your heating installer or energy consultant. |
 | Design outdoor temperature | The outdoor temperature the heat load was calculated for. Required if you enter a heat load. |
 | Flow temperature sensor | Optional. The water temperature going to the radiators – choose it carefully, see [Choosing the flow temperature sensor](thermostats.md#choosing-the-flow-temperature-sensor). |
+| Return temperature sensor | Optional. The water coming back from the radiators; Thermogeist then uses the measured spread instead of assuming 5 K. |
 | Heated living area | Total heated floor area, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size – a 20 m² room in a 160 m² house starts at about 12.5 %. Recommended. |
 | Share outside Thermogeist | Part of the heat load in rooms Thermogeist will not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise it follows from the living area. |
 

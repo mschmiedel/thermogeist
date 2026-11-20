@@ -7,7 +7,7 @@
 | OVR-001 | In control mode, setpoint changes on the device are detected by comparing with the last value Thermogeist wrote. The new value becomes the room setpoint until further notice (no schedules yet) and is written to the logbook. In observe mode the device is left alone. | implemented |
 | OVR-002 | Debounce: the final value counts only after 20 s without further change. | implemented |
 | OVR-003 | The value becomes the new room setpoint as an override, with reason code and visible remaining time. | planned |
-| OVR-004 | The device display always shows the real room setpoint, never an artificial offset. | implemented |
+| OVR-004 | The device display shows the real room setpoint. Exception: a setpoint thermostat without external temperature input shows the corrected setpoint (ACT-052); turning its knob changes the room setpoint by the same difference. | implemented |
 
 ## Override duration
 

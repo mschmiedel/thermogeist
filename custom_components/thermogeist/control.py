@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Control mode: write plans to thermostats (spec ACT-040 to ACT-045, OVR-001, RSN-003, RSN-004).
+"""Control mode: write plans to thermostats (spec ACT-040 to ACT-054, OVR-001, RSN-003, RSN-004).
 
 This is HA glue. What to write is decided in ``core`` (controller, decisions, supervision);
 this module only talks to the devices, remembers what it changed and puts it back.
@@ -23,6 +23,14 @@ from .const import DOMAIN
 from .core.actuation import should_write
 from .core.actuator import DeviceProfile, Kind, Role, Source, Thermostat
 from .core.controller import ControllerResult, Limit
+from .core.decisions import ReasonCode
+from .core.setpoint import (
+    CLOSED_SETPOINT_C,
+    device_setpoint_c,
+    round_setpoint,
+    should_write_setpoint,
+)
+from .core.smoothing import MovingAverage
 from .core.supervision import ValveSupervisor, Verdict
 
 if TYPE_CHECKING:
@@ -33,7 +41,11 @@ EXTERNAL_TEMPERATURE_REFRESH = timedelta(minutes=20)
 EXTERNAL_TEMPERATURE_STEP_K = 0.1
 OVERRIDE_DEBOUNCE_S = 20
 """OVR-002: wait until the knob has stopped turning."""
-STOP_SETPOINT_C = 5.0
+STOP_SETPOINT_C = CLOSED_SETPOINT_C
+URGENT_CODES = frozenset(
+    {ReasonCode.WINDOW_OPEN, ReasonCode.CENTRAL_STOP, ReasonCode.SAFETY_SENSOR_STALE}
+)
+"""ACT-053: these reasons change a setpoint at once, without bundling."""
 SETPOINT_TOLERANCE_K = 0.05
 LOGBOOK_EVENT = "logbook_entry"
 
@@ -49,12 +61,17 @@ class ThermostatControl:
     settings_applied: bool = False
     pending_override: CALLBACK_TYPE | None = None
     last_write_urgent: bool = False
+    """Leaving an urgent state (window closed again) is just as urgent as entering it."""
     last_sent_at: datetime | None = None
     """Last time any valve value was sent, including confirmations (ACT-047)."""
     last_write_at: datetime | None = None
     last_write_pct: float | None = None
     last_confirmation_at: datetime | None = None
-    """Leaving an urgent state (window closed again) is just as urgent as entering it."""
+    offset_average: MovingAverage = field(default_factory=MovingAverage)
+    """ACT-052: device temperature minus room temperature, averaged over 30 minutes."""
+    setpoint_offset_k: float = 0.0
+    """Difference between the last sent device setpoint and the room target (OVR-001)."""
+    setpoint_written_at: datetime | None = None
 
 
 class ControlManager:
@@ -87,11 +104,8 @@ class ControlManager:
         return self.enabled.get(room_id, False)
 
     def can_control(self, room_id: str) -> bool:
-        """ACT-044: only valve-based thermostats can be controlled in M4."""
-        return any(
-            self._runtime.thermostats[tid].kind is Kind.VALVE
-            for tid in self._rooms[room_id].thermostat_ids
-        )
+        """ACT-044: every thermostat can be controlled, by valve or by setpoint."""
+        return bool(self._rooms[room_id].thermostat_ids)
 
     @property
     def _rooms(self) -> dict[str, RoomState]:
@@ -110,9 +124,7 @@ class ControlManager:
 
     async def async_set_enabled(self, room_id: str, on: bool) -> None:
         if on and not self.can_control(room_id):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="no_valve_thermostat"
-            )
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="no_thermostat")
         self.enabled[room_id] = on
         if on:
             for tid in self._rooms[room_id].thermostat_ids:
@@ -120,6 +132,7 @@ class ControlManager:
         else:
             for tid in self._rooms[room_id].thermostat_ids:
                 await self._async_restore(tid)
+                await self._async_hand_back_setpoint(room_id, tid)
         await self._runtime.async_save()
         self._runtime.reevaluate()
 
@@ -133,6 +146,14 @@ class ControlManager:
         control = self.thermostats.get(tid)
         if control is None:
             return {}
+        if self._runtime.thermostats[tid].kind is Kind.SETPOINT:
+            return {
+                "last_write": (
+                    control.setpoint_written_at.isoformat() if control.setpoint_written_at else None
+                ),
+                "last_write_value": control.last_setpoint_c,
+                "setpoint_offset": round(control.setpoint_offset_k, 1),
+            }
         return {
             "last_write": control.last_write_at.isoformat() if control.last_write_at else None,
             "last_write_value": control.last_write_pct,
@@ -157,18 +178,54 @@ class ControlManager:
         target = state.decision.target_setpoint_c
         for tid in state.thermostat_ids:
             thermostat = self._runtime.thermostats[tid]
-            if thermostat.kind is not Kind.VALVE:
-                continue
             control = self.thermostats[tid]
             if not control.settings_applied:
                 await self._async_apply_settings(tid, thermostat)
                 control.settings_applied = True
+            if thermostat.kind is Kind.SETPOINT:
+                await self._async_external_temperature(thermostat, control, state)
+                await self._async_device_setpoint(thermostat, control, state)
+                continue
             if not await self._async_valve(room_id, tid, thermostat, state.plan):
                 return
             await self._async_min_opening(tid, thermostat)
             await self._async_external_temperature(thermostat, control, state)
             await self._async_setpoint(thermostat, control, target)
         self._runtime.notify()
+
+    async def _async_device_setpoint(
+        self, thermostat: Thermostat, control: ThermostatControl, state: RoomState
+    ) -> None:
+        """ACT-051 to ACT-053: let the device regulate, aiming at the right room temperature."""
+        assert state.decision is not None
+        entity = thermostat.roles[Role.CLIMATE]
+        now = self._runtime.now()
+        external = Role.EXTERNAL_TEMPERATURE in thermostat.roles
+        room_c = state.current_temperature_c
+        device_c = self._climate_temperature(entity)
+        if not external and room_c is not None and device_c is not None:
+            control.offset_average.add(now, device_c - room_c)
+        code = state.decision.code
+        target = None if code is ReasonCode.WINDOW_OPEN else state.decision.target_setpoint_c
+        offset = None if external else control.offset_average.value(now)
+        desired = device_setpoint_c(
+            target,
+            room_c,
+            None if offset is None or room_c is None else room_c + offset,
+            external_input=external,
+        )
+        if should_write_setpoint(
+            desired,
+            control.last_setpoint_c,
+            control.setpoint_written_at,
+            now,
+            urgent=code in URGENT_CODES or control.last_write_urgent,
+        ):
+            control.last_setpoint_c = desired
+            control.setpoint_written_at = now
+            control.setpoint_offset_k = 0.0 if target is None else desired - target
+            control.last_write_urgent = code in URGENT_CODES
+            await self._async_call("climate", "set_temperature", entity, temperature=desired)
 
     async def _async_valve(
         self, room_id: str, tid: str, thermostat: Thermostat, plan: ControllerResult
@@ -269,7 +326,12 @@ class ControlManager:
         if profile is None or thermostat.device_id is None:
             return
         entries = er.async_entries_for_device(er.async_get(self._hass), thermostat.device_id)
-        for expose, value in profile.control_settings.get(Source.Z2M, ()):
+        settings = (
+            profile.setpoint_control_settings
+            if thermostat.kind is Kind.SETPOINT
+            else profile.control_settings
+        )
+        for expose, value in settings.get(Source.Z2M, ()):
             entity = next(
                 (e for e in entries if e.unique_id.endswith(f"_{expose}_zigbee2mqtt")), None
             )
@@ -294,6 +356,18 @@ class ControlManager:
         control = self.thermostats.get(tid)
         if control is not None:
             self.thermostats[tid] = ThermostatControl()
+
+    async def _async_hand_back_setpoint(self, room_id: str, tid: str) -> None:
+        """ACT-052: a setpoint thermostat gets the plain room setpoint back."""
+        thermostat = self._runtime.thermostats[tid]
+        if thermostat.kind is not Kind.SETPOINT:
+            return
+        await self._async_call(
+            "climate",
+            "set_temperature",
+            thermostat.roles[Role.CLIMATE],
+            temperature=self._rooms[room_id].user_setpoint_c,
+        )
 
     async def _async_set_state(self, entity_id: str, value: str) -> None:
         domain = entity_id.split(".", 1)[0]
@@ -357,11 +431,16 @@ class ControlManager:
         if abs(value - control.last_setpoint_c) <= SETPOINT_TOLERANCE_K:
             return
         control.last_setpoint_c = value
+        # ACT-052: with the setpoint strategy the device shows the corrected value; the room
+        # setpoint is what the user meant, i.e. without the offset.
+        room_setpoint = round_setpoint(value - control.setpoint_offset_k)
+        if thermostat.kind is Kind.SETPOINT:
+            control.setpoint_offset_k = value - room_setpoint
         room_name = self._rooms[thermostat.room_id].room.name
         await self._async_logbook(
-            room_name, "logbook_manual_setpoint", thermostat=thermostat.name, setpoint=value
+            room_name, "logbook_manual_setpoint", thermostat=thermostat.name, setpoint=room_setpoint
         )
-        await self._runtime.async_set_room_setpoint(thermostat.room_id, value)
+        await self._runtime.async_set_room_setpoint(thermostat.room_id, room_setpoint)
 
     # ----- helpers ------------------------------------------------------------------------
 
@@ -386,6 +465,15 @@ class ControlManager:
         try:
             return float(state.state)
         except ValueError:
+            return None
+
+    def _climate_temperature(self, entity_id: str) -> float | None:
+        """The device's own temperature reading."""
+        state = self._hass.states.get(entity_id)
+        value = state.attributes.get("current_temperature") if state else None
+        try:
+            return float(value) if value is not None else None
+        except TypeError, ValueError:
             return None
 
     def _climate_setpoint(self, entity_id: str) -> float | None:

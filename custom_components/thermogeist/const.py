@@ -32,6 +32,7 @@ CONF_DESIGN_TEMPERATURE: Final = FIELD_DESIGN_TEMPERATURE
 CONF_SHARE_OUTSIDE: Final = FIELD_SHARE_OUTSIDE
 CONF_LIVING_AREA: Final = FIELD_LIVING_AREA
 CONF_FLOW_TEMPERATURE_ENTITY: Final = "flow_temperature_entity"
+CONF_RETURN_TEMPERATURE_ENTITY: Final = "return_temperature_entity"
 
 # Room keys.
 SUBENTRY_ROOM: Final = "room"
@@ -57,6 +58,7 @@ CONF_PROFILE: Final = "profile"
 CONF_ROLES: Final = "roles"
 CONF_VALVE_MIN_INVERTED: Final = "valve_min_inverted"
 CONF_VALVE_REFRESH: Final = "valve_refresh_minutes"
+CONF_STRATEGY: Final = "strategy"
 RATED_OUTPUT_W_MIN: Final = 50.0
 RATED_OUTPUT_W_MAX: Final = 10_000.0
 

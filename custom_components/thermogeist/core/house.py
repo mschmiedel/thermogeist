@@ -57,6 +57,8 @@ class House:
     living_area_m2: float | None = None
     flow_temperature_entity: str | None = None
     """MDL-007: optional; enables the feed-forward together with radiator output."""
+    return_temperature_entity: str | None = None
+    """MDL-019: optional; the measured spread replaces the assumed 5 K."""
 
 
 @dataclass(frozen=True, slots=True)

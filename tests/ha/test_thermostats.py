@@ -19,6 +19,7 @@ from pytest_homeassistant_custom_component.common import (
 from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, setup_house
 
 FLOW_SENSOR = "sensor.flow_temperature"
+RETURN_SENSOR = "sensor.return_temperature"
 PLANNED = "sensor.living_room_planned_valve_position"
 
 
@@ -77,7 +78,12 @@ def suggested(result: dict[str, Any]) -> dict[str, str]:
 
 
 async def assign(
-    hass: HomeAssistant, entry_id: str, room_id: str, device_id: str, rated: float | None
+    hass: HomeAssistant,
+    entry_id: str,
+    room_id: str,
+    device_id: str,
+    rated: float | None,
+    strategy: str | None = None,
 ) -> dict[str, Any]:
     result = await hass.config_entries.subentries.async_init(
         (entry_id, "thermostat"), context={"source": SOURCE_USER}
@@ -88,9 +94,10 @@ async def assign(
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], answers)
     assert result["step_id"] == "roles"
     roles_form = result
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], suggested(result)
-    )
+    answers = suggested(result)
+    if strategy is not None:
+        answers["strategy"] = strategy
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], answers)
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     return roles_form
@@ -323,3 +330,47 @@ async def test_implausible_role_is_rejected(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"setpoint_source": "role_needs_setpoint_source"}
+
+
+async def test_valve_strategy_needs_a_writable_valve(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-012"""
+    entry, room_id = await house_with_room(hass)
+    device_id = z2m_device(hass, "Old TRV", "Acme", "X1", {"climate": ("climate", "heat")})
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"room": room_id, "device": device_id}
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {**suggested(result), "strategy": "valve"}
+    )
+
+    assert result["errors"] == {"strategy": "valve_strategy_needs_valve_write"}
+
+
+async def test_return_sensor_sets_the_spread(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-013"""
+    hass.states.async_set(FLOW_SENSOR, "40.0", {"device_class": "temperature"})
+    hass.states.async_set(RETURN_SENSOR, "33.0", {"device_class": "temperature"})
+    entry = await setup_house(
+        hass,
+        {
+            **HOUSE_WITH_LOAD,
+            "flow_temperature_entity": FLOW_SENSOR,
+            "return_temperature_entity": RETURN_SENSOR,
+        },
+        [LIVING_ROOM],
+    )
+    room_id = next(iter(entry.subentries))
+    device_id = z2m_device(hass, "Old TRV", "Acme", "X1", {"climate": ("climate", "heat")})
+    await assign(hass, entry.entry_id, room_id, device_id, 1500.0)
+
+    planned = hass.states.get(PLANNED).attributes
+    assert planned["return_temperature_used"] == 33.0
+    assert planned["spread_used"] == 7.0

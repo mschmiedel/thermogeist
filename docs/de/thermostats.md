@@ -44,13 +44,36 @@ Bekannte Modelle bisher:
 | Sonoff TRV-ZBT (Gen2) | Über Ventilstellung | *Smart temperature control* ausschalten. |
 | Bosch Heizkörperthermostat II (BTH-RA) | Über Ventilstellung | Keine Mindestöffnung im Gerät. Hält eine geschriebene Ventilstellung nur 15 Minuten; Thermogeist bestätigt sie alle 10 Minuten. |
 
-Alle anderen Thermostate funktionieren **über den Sollwert**: Thermogeist regelt sie über die
-Zieltemperatur (ab der nächsten Version).
+Alle anderen Thermostate funktionieren **über den Sollwert**: Thermogeist sagt ihnen, welche
+Temperatur sie anpeilen sollen, und das Thermostat bewegt sein Ventil selbst.
+
+### Wie regeln
+
+Im zweiten Schritt wählst du **Wie regeln**:
+
+| Auswahl | Was passiert |
+|---|---|
+| Automatisch (Standard) | Über die Ventilstellung, wenn *Ventilstellung (setzen)* ausgefüllt ist, sonst über den Sollwert. |
+| Über Ventilstellung | Thermogeist stellt das Ventil selbst: ruhig, mit Mindestöffnung und Vorsteuerung. Braucht *Ventilstellung (setzen)*. |
+| Über Sollwert | Das Thermostat regelt mit seinem eigenen Regler; Thermogeist schickt nur das richtige Ziel. Geht mit jedem Thermostat, auch mit ventilgesteuerten, wenn du das lieber willst. |
+
+**Über Sollwert, mit Eingang für externe Temperatur** (z. B. Bosch): Thermogeist schickt die
+Raumtemperatur ans Thermostat und setzt das Raumziel als Sollwert. Das Thermostat regelt dann
+auf die echte Raumtemperatur.
+
+**Über Sollwert, ohne externen Eingang:** Das Thermostat misst direkt am warmen Heizkörper und
+würde zu früh aufhören zu heizen. Thermogeist vergleicht seinen Messwert mit dem Raumsensor
+(Mittel über 30 Minuten) und rechnet den Unterschied drauf: Raumziel 20 °C, Thermostat 2,5 K
+wärmer als der Raum → Sollwert 22,5 °C. Die Anzeige am Thermostat zeigt deshalb den korrigierten
+Wert. Sollwerte bleiben zwischen 5 und 30 °C, in 0,5-K-Schritten.
+
+Grenzen von *über Sollwert*: keine Mindestöffnung und keine ruhige Ventilbewegung – wie weit das
+Ventil öffnet, entscheidet der Regler im Thermostat.
 
 ## Regeln
 
 Jeder Raum hat einen Schalter **Regeln**. Aus (Standard): nur beobachten. An: Thermogeist
-schreibt auf die Thermostate des Raums, die über die Ventilstellung geregelt werden.
+schreibt auf die Thermostate des Raums – Ventilstellung oder Sollwert, je nach *Wie regeln*.
 
 Was beim Einschalten passiert:
 
@@ -59,20 +82,23 @@ Was beim Einschalten passiert:
 2. Geräteeinstellungen, die fürs Regeln nötig sind, werden gesetzt – z. B. Bosch
    `operating_mode` → *manual*, beim Sonoff *smart temperature control* aus. Die vorherigen Werte
    merkt sich Thermogeist.
-3. Jede Minute: geplante Ventilstellung, Mindestöffnung (Sonoff), Raumtemperatur als externe
-   Temperatur und das Raumziel als Sollwert am Thermostat, damit die Anzeige stimmt.
+3. Jede Minute, über Ventilstellung: geplante Ventilstellung, Mindestöffnung (Sonoff),
+   Raumtemperatur als externe Temperatur und das Raumziel als Sollwert am Thermostat, damit die
+   Anzeige stimmt.
+4. Über Sollwert: Raumtemperatur als externe Temperatur (wenn möglich) und der Sollwert –
+   Änderungen ab 0,5 K, höchstens alle 10 Minuten. Fenster offen oder *Aus*: sofort 5 °C.
 
 Was beim Ausschalten passiert: Alle gemerkten Geräteeinstellungen und die Ventilstellung werden
-zurückgesetzt. Das Thermostat regelt wieder selbst.
+zurückgesetzt; Sollwert-Thermostate bekommen den einfachen Raum-Sollwert. Das Thermostat regelt
+wieder selbst.
 
 **Am Rad drehen** an einem geregelten Thermostat setzt den Raum-Sollwert (nach 20 Sekunden ohne
-weiteres Drehen). Du siehst das im Logbuch.
+weiteres Drehen). Du siehst das im Logbuch. Bei korrigiertem Sollwert zählt der Unterschied:
+Drehen von 22,5 auf 23,5 °C macht den Raum-Sollwert ein Grad höher.
 
 **Verstellt ein Thermostat sein Ventil immer wieder selbst**, schreibt Thermogeist bis zu dreimal
 pro Stunde neu, schaltet den Raum dann zurück auf Beobachten und zeigt einen Reparaturhinweis
 ([Häufige Fragen](faq/device_overrides_valve.md)).
-
-Räume mit Thermostaten, die nur über den Sollwert gehen, lassen sich noch nicht regeln.
 
 Bevor du Regeln einschaltest: Stell eigene Automationen, Dashboards und Sprachassistenten vom
 Thermostat auf die Klima-Entität des Raums um – sonst arbeiten zwei Regler gegeneinander.
@@ -83,6 +109,14 @@ Beim Haus (**Konfigurieren**) kannst du einen **Vorlauftemperatursensor** wähle
 Temperatur des Wassers, das zu den Heizkörpern fließt, z. B. von deiner Wärmepumpe. Zusammen
 mit der Heizkörperleistung und der Heizlast des Hauses berechnet Thermogeist dann eine gute
 Start-Ventilstellung, statt sie langsam zu suchen.
+
+Optional auch einen **Rücklauftemperatursensor** – das zurückkommende Wasser, an derselben Stelle
+gemessen (z. B. Heizkreis-Rücklauf). Ohne ihn nimmt Thermogeist an, dass die Heizkörper im
+Mittel 2,5 K kühler sind als der Vorlauf (5 K Spreizung). Mit ihm wird die gemessene Spreizung
+genutzt (Mittel über 30 Minuten, begrenzt auf 1–10 K). Bei großer Spreizung sind die Heizkörper
+kühler, und die Ventile öffnen etwas weiter. Der Haus-Rücklauf mischt alle Heizkörper, er zeigt
+also den Durchschnitt, nicht einen einzelnen Heizkörper. Anlegefühler am Rücklauf genauso
+kalibrieren wie den Vorlauf-Fühler.
 
 ## Den Vorlauf-Sensor wählen
 
@@ -129,7 +163,7 @@ Pro Raum:
 |---|---|
 | Geplante Ventilstellung | Was Thermogeist gerade einstellen würde. Die Attribute zeigen die Anteile: *feed_forward* (aus dem Wärmebedarf), *proportional* (Reaktion auf den Temperaturunterschied), *integral* (langsame Korrektur) und *limits*, die gegriffen haben. Ist *feed_forward* leer, steht in *feed_forward_missing*, was fehlt – meist der Vorlauf-Sensor am Haus oder die Heizkörperleistung. |
 | Ventilstellung *Thermostat* | Die tatsächliche Ventilstellung, wenn das Thermostat sie meldet. Leg sie in einem Verlaufsdiagramm neben die geplante. |
-| Art *Thermostat* | Über Ventilstellung oder über Sollwert, mit Profil und Rollen als Attribute. |
+| Art *Thermostat* | Über Ventilstellung oder über Sollwert, mit *strategy* (deine Auswahl), Profil und Rollen als Attribute. |
 
 ### Grenzen, die du sehen kannst
 
@@ -143,6 +177,8 @@ Pro Raum:
 | `stopped` | Zentralmodus *Aus*: 0 %. |
 | `safety` | Der Raumsensor schweigt: Das Ventil geht auf die Mindestöffnung, mindestens 20 %. |
 
-Der Sensor *Art* jedes Thermostats zeigt, was Thermogeist damit getan hat: `last_write` und `last_write_value`, `last_confirmation`, `rewrites_last_hour` und `valve_refresh_minutes`.
+Der Sensor *Art* jedes Thermostats zeigt, was Thermogeist damit getan hat: `last_write` und `last_write_value`, `last_confirmation`, `rewrites_last_hour` und `valve_refresh_minutes`. Über Sollwert: `last_write`, `last_write_value` (der geschickte Sollwert) und `setpoint_offset` (die Korrektur auf das Raumziel).
+
+Die geplante Ventilstellung zeigt außerdem `flow_temperature_used`, `return_temperature_used` und `spread_used`.
 
 **Ventilstellung bestätigen alle … Minuten** (in den Einstellungen des Thermostats): Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile – das Bosch Heizkörperthermostat II nach 15 Minuten. Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut (eine Funknachricht, keine Motorbewegung). Vorbelegt aus dem Geräteprofil (Bosch: 10), leer = aus.

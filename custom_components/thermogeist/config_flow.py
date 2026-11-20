@@ -57,10 +57,12 @@ from .const import (
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
     CONF_PROFILE,
     CONF_RATED_OUTPUT,
+    CONF_RETURN_TEMPERATURE_ENTITY,
     CONF_ROLES,
     CONF_ROOM,
     CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
+    CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
     CONF_VALVE_REFRESH,
@@ -76,6 +78,7 @@ from .core.actuator import (
     EntityFacts,
     Role,
     Source,
+    Strategy,
     check_role,
     find_profile,
     resolve_roles,
@@ -122,6 +125,7 @@ DETAIL_KEYS = (
     CONF_SHARE_OUTSIDE,
     CONF_LIVING_AREA,
     CONF_FLOW_TEMPERATURE_ENTITY,
+    CONF_RETURN_TEMPERATURE_ENTITY,
 )
 
 
@@ -184,6 +188,9 @@ def _detail_schema(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
         ),
         optional(CONF_SHARE_OUTSIDE): _number(SHARE_PCT_MIN, SHARE_PCT_MAX, 1, PERCENTAGE),
         optional(CONF_FLOW_TEMPERATURE_ENTITY): EntitySelector(
+            EntitySelectorConfig(domain="sensor", device_class=SensorDeviceClass.TEMPERATURE)
+        ),
+        optional(CONF_RETURN_TEMPERATURE_ENTITY): EntitySelector(
             EntitySelectorConfig(domain="sensor", device_class=SensorDeviceClass.TEMPERATURE)
         ),
     }
@@ -463,6 +470,7 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
         self._detected: dict[str, str] = {}
         self._profile_name: str | None = None
         self._refresh: float | None = None
+        self._strategy: str = Strategy.AUTOMATIC
         self._notes: str = ""
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
@@ -540,6 +548,9 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
                 if profile and profile.valve_refresh
                 else None
             )
+        self._strategy = str(
+            defaults.get(CONF_STRATEGY, Strategy.AUTOMATIC) if same_device else Strategy.AUTOMATIC
+        )
         self._data["_device_name"] = (device.name_by_user or device.name) if device else device_id
 
     async def async_step_roles(
@@ -549,9 +560,12 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
         if user_input is not None:
             user_input = dict(user_input)
             self._refresh = user_input.pop(CONF_VALVE_REFRESH, None)
+            self._strategy = user_input.pop(CONF_STRATEGY, Strategy.AUTOMATIC)
             roles = {role: entity for role, entity in user_input.items() if entity}
             if Role.CLIMATE.value not in roles:
                 errors[Role.CLIMATE.value] = "climate_required"
+            if self._strategy == Strategy.VALVE and Role.VALVE_WRITE.value not in roles:
+                errors[CONF_STRATEGY] = "valve_strategy_needs_valve_write"
             errors |= self._implausible_roles(roles)
             if not errors:
                 return self._finish(roles)
@@ -563,6 +577,9 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
             schema[marker(role.value, description=_suggested(self._detected, role.value))] = (
                 EntitySelector(EntitySelectorConfig(domain=domains))
             )
+        schema[vol.Required(CONF_STRATEGY, default=self._strategy)] = _select(
+            [s.value for s in Strategy], "strategy"
+        )
         schema[
             vol.Optional(
                 CONF_VALVE_REFRESH,
@@ -605,6 +622,7 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
             CONF_VALVE_MIN_INVERTED: self._data.get(CONF_VALVE_MIN_INVERTED, False),
             CONF_ROLES: roles,
             CONF_VALVE_REFRESH: self._refresh or None,
+            CONF_STRATEGY: self._strategy,
         }
         if self._data.get(CONF_RATED_OUTPUT) is not None:
             data[CONF_RATED_OUTPUT] = self._data[CONF_RATED_OUTPUT]

@@ -21,7 +21,7 @@ applied.
 | ID | Kind | Requirement | Status |
 |---|---|---|---|
 | ACT-020 | Setpoint-based | Only `climate` is required. Works with every thermostat. | implemented |
-| ACT-021 | Valve-based | `valve_write` is set. Enables direct valve control (ACT-010). | implemented |
+| ACT-021 | Valve-based | `valve_write` is set and the strategy is not *setpoint* (ACT-050). Enables direct valve control (ACT-010). | implemented |
 
 ## Device profiles
 
@@ -47,6 +47,16 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 | ACT-014 | Observe mode (default for new rooms): the controller runs and shows the planned position and reason, but nothing is written to the device. Control is switched on per room (M4). | always | implemented |
 | ACT-015 | In observe mode each thermostat with `valve_read` shows its actual valve position next to the planned one, so users can compare Thermogeist with their current regulation. | always | implemented |
 
+## Setpoint strategy (first version)
+
+| ID | Requirement | Status |
+|---|---|---|
+| ACT-050 | Per thermostat a control strategy: *automatic* (valve if `valve_write` exists, else setpoint), *valve* or *setpoint*. Shown on the thermostat. | implemented |
+| ACT-051 | Setpoint strategy with external temperature input: the room temperature is sent to the device and its setpoint is the room target; the device regulates on the real room temperature with its own controller. | implemented |
+| ACT-052 | Setpoint strategy without external input: the device setpoint is the room target plus the measured difference between the device's own temperature and the room sensor (30-minute average), so the device aims at the right room temperature. Limited to 5–30 °C, rounded to 0.5 K. The device display then shows the corrected value. | implemented |
+| ACT-053 | Setpoint writes are bundled like valve writes: only changes of at least 0.5 K, at most every 10 minutes; window, stop and safety at once (window/stop: 5 °C). | implemented |
+| ACT-054 | Limits of the setpoint strategy are explicit: no minimum opening and no calm valve movement – the device's own controller decides. Shown on the thermostat (`strategy: setpoint`). | implemented |
+
 ## Control mode (M4)
 
 | ID | Requirement | Status |
@@ -55,7 +65,7 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 | ACT-041 | Valve-based thermostats get, while controlled: the planned position on `valve_write` (only when it differs by at least 1 %), the minimum opening on `valve_min` (inverted if the profile says so), the room temperature on `external_temperature` (on change by ≥ 0.1 K and at least every 20 min), and the room target as setpoint on the climate entity so the display stays honest. Central stop sets the valve to 0 %. | implemented |
 | ACT-042 | Profiles may list device settings needed for control (e.g. Bosch `operating_mode: manual`, Sonoff `smart_temperature_control: off`, `temperature_sensor_select: remote_temperature`). They are applied when control starts; the previous values are stored and restored when control stops or the thermostat is removed (ACT-008). | implemented |
 | ACT-043 | Write verification: if a valve-based thermostat reports a position more than 5 % away from the last written one for longer than 5 minutes, Thermogeist writes again, at most 3 times per hour. If that is exceeded, the room switches back to observe, the logbook explains why (`device_overrides_valve`) and a repair issue appears. | implemented |
-| ACT-044 | Setpoint-based thermostats are not controlled yet in M4; their rooms cannot be switched to control (the switch explains why). | implemented |
+| ACT-044 | Setpoint-based thermostats are controlled with the setpoint strategy (ACT-050 to ACT-054). | implemented |
 | ACT-047 | Valve confirmation per thermostat: "Confirm valve position every … minutes" in the thermostat dialog, pre-filled from the profile (`valve_write_refresh_minutes`; Bosch BTH-RA: 10), empty = off. The unchanged position is resent at that interval; confirmations do not count as rewrites (ACT-043). Field finding: the Bosch drops an external valve position exactly 15 minutes after the last write. | implemented |
 | ACT-048 | Each thermostat shows what Thermogeist did: `last_write` (time) and `last_write_value`, `last_confirmation`, `rewrites_last_hour`, `valve_refresh_minutes` – as attributes of its kind sensor. | implemented |
 | ACT-046 | Valve writes are bundled to spare motor and battery: a new position is written when it differs by at least 3 % and the last write is at least 10 min ago, or by at least 1 % after 30 min. Window, stop and safety are written at once, and so is the way back (window closed again). Field finding: 1 % steps every 3 minutes during a ramp were too many. | implemented |

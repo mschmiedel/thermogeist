@@ -48,5 +48,13 @@
       }
     ]
   },
-  "valve_write_refresh_minutes": 10
+  "valve_write_refresh_minutes": 10,
+  "setpoint_control_settings": {
+    "z2m": [
+      {
+        "expose": "operating_mode",
+        "value": "manual"
+      }
+    ]
+  }
 }

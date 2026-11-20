@@ -29,10 +29,12 @@ from .const import (
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
     CONF_PROFILE,
     CONF_RATED_OUTPUT,
+    CONF_RETURN_TEMPERATURE_ENTITY,
     CONF_ROLES,
     CONF_ROOM,
     CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
+    CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
     CONF_VALVE_REFRESH,
@@ -40,7 +42,7 @@ from .const import (
     SUBENTRY_ROOM,
     SUBENTRY_THERMOSTAT,
 )
-from .core.actuator import Role, Thermostat
+from .core.actuator import Role, Strategy, Thermostat
 from .core.house import HeatingType, House
 from .core.room import (
     DEFAULT_CEILING_HEIGHT_M,
@@ -64,6 +66,7 @@ def house_from_config(config: Mapping[str, Any]) -> House:
         share_outside_pct=_optional_float(config.get(CONF_SHARE_OUTSIDE)) or 0.0,
         living_area_m2=_optional_float(config.get(CONF_LIVING_AREA)),
         flow_temperature_entity=config.get(CONF_FLOW_TEMPERATURE_ENTITY) or None,
+        return_temperature_entity=config.get(CONF_RETURN_TEMPERATURE_ENTITY) or None,
     )
 
 
@@ -121,7 +124,15 @@ def thermostat_from_config(config: Mapping[str, Any], name: str) -> Thermostat:
             if config.get(CONF_VALVE_REFRESH)
             else None
         ),
+        strategy=_strategy(config.get(CONF_STRATEGY)),
     )
+
+
+def _strategy(value: Any) -> Strategy:
+    try:
+        return Strategy(value)
+    except ValueError:
+        return Strategy.AUTOMATIC
 
 
 def thermostats_from_entry(entry: ConfigEntry) -> dict[str, Thermostat]:

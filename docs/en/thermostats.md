@@ -44,33 +44,59 @@ Known models today:
 | Sonoff TRV-ZBT (Gen2) | Valve-based | Switch off *smart temperature control*. |
 | Bosch Radiator Thermostat II (BTH-RA) | Valve-based | No minimum opening on the device. Keeps a written valve position for 15 minutes only; Thermogeist confirms it every 10 minutes. |
 
-Every other thermostat works **setpoint-based**: Thermogeist controls it through the target
-temperature (from the next version on).
+Every other thermostat works **setpoint-based**: Thermogeist tells it which temperature to aim
+for, and the thermostat moves its valve itself.
+
+### How to control
+
+In the second step you choose **How to control**:
+
+| Choice | What happens |
+|---|---|
+| Automatic (default) | By valve position if *Valve position (set)* is filled in, otherwise by setpoint. |
+| By valve position | Thermogeist sets the valve itself: calm, with minimum opening and feed-forward. Needs *Valve position (set)*. |
+| By setpoint | The thermostat regulates with its own controller; Thermogeist only sends the right target. Works with every thermostat, also with valve-based ones if you prefer it. |
+
+**By setpoint, with external temperature input** (e.g. Bosch): Thermogeist sends the room
+temperature to the thermostat and sets the room target as its setpoint. The thermostat then
+regulates on the real room temperature.
+
+**By setpoint, without external temperature input:** the thermostat measures next to the warm
+radiator and would stop heating too early. Thermogeist compares its reading with the room sensor
+(30-minute average) and adds the difference: room target 20 °C, thermostat 2.5 K warmer than the
+room → setpoint 22.5 °C. The thermostat display therefore shows the corrected value. Setpoints
+stay within 5–30 °C in 0.5 K steps.
+
+Limits of *by setpoint*: no minimum opening and no calm valve movement – the thermostat's own
+controller decides how far it opens.
 
 ## Control
 
 Each room has a switch **Control**. Off (default): observe only. On: Thermogeist writes to the
-room's valve-based thermostats.
+room's thermostats – the valve position or the setpoint, depending on *How to control*.
 
 What happens when you switch it on:
 
 1. For 90 seconds after a Home Assistant restart nothing is written (*Waiting after restart*).
 2. Device settings needed for control are applied – e.g. Bosch `operating_mode` → *manual*,
    Sonoff *smart temperature control* off. The previous values are remembered.
-3. Every minute: planned valve position, minimum opening (Sonoff), room temperature as external
-   temperature, and the room target as the thermostat's setpoint, so its display stays honest.
+3. Every minute, by valve position: planned valve position, minimum opening (Sonoff), room
+   temperature as external temperature, and the room target as the thermostat's setpoint, so its
+   display stays honest.
+4. By setpoint: room temperature as external temperature (if possible) and the setpoint – changes
+   of at least 0.5 K, at most every 10 minutes. Window open or *Stop*: 5 °C at once.
 
 What happens when you switch it off: all remembered device settings and the valve position are
-put back. The thermostat regulates on its own again.
+put back; setpoint thermostats get the plain room setpoint. The thermostat regulates on its own
+again.
 
 **Turning the knob** on a controlled thermostat sets the room setpoint (after 20 seconds without
-further turning). You see it in the logbook.
+further turning). You see it in the logbook. With a corrected setpoint the difference counts:
+turning from 22.5 to 23.5 °C makes the room setpoint one degree higher.
 
 **If a thermostat keeps changing its valve on its own**, Thermogeist writes again up to three
 times per hour, then switches the room back to observe and shows a repair issue
 ([FAQ](faq/device_overrides_valve.md)).
-
-Rooms with only setpoint-based thermostats cannot be controlled yet.
 
 Before you switch control on, retarget your own automations, dashboards and voice assistants
 from the thermostat to the room's climate entity – otherwise two regulators fight.
@@ -81,6 +107,13 @@ On the house (**Configure**) you can choose a **flow temperature sensor** – th
 the water going to the radiators, e.g. from your heat pump. Together with the radiator outputs
 and the house heat load, Thermogeist then calculates a good starting valve position instead of
 finding it slowly.
+
+Optionally also a **return temperature sensor** – the water coming back, measured at the same
+place (e.g. heating circuit return). Without it Thermogeist assumes the radiators are 2.5 K
+cooler than the flow on average (5 K spread). With it the measured spread is used (30-minute
+average, limited to 1–10 K). With a large spread the radiators are cooler, and the valves open a
+bit further. The house return mixes all radiators, so it tells the average, not one radiator.
+Calibrate strap-on return sensors the same way as the flow sensor.
 
 ## Choosing the flow temperature sensor
 
@@ -126,7 +159,7 @@ On each room:
 |---|---|
 | Planned valve position | What Thermogeist would set right now. Attributes show the parts: *feed_forward* (from the heat demand), *proportional* (reaction to the temperature difference), *integral* (slow correction), and *limits* that applied. If *feed_forward* is empty, *feed_forward_missing* tells you what is missing – usually the flow temperature sensor on the house or the radiator output. |
 | Valve position *thermostat* | The actual valve position, if the thermostat reports it. Put it next to the planned one in a history graph. |
-| Kind *thermostat* | Valve-based or setpoint-based, with profile and roles as attributes. |
+| Kind *thermostat* | Valve-based or setpoint-based, with *strategy* (your choice), profile and roles as attributes. |
 
 ### Limits you may see
 
@@ -140,6 +173,8 @@ On each room:
 | `stopped` | Central mode *Stop*: 0 %. |
 | `safety` | The room sensor is silent: the valve goes to the minimum opening, at least 20 %. |
 
-Each thermostat's *Kind* sensor shows what Thermogeist did with it: `last_write` and `last_write_value`, `last_confirmation`, `rewrites_last_hour` and `valve_refresh_minutes`.
+Each thermostat's *Kind* sensor shows what Thermogeist did with it: `last_write` and `last_write_value`, `last_confirmation`, `rewrites_last_hour` and `valve_refresh_minutes`. By setpoint: `last_write`, `last_write_value` (the setpoint sent) and `setpoint_offset` (the correction added to the room target).
+
+The planned valve position also shows `flow_temperature_used`, `return_temperature_used` and `spread_used`.
 
 **Confirm valve position every … minutes** (in the thermostat's settings): some thermostats drop a valve position set from outside after a while – the Bosch Radiator Thermostat II after 15 minutes. Thermogeist then resends the unchanged value at this interval (a radio message, no motor movement). Pre-filled from the device profile (Bosch: 10), empty = off.

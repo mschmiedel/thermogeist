@@ -100,12 +100,16 @@ class ControllerState:
 
 
 def feed_forward_pct(
-    demand_w: float | None, rated_output_w: float | None, flow_c: float | None, room_c: float | None
+    demand_w: float | None,
+    rated_output_w: float | None,
+    flow_c: float | None,
+    room_c: float | None,
+    spread_k: float | None = None,
 ) -> float | None:
     """Share of the radiator's current capacity the room needs (CTL-030)."""
     if demand_w is None or not rated_output_w or flow_c is None or room_c is None:
         return None
-    available = available_output_w(rated_output_w, flow_c, room_c)
+    available = available_output_w(rated_output_w, flow_c, room_c, spread_k)
     if available <= 0:
         return FULL_PCT
     heat_fraction = min(1.0, demand_w / available)

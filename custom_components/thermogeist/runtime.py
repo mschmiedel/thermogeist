@@ -42,7 +42,7 @@ from .core.profiles import (
     effective_settings,
     is_valid_override,
 )
-from .core.radiator import time_constant_h
+from .core.radiator import time_constant_h, usable_spread_k
 from .core.room import Room
 from .core.smoothing import MovingAverage, plausible_flow
 from .core.time_provider import SystemTimeProvider, TimeProvider
@@ -136,6 +136,9 @@ class HouseRuntime:
         self.control = ControlManager(hass, self, profiles or [])
         self._flow_average = MovingAverage()
         self.flow_used_c: float | None = None
+        self._return_average = MovingAverage()
+        self.return_used_c: float | None = None
+        self.spread_used_k: float | None = None
 
     # ----- lifecycle -------------------------------------------------------------------------
 
@@ -165,6 +168,8 @@ class HouseRuntime:
         watched.append(self.house.outdoor_temperature_entity)
         if self.house.flow_temperature_entity:
             watched.append(self.house.flow_temperature_entity)
+        if self.house.return_temperature_entity:
+            watched.append(self.house.return_temperature_entity)
         self._unsubscribe.append(
             async_track_state_change_event(self._hass, watched, self._on_state_change)
         )
@@ -252,6 +257,19 @@ class HouseRuntime:
         self.flow_used_c = self._flow_average.value(now)
         return self.flow_used_c
 
+    def spread_k(self, flow_c: float | None) -> float | None:
+        """MDL-019: measured system spread from the averaged flow and return, or None."""
+        if not self.house.return_temperature_entity:
+            return None
+        now = self._clock.now()
+        raw = numeric_state(self._hass, self.house.return_temperature_entity)
+        if plausible_flow(raw):
+            assert raw is not None
+            self._return_average.add(now, raw)
+        self.return_used_c = self._return_average.value(now)
+        self.spread_used_k = usable_spread_k(flow_c, self.return_used_c)
+        return self.spread_used_k
+
     def controller_settings(self) -> ControllerSettings:
         values = self.settings()
         return ControllerSettings(
@@ -303,6 +321,7 @@ class HouseRuntime:
             return
         outdoor = self.outdoor_temperature_c()
         flow = self.flow_temperature_c()
+        spread = self.spread_k(flow)
         settings = self.controller_settings()
         for room_id, state in self.rooms.items():
             previous = state.decision.code if state.decision else None
@@ -322,7 +341,7 @@ class HouseRuntime:
                 state.heat_loss_w_per_k, state.decision.target_setpoint_c, outdoor
             )
             if state.thermostat_ids:
-                self._plan(state, flow, settings)
+                self._plan(state, flow, spread, settings)
             self._update_sensor_issue(room_id, state)
         self._notify()
         if not self.startup_hold():
@@ -367,7 +386,13 @@ class HouseRuntime:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, issue_id)
 
-    def _plan(self, state: RoomState, flow: float | None, settings: ControllerSettings) -> None:
+    def _plan(
+        self,
+        state: RoomState,
+        flow: float | None,
+        spread: float | None,
+        settings: ControllerSettings,
+    ) -> None:
         """Compute what the valves should do (CTL-042: at most once per minute)."""
         assert state.decision is not None
         now = self._clock.now()
@@ -401,7 +426,7 @@ class HouseRuntime:
                 target_c=state.decision.target_setpoint_c,
                 room_c=state.current_temperature_c,
                 feed_forward_pct=feed_forward_pct(
-                    state.demand_w, state.rated_output_w, flow, state.current_temperature_c
+                    state.demand_w, state.rated_output_w, flow, state.current_temperature_c, spread
                 ),
                 time_constant_h=time_constant_h(state.room.floor_area_m2, state.heat_loss_w_per_k),
                 safety=state.decision.code is ReasonCode.SAFETY_SENSOR_STALE,

@@ -23,14 +23,16 @@
           "design_outdoor_temperature": "Normaußentemperatur",
           "living_area": "Beheizte Wohnfläche",
           "share_outside": "Anteil außerhalb von Thermogeist",
-          "flow_temperature_entity": "Vorlauftemperatursensor"
+          "flow_temperature_entity": "Vorlauftemperatursensor",
+          "return_temperature_entity": "Rücklauftemperatursensor"
         },
         "data_description": {
           "heat_load": "Wärme, die das Haus am kältesten Auslegungstag braucht, aus deiner Heizlastberechnung (Heizungsbauer oder Energieberater). Leer lassen, wenn unbekannt.",
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
           "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
           "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %.",
-          "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen."
+          "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen.",
+          "return_temperature_entity": "Optional. Die Temperatur des Wassers, das von den Heizkörpern zurückkommt, gemessen an derselben Stelle wie der Vorlauf (z. B. Heizkreis-Rücklauf). Thermogeist nutzt dann den gemessenen Unterschied zwischen Vor- und Rücklauf, statt 5 K anzunehmen. Anlegefühler genauso kalibrieren wie den Vorlauf-Fühler."
         }
       }
     },
@@ -55,7 +57,8 @@
           "design_outdoor_temperature": "Normaußentemperatur",
           "living_area": "Beheizte Wohnfläche",
           "share_outside": "Anteil außerhalb von Thermogeist",
-          "flow_temperature_entity": "Vorlauftemperatursensor"
+          "flow_temperature_entity": "Vorlauftemperatursensor",
+          "return_temperature_entity": "Rücklauftemperatursensor"
         },
         "data_description": {
           "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
@@ -64,7 +67,8 @@
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
           "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
           "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %.",
-          "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen."
+          "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen.",
+          "return_temperature_entity": "Optional. Die Temperatur des Wassers, das von den Heizkörpern zurückkommt, gemessen an derselben Stelle wie der Vorlauf (z. B. Heizkreis-Rücklauf). Thermogeist nutzt dann den gemessenen Unterschied zwischen Vor- und Rücklauf, statt 5 K anzunehmen. Anlegefühler genauso kalibrieren wie den Vorlauf-Fühler."
         }
       }
     },
@@ -103,6 +107,13 @@
         "heated": "Beheizter Raum",
         "unheated": "Unbeheizter Raum oder Keller",
         "ground": "Erdreich (Bodenplatte)"
+      }
+    },
+    "strategy": {
+      "options": {
+        "automatic": "Automatisch",
+        "valve": "Über Ventilstellung",
+        "setpoint": "Über Sollwert"
       }
     }
   },
@@ -344,7 +355,8 @@
             "calibration_trigger": "Kalibrierung starten",
             "calibration_status": "Kalibrierstatus",
             "setpoint_source": "Quelle des Sollwerts",
-            "valve_refresh_minutes": "Ventilstellung bestätigen alle … Minuten"
+            "valve_refresh_minutes": "Ventilstellung bestätigen alle … Minuten",
+            "strategy": "Wie regeln"
           },
           "data_description": {
             "climate": "Die Klima-Entität des Thermostats (Sollwert, eigene Temperatur).",
@@ -353,7 +365,8 @@
             "valve_min": "Eine im Gerät gespeicherte Rückfallebene; sie wirkt auch, wenn Home Assistant ausfällt.",
             "external_temperature": "Damit nutzt das Thermostat den Raumsensor statt seines eigenen.",
             "setpoint_source": "Zeigt, ob ein Sollwert am Gerät geändert wurde.",
-            "valve_refresh_minutes": "Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile (Bosch: nach 15 Minuten). Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut – eine Funknachricht, keine Motorbewegung. Leer = aus."
+            "valve_refresh_minutes": "Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile (Bosch: nach 15 Minuten). Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut – eine Funknachricht, keine Motorbewegung. Leer = aus.",
+            "strategy": "Automatisch: über die Ventilstellung, wenn das Thermostat sie erlaubt, sonst über den Sollwert. Ventilstellung: Thermogeist stellt das Ventil selbst (ruhig, mit Mindestöffnung). Sollwert: Thermogeist sagt dem Thermostat, welche Temperatur es anpeilen soll, und das Thermostat bewegt sein Ventil selbst."
           }
         }
       },
@@ -361,7 +374,8 @@
         "climate_required": "Die Klima-Entität wird benötigt.",
         "role_needs_percent": "Diese Entität meldet keinen Prozentwert. Wähle die Ventilstellung (Einheit %).",
         "role_needs_temperature": "Diese Entität ist kein Temperatureingang.",
-        "role_needs_setpoint_source": "Diese Entität meldet nicht, woher ein Sollwert kam (manuell, Zeitplan, extern). Lass das Feld leer, wenn dein Thermostat so etwas nicht hat."
+        "role_needs_setpoint_source": "Diese Entität meldet nicht, woher ein Sollwert kam (manuell, Zeitplan, extern). Lass das Feld leer, wenn dein Thermostat so etwas nicht hat.",
+        "valve_strategy_needs_valve_write": "Die Strategie „Über Ventilstellung“ braucht die Entität „Ventilstellung (setzen)“. Wähle sie oder eine andere Strategie."
       },
       "abort": {
         "no_rooms": "Leg zuerst einen Raum an und ordne ihm dann Thermostate zu.",
@@ -370,8 +384,8 @@
     }
   },
   "exceptions": {
-    "no_valve_thermostat": {
-      "message": "Dieser Raum hat kein Thermostat, dessen Ventil Thermogeist stellen kann. Regeln ist mit Thermostaten über Ventilstellung möglich (z. B. Sonoff TRVZB, Bosch Heizkörperthermostat II)."
+    "no_thermostat": {
+      "message": "Dieser Raum hat noch kein Thermostat. Füge dem Raum zuerst ein Thermostat hinzu."
     },
     "logbook_manual_setpoint": {
       "message": "an {thermostat} auf {setpoint} °C gestellt; neuer Raum-Sollwert"

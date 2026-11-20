@@ -23,14 +23,16 @@
           "design_outdoor_temperature": "Design outdoor temperature",
           "living_area": "Heated living area",
           "share_outside": "Share outside Thermogeist",
-          "flow_temperature_entity": "Flow temperature sensor"
+          "flow_temperature_entity": "Flow temperature sensor",
+          "return_temperature_entity": "Return temperature sensor"
         },
         "data_description": {
           "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
           "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
-          "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor."
+          "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor.",
+          "return_temperature_entity": "Optional. The temperature of the water coming back from the radiators, measured at the same place as the flow (e.g. heating circuit return). Thermogeist then uses the measured difference between flow and return instead of assuming 5 K. Calibrate strap-on sensors the same way as the flow sensor."
         }
       }
     },
@@ -55,7 +57,8 @@
           "design_outdoor_temperature": "Design outdoor temperature",
           "living_area": "Heated living area",
           "share_outside": "Share outside Thermogeist",
-          "flow_temperature_entity": "Flow temperature sensor"
+          "flow_temperature_entity": "Flow temperature sensor",
+          "return_temperature_entity": "Return temperature sensor"
         },
         "data_description": {
           "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
@@ -64,7 +67,8 @@
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
           "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
-          "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor."
+          "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor.",
+          "return_temperature_entity": "Optional. The temperature of the water coming back from the radiators, measured at the same place as the flow (e.g. heating circuit return). Thermogeist then uses the measured difference between flow and return instead of assuming 5 K. Calibrate strap-on sensors the same way as the flow sensor."
         }
       }
     },
@@ -103,6 +107,13 @@
         "heated": "Heated room",
         "unheated": "Unheated room or basement",
         "ground": "Ground (floor slab)"
+      }
+    },
+    "strategy": {
+      "options": {
+        "automatic": "Automatic",
+        "valve": "By valve position",
+        "setpoint": "By setpoint"
       }
     }
   },
@@ -344,7 +355,8 @@
             "calibration_trigger": "Start calibration",
             "calibration_status": "Calibration status",
             "setpoint_source": "Setpoint source",
-            "valve_refresh_minutes": "Confirm valve position every … minutes"
+            "valve_refresh_minutes": "Confirm valve position every … minutes",
+            "strategy": "How to control"
           },
           "data_description": {
             "climate": "The thermostat's own climate entity (setpoint, its temperature).",
@@ -353,7 +365,8 @@
             "valve_min": "A fallback stored on the device; it still works when Home Assistant is down.",
             "external_temperature": "Lets the thermostat use the room sensor instead of its own.",
             "setpoint_source": "Tells whether a setpoint was changed on the device.",
-            "valve_refresh_minutes": "Some thermostats drop a valve position set from outside after a while (Bosch: after 15 minutes). Thermogeist then resends the unchanged value at this interval – a radio message, no motor movement. Empty = off."
+            "valve_refresh_minutes": "Some thermostats drop a valve position set from outside after a while (Bosch: after 15 minutes). Thermogeist then resends the unchanged value at this interval – a radio message, no motor movement. Empty = off.",
+            "strategy": "Automatic: by valve position if the thermostat allows it, otherwise by setpoint. Valve: Thermogeist sets the valve itself (calm, with minimum opening). Setpoint: Thermogeist tells the thermostat which temperature to aim for, and the thermostat moves its valve itself."
           }
         }
       },
@@ -361,7 +374,8 @@
         "climate_required": "The climate entity is required.",
         "role_needs_percent": "This entity does not report a percentage. Choose the valve position entity (unit %).",
         "role_needs_temperature": "This entity is not a temperature input.",
-        "role_needs_setpoint_source": "This entity does not report where a setpoint came from (manual, schedule, externally). Leave the field empty if your thermostat has none."
+        "role_needs_setpoint_source": "This entity does not report where a setpoint came from (manual, schedule, externally). Leave the field empty if your thermostat has none.",
+        "valve_strategy_needs_valve_write": "The strategy “by valve position” needs the entity “Valve position (set)”. Choose it or pick another strategy."
       },
       "abort": {
         "no_rooms": "Add a room first, then assign thermostats to it.",
@@ -370,8 +384,8 @@
     }
   },
   "exceptions": {
-    "no_valve_thermostat": {
-      "message": "This room has no thermostat whose valve Thermogeist can set. Control is available for valve-based thermostats (e.g. Sonoff TRVZB, Bosch Radiator Thermostat II)."
+    "no_thermostat": {
+      "message": "This room has no thermostat yet. Add a thermostat to the room first."
     },
     "logbook_manual_setpoint": {
       "message": "set to {setpoint} °C on {thermostat}; new room setpoint"
