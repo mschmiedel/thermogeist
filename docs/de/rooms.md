@@ -61,4 +61,45 @@ Beim Haus siehst du zusätzlich **Heizlast ohne Raum**.
 
 Um einen Raum zu ändern, öffne den Thermogeist-Eintrag und klick auf das Zahnrad (⚙) neben dem Raum.
 
+
+## Geräte, die den Raum heizen (kommt bald)
+
+> Geplant für eine spätere Version. Dieser Abschnitt erklärt schon vorab, welchen Faktor du wählst.
+
+Viele Geräte machen aus ihrem Strom Wärme im Raum: Ein Gaming-PC mit 300 W ist ein kleiner
+Heizkörper. Du wirst einem Raum die Leistungssensoren (W) solcher Geräte geben können;
+Thermogeist zieht ihre Wärme dann von dem ab, was der Heizkörper liefern muss. Die Leistung wird
+über 10 Minuten gemittelt, damit ein PC, der zwischen 80 und 400 W springt, das Ventil nicht bei
+jedem Lastwechsel bewegt.
+
+Pro Gerät sagt ein **Faktor**, wie viel der Leistung wirklich als Wärme im Raum bleibt.
+
+**100 % – alles bleibt im Raum** (Standard)
+
+| Gerät | Warum |
+|---|---|
+| PC, Gaming-PC, Laptop, Server, NAS, Netzwerkgeräte | Elektronik macht aus dem ganzen Strom Wärme. |
+| Fernseher, Monitor, Spielkonsole, Audio | Genauso. |
+| Licht | Praktisch alles, auch das Licht selbst wird am Ende zu Wärme. |
+| Kühlschrank, Gefriertruhe | Die Wärme kommt hinten raus – in den Raum. |
+| Wärmepumpentrockner | Arbeitet mit geschlossener Luft, die Wärme bleibt im Raum. |
+| Föhn, Heizlüfter, elektrischer Handtuchheizkörper, Infrarotheizung | Wärme ist ihr Zweck. |
+| Aquarium (Heizstab, Pumpe, Licht) | Das Wasser gibt die Wärme an den Raum weiter. |
+
+**Weniger als 100 % – ein Teil der Wärme verlässt den Raum**
+
+| Gerät | Faktor etwa | Warum |
+|---|---|---|
+| Ablufttrockner | 10–20 % | Warme, feuchte Luft wird nach draußen geblasen. |
+| Waschmaschine | 10–20 % | Der Strom heizt vor allem Wasser, und das läuft in den Abfluss. |
+| Spülmaschine | 20–40 % | Wie die Waschmaschine; die Trocknungsphase gibt etwas Wärme ab. |
+| Herd mit Abluft-Dunstabzug | etwa 50 % | Ein Teil der Wärme geht mit der Abluft hinaus. |
+| Durchlauferhitzer, Boiler | fast 0 % | Das Warmwasser fließt in den Abfluss. |
+| Zwischenstecker mit Mehrfachdose, Geräte stehen woanders | so viel, wie davon im Raum steht | Der Sensor misst mehr, als im Raum ankommt. |
+| PoE-Switch, der Außenkameras versorgt | der Anteil des Switches | Den Rest verbrauchen die Kameras draußen. |
+
+**Mehr als 100 %:** Ein Luftentfeuchter mit Kompressor gibt seinen Strom plus die Wärme der
+kondensierten Feuchte ab – etwa 150 %. Wähle trotzdem 100 %: Zu wenig Wärme anzunehmen ist
+harmlos, die langsame Korrektur gleicht es aus.
+
 Weiter: [Thermostate zuordnen](thermostats.md).

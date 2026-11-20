@@ -61,4 +61,44 @@ On the house you additionally see **Heat load not assigned to a room**.
 
 To change a room, open the Thermogeist entry and click the gear icon (⚙) next to the room.
 
+
+## Devices that heat the room (coming soon)
+
+> Planned for a later version. This section explains in advance which factor to choose.
+
+Many devices turn their power into heat in the room: a gaming PC at 300 W is a small radiator.
+You will be able to give a room the power sensors (W) of such devices; Thermogeist then
+subtracts their heat from what the radiator has to deliver. The power is averaged over
+10 minutes, so a PC jumping between 80 and 400 W does not move the valve with every load change.
+
+Per device a **factor** says how much of the power really stays in the room as heat.
+
+**100 % – everything stays in the room** (default)
+
+| Device | Why |
+|---|---|
+| PC, gaming PC, laptop, server, NAS, network gear | Electronics turn all power into heat. |
+| TV, monitor, games console, audio | Same. |
+| Lights | Practically all, also the light itself ends as heat. |
+| Fridge, freezer | The heat comes out at the back – into the room. |
+| Heat pump tumble dryer | Works with closed air, the heat stays in the room. |
+| Hair dryer, fan heater, electric towel rail, infrared panel | Heat is what they are for. |
+| Aquarium (heater, pump, light) | The water passes the heat on to the room. |
+
+**Less than 100 % – part of the heat leaves the room**
+
+| Device | Factor about | Why |
+|---|---|---|
+| Vented tumble dryer | 10–20 % | Warm, humid air is blown outside. |
+| Washing machine | 10–20 % | The power mainly heats water, which goes down the drain. |
+| Dishwasher | 20–40 % | Like the washing machine; the drying phase releases a little heat. |
+| Cooker with an extractor hood venting outside | about 50 % | Part of the heat leaves with the exhaust air. |
+| Instantaneous water heater, boiler | almost 0 % | The hot water leaves through the drain. |
+| Smart plug feeding a power strip whose devices are elsewhere | the share that is in the room | The sensor measures more than arrives in the room. |
+| PoE switch powering outdoor cameras | the switch's own share | The cameras use the rest outside. |
+
+**More than 100 %:** a compressor dehumidifier releases its power plus the heat of the
+condensed moisture – roughly 150 %. Choose 100 % anyway: assuming too little heat is harmless,
+the slow correction makes up for it.
+
 Next: [assign thermostats](thermostats.md).
