@@ -27,5 +27,8 @@ The user can always see whether a room is still learning, has settled, or is dri
 | ID | Requirement | Status |
 |---|---|---|
 | LRN-020 | Learning only happens in steady phases (no open window, no ramp, no override). Phases with an open door are learned separately or left out (OPN-010). | planned |
+| LRN-023 | Learning pauses automatically when the room warms clearly faster than radiator and known heat sources explain ("unexplained heat", e.g. a LAN party in a small room), when the central mode is stop, or within one hour after a manual change. The pause reason is shown. | planned |
+| LRN-024 | Per room a switch "Learning" to pause by hand, optionally for a duration (e.g. 24 h for a party weekend). Control keeps running; only adapting the learned values pauses. | planned |
+| LRN-025 | Every change of the learning state (learning / paused with reason / settled / drifting) appears in the logbook. | planned |
 | LRN-021 | Learning can be paused and reset per room. Both produce a reason code. | planned |
 | LRN-022 | All learning steps are deterministically testable via `TimeProvider` and the simulator. | planned |
