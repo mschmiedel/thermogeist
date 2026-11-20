@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
+from custom_components.thermogeist.core.actuation import should_write
 from custom_components.thermogeist.core.controller import (
     ControllerInputs,
     ControllerResult,
@@ -43,6 +44,8 @@ class Trace:
     minutes: list[float] = field(default_factory=list)
     temperatures: list[float] = field(default_factory=list)
     outputs: list[float] = field(default_factory=list)
+    written: list[float] = field(default_factory=list)
+    """What reached the valve after write bundling (ACT-046)."""
     results: list[ControllerResult] = field(default_factory=list)
 
 
@@ -54,6 +57,8 @@ def run(scenario: Scenario, duration: timedelta) -> Trace:
     known_h = room.heat_loss_w_per_k if scenario.knows_heat_loss else None
     tau = time_constant_h(room.floor_area_m2, known_h)
     elapsed = timedelta(0)
+    valve: float | None = None
+    valve_written_at = None
     while elapsed < duration:
         demand = current_demand_w(known_h, scenario.target_c, scenario.outdoor_c)
         ff = (
@@ -76,8 +81,14 @@ def run(scenario: Scenario, duration: timedelta) -> Trace:
         trace.temperatures.append(room.temperature_c)
         trace.outputs.append(result.output_pct)
         trace.results.append(result)
+        urgent = bool({"window", "stopped", "safety"} & {limit.value for limit in result.limits})
+        if should_write(result.output_pct, valve, valve_written_at, clock.now(), urgent=urgent):
+            valve = result.output_pct
+            valve_written_at = clock.now()
+        assert valve is not None
+        trace.written.append(valve)
         room.step(
-            result.output_pct,
+            valve,
             scenario.outdoor_c,
             scenario.flow_c,
             scenario.gains_w(elapsed),

@@ -29,11 +29,13 @@ class ValveSupervisor:
 
     def __init__(self) -> None:
         self.last_written_pct: float | None = None
+        self.last_written_at: datetime | None = None
         self._deviating_since: datetime | None = None
         self._rewrites: deque[datetime] = deque()
 
-    def written(self, value_pct: float) -> None:
+    def written(self, value_pct: float, now: datetime | None = None) -> None:
         self.last_written_pct = value_pct
+        self.last_written_at = now
         self._deviating_since = None
 
     def check(self, reported_pct: float | None, now: datetime) -> Verdict:

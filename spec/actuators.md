@@ -56,6 +56,7 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 | ACT-042 | Profiles may list device settings needed for control (e.g. Bosch `operating_mode: manual`, Sonoff `smart_temperature_control: off`, `temperature_sensor_select: remote_temperature`). They are applied when control starts; the previous values are stored and restored when control stops or the thermostat is removed (ACT-008). | implemented |
 | ACT-043 | Write verification: if a valve-based thermostat reports a position more than 5 % away from the last written one for longer than 5 minutes, Thermogeist writes again, at most 3 times per hour. If that is exceeded, the room switches back to observe, the logbook explains why (`device_overrides_valve`) and a repair issue appears. | implemented |
 | ACT-044 | Setpoint-based thermostats are not controlled yet in M4; their rooms cannot be switched to control (the switch explains why). | implemented |
+| ACT-046 | Valve writes are bundled to spare motor and battery: a new position is written when it differs by at least 3 % and the last write is at least 10 min ago, or by at least 1 % after 30 min. Window, stop and safety are written at once, and so is the way back (window closed again). Field finding: 1 % steps every 3 minutes during a ramp were too many. | implemented |
 | ACT-045 | Writes only start 90 s after Home Assistant started (`startup_hold`), so devices are available and no stale values are sent. | implemented |
 
 ## Devices

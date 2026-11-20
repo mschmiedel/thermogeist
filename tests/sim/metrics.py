@@ -39,3 +39,9 @@ def valve_moves(trace: Trace, start_h: float, end_h: float) -> int:
 
 def mean_opening_pct(trace: Trace, start_h: float, end_h: float) -> float:
     return fmean(trace.outputs[i] for i in window(trace, start_h, end_h))
+
+
+def valve_writes(trace: Trace, start_h: float, end_h: float) -> int:
+    """Motor movements: how often a new position reached the device."""
+    indices = list(window(trace, start_h, end_h))
+    return sum(1 for a, b in pairwise(indices) if trace.written[a] != trace.written[b])

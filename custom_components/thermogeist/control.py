@@ -20,7 +20,9 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 from homeassistant.helpers.translation import async_get_translations
 
 from .const import DOMAIN
+from .core.actuation import should_write
 from .core.actuator import DeviceProfile, Kind, Role, Source, Thermostat
+from .core.controller import ControllerResult, Limit
 from .core.supervision import ValveSupervisor, Verdict
 
 if TYPE_CHECKING:
@@ -46,6 +48,8 @@ class ThermostatControl:
     external_sent_at: datetime | None = None
     settings_applied: bool = False
     pending_override: CALLBACK_TYPE | None = None
+    last_write_urgent: bool = False
+    """Leaving an urgent state (window closed again) is just as urgent as entering it."""
 
 
 class ControlManager:
@@ -140,27 +144,37 @@ class ControlManager:
             if not control.settings_applied:
                 await self._async_apply_settings(tid, thermostat)
                 control.settings_applied = True
-            if not await self._async_valve(room_id, tid, thermostat, state.plan.output_pct):
+            if not await self._async_valve(room_id, tid, thermostat, state.plan):
                 return
             await self._async_min_opening(tid, thermostat)
             await self._async_external_temperature(thermostat, control, state)
             await self._async_setpoint(thermostat, control, target)
 
     async def _async_valve(
-        self, room_id: str, tid: str, thermostat: Thermostat, output_pct: float
+        self, room_id: str, tid: str, thermostat: Thermostat, plan: ControllerResult
     ) -> bool:
         """Write the planned position; returns False if Thermogeist gave up on this room."""
         control = self.thermostats[tid]
         write_entity = thermostat.roles[Role.VALVE_WRITE]
-        if control.supervisor.last_written_pct != output_pct:
+        output_pct = plan.output_pct
+        now = self._runtime.now()
+        urgent_now = bool({Limit.WINDOW, Limit.STOPPED, Limit.SAFETY} & set(plan.limits))
+        urgent = urgent_now or control.last_write_urgent
+        supervisor = control.supervisor
+        if should_write(
+            output_pct, supervisor.last_written_pct, supervisor.last_written_at, now, urgent=urgent
+        ):
             await self._async_write_number(tid, write_entity, output_pct)
-            control.supervisor.written(output_pct)
+            supervisor.written(output_pct, now)
+            control.last_write_urgent = urgent_now
             return True
         read_entity = thermostat.roles.get(Role.VALVE_READ, write_entity)
-        verdict = control.supervisor.check(self._number(read_entity), self._runtime.now())
+        verdict = supervisor.check(self._number(read_entity), now)
         if verdict is Verdict.REWRITE:
-            await self._async_write_number(tid, write_entity, output_pct)
-            control.supervisor.written(output_pct)
+            rewrite = supervisor.last_written_pct
+            assert rewrite is not None
+            await self._async_write_number(tid, write_entity, rewrite)
+            supervisor.written(rewrite, now)
         elif verdict is Verdict.GIVE_UP:
             await self._async_give_up(room_id, tid, thermostat)
             return False
