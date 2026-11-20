@@ -1,11 +1,17 @@
-<p align="center"><img src="brand/logo-light.svg" alt="Thermogeist" width="480"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/logo-dark.svg">
+    <img src="brand/logo-light.svg" alt="Thermogeist" width="480">
+  </picture>
+</p>
 
 # Thermogeist
 
 [English](README.md) | **Deutsch**
 
-> **Status: frühe Entwicklung.** Haus und Räume beschreiben, Thermostate zuordnen und sehen, was
-> Thermogeist tun würde (Beobachtungsmodus). Das echte Regeln der Ventile folgt.
+> **Status: Alpha.** Haus und Räume beschreiben, Thermostate zuordnen, sehen, was Thermogeist tun
+> würde (Beobachtungsmodus), und Raum für Raum das Regeln einschalten – über Ventilstellung oder
+> über Sollwert.
 > Los geht's mit [Erste Schritte](docs/de/getting-started.md).
 
 Ruhige, nachvollziehbare Heizkörperregelung für Home Assistant – für das ganze Haus, nicht nur

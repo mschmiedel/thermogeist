@@ -1,11 +1,16 @@
-<p align="center"><img src="brand/logo-light.svg" alt="Thermogeist" width="480"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/logo-dark.svg">
+    <img src="brand/logo-light.svg" alt="Thermogeist" width="480">
+  </picture>
+</p>
 
 # Thermogeist
 
 **English** | [Deutsch](README.de.md)
 
-> **Status: early development.** Describe your house and rooms, assign thermostats and see what
-> Thermogeist would do (observe mode). Actually controlling the valves follows.
+> **Status: alpha.** Describe your house and rooms, assign thermostats, watch what Thermogeist
+> would do (observe mode) and switch control on room by room – by valve position or by setpoint.
 > Start with [Getting started](docs/en/getting-started.md).
 
 Calm, understandable radiator control for Home Assistant – for the whole house, not just one
