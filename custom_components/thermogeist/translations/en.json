@@ -343,7 +343,8 @@
             "child_lock": "Child lock",
             "calibration_trigger": "Start calibration",
             "calibration_status": "Calibration status",
-            "setpoint_source": "Setpoint source"
+            "setpoint_source": "Setpoint source",
+            "valve_refresh_minutes": "Confirm valve position every … minutes"
           },
           "data_description": {
             "climate": "The thermostat's own climate entity (setpoint, its temperature).",
@@ -351,7 +352,8 @@
             "valve_write": "Lets Thermogeist set the valve position directly. Without it the thermostat is controlled by setpoint.",
             "valve_min": "A fallback stored on the device; it still works when Home Assistant is down.",
             "external_temperature": "Lets the thermostat use the room sensor instead of its own.",
-            "setpoint_source": "Tells whether a setpoint was changed on the device."
+            "setpoint_source": "Tells whether a setpoint was changed on the device.",
+            "valve_refresh_minutes": "Some thermostats drop a valve position set from outside after a while (Bosch: after 15 minutes). Thermogeist then resends the unchanged value at this interval – a radio message, no motor movement. Empty = off."
           }
         }
       },

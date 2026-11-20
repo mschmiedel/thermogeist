@@ -51,6 +51,7 @@ class Limit(StrEnum):
     SATURATED = "saturated"
     MIN_OPENING = "min_opening"
     MIN_OPENING_RELAXED = "min_opening_relaxed"
+    HOLD_WHEN_WARM = "hold_when_warm"
     RATE_LIMIT = "rate_limit"
 
 
@@ -135,6 +136,15 @@ class RoomController:
     def __init__(self) -> None:
         self.state = ControllerState()
 
+    def seed(self, output_pct: float) -> None:
+        """CTL-044: start from the valve's actual position after a restart.
+
+        Without it the first step is not rate-limited and may jump (field finding: 30 → 54 %).
+        """
+        if self.state.last_output_pct is None:
+            self.state.last_output_pct = output_pct
+            self.state.last_reported_pct = float(round(output_pct))
+
     def step(self, inputs: ControllerInputs, now: datetime) -> ControllerResult:
         elapsed_h = self._elapsed_h(now)
         settings = inputs.settings
@@ -206,6 +216,13 @@ class RoomController:
             else:
                 output = settings.min_opening_pct
                 limits.append(Limit.MIN_OPENING)
+        last = self.state.last_output_pct
+        if raw_error < 0 and last is not None and output > last:
+            # CTL-043: a room above its target never gets more heat, whatever the feed-forward
+            # says (field finding: a falling flow temperature pushed the plan up while the
+            # guest bathroom was already 0.3 K too warm).
+            output = last
+            limits.append(Limit.HOLD_WHEN_WARM)
         output = self._rate_limited(output, settings, elapsed_h, limits)
         return ControllerResult(
             output_pct=output,
@@ -259,5 +276,6 @@ class RoomController:
 
     def _elapsed_h(self, now: datetime) -> float:
         if self.state.last_time is None:
-            return 0.0
+            # A seeded controller is rate-limited from its first step on.
+            return 0.0 if self.state.last_output_pct is None else 1 / 60
         return max(0.0, (now - self.state.last_time).total_seconds() / 3600)

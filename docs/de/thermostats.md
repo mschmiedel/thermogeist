@@ -137,7 +137,12 @@ Pro Raum:
 |---|---|
 | `min_opening` | Das Ventil bleibt auf der Mindestöffnung deiner Heizungsart (Wärmepumpe: 40 %). |
 | `min_opening_relaxed` | Der Raum ist deutlich zu warm, das Ventil darf unter die Mindestöffnung. Typisch für Heizkörper, die für den Raum zu groß sind. |
+| `hold_when_warm` | Der Raum ist über seinem Ziel, deshalb wird das Ventil nicht weiter geöffnet, egal was die Rechnung sagt. |
 | `rate_limit` | Das Ventil bewegt sich absichtlich langsam (Wärmepumpe: max. 10 % pro 30 Minuten). |
 | `saturated` | Das Ventil ist ganz offen oder an seiner untersten erlaubten Stellung. |
 | `stopped` | Zentralmodus *Aus*: 0 %. |
 | `safety` | Der Raumsensor schweigt: Das Ventil geht auf die Mindestöffnung, mindestens 20 %. |
+
+Der Sensor *Art* jedes Thermostats zeigt, was Thermogeist damit getan hat: `last_write` und `last_write_value`, `last_confirmation`, `rewrites_last_hour` und `valve_refresh_minutes`.
+
+**Ventilstellung bestätigen alle … Minuten** (in den Einstellungen des Thermostats): Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile – das Bosch Heizkörperthermostat II nach 15 Minuten. Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut (eine Funknachricht, keine Motorbewegung). Vorbelegt aus dem Geräteprofil (Bosch: 10), leer = aus.

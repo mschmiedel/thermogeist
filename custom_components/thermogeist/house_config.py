@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,6 +35,7 @@ from .const import (
     CONF_SHARE_OUTSIDE,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
+    CONF_VALVE_REFRESH,
     CONF_WINDOWS,
     SUBENTRY_ROOM,
     SUBENTRY_THERMOSTAT,
@@ -114,6 +116,11 @@ def thermostat_from_config(config: Mapping[str, Any], name: str) -> Thermostat:
         device_id=config.get(CONF_DEVICE) or None,
         profile_id=config.get(CONF_PROFILE) or None,
         valve_min_inverted=bool(config.get(CONF_VALVE_MIN_INVERTED, False)),
+        valve_refresh=(
+            timedelta(minutes=float(config[CONF_VALVE_REFRESH]))
+            if config.get(CONF_VALVE_REFRESH)
+            else None
+        ),
     )
 
 

@@ -121,3 +121,28 @@ def test_start_value_is_removed_when_feed_forward_arrives() -> None:
     clock.advance(timedelta(minutes=1))
     controller.step(inputs(feed_forward_pct=None), clock.now())
     assert controller.state.integral_pct == pytest.approx(30.0)
+
+
+def test_room_above_target_never_gets_more_heat() -> None:
+    """Scenario: SCN-CTL-014"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    first = controller.step(inputs(room_c=20.3, feed_forward_pct=30.0), clock.now())
+
+    clock.advance(timedelta(minutes=15))
+    result = controller.step(inputs(room_c=20.3, feed_forward_pct=54.0), clock.now())
+
+    assert result.output_pct == first.output_pct  # 40 % minimum opening, no increase
+    assert Limit.HOLD_WHEN_WARM in result.limits
+
+
+def test_seeded_controller_is_rate_limited_from_the_first_step() -> None:
+    """Scenario: SCN-CTL-015"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    controller.seed(30.0)
+
+    result = controller.step(inputs(feed_forward_pct=54.0), clock.now())
+
+    assert result.output_pct == 30.0
+    assert Limit.RATE_LIMIT in result.limits

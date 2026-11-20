@@ -215,6 +215,9 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
             "mode": "observe",
             "strategies": sorted({t.kind.value for t in thermostats}),
             "radiator_output_w": self.room_state.rated_output_w,
+            "flow_temperature_used": (
+                round(self.runtime.flow_used_c, 1) if self.runtime.flow_used_c is not None else None
+            ),
         }
         if plan is not None:
             attributes |= {
@@ -251,6 +254,12 @@ class ThermostatKindSensor(ThermostatEntity, SensorEntity):
             "profile": self.thermostat.profile_id,
             "radiator_output_w": self.thermostat.rated_output_w,
             "roles": {role.value: entity for role, entity in self.thermostat.roles.items()},
+            "valve_refresh_minutes": (
+                self.thermostat.valve_refresh.total_seconds() / 60
+                if self.thermostat.valve_refresh
+                else None
+            ),
+            **self.runtime.control.write_info(self._thermostat_id),
         }
 
 

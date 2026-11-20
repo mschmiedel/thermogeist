@@ -51,6 +51,9 @@ class ThermostatControl:
     last_write_urgent: bool = False
     last_sent_at: datetime | None = None
     """Last time any valve value was sent, including confirmations (ACT-047)."""
+    last_write_at: datetime | None = None
+    last_write_pct: float | None = None
+    last_confirmation_at: datetime | None = None
     """Leaving an urgent state (window closed again) is just as urgent as entering it."""
 
 
@@ -125,6 +128,20 @@ class ControlManager:
         await self._async_restore(tid)
         await self._runtime.async_save()
 
+    def write_info(self, tid: str) -> dict[str, Any]:
+        """ACT-048: what Thermogeist last did with this thermostat, for its attributes."""
+        control = self.thermostats.get(tid)
+        if control is None:
+            return {}
+        return {
+            "last_write": control.last_write_at.isoformat() if control.last_write_at else None,
+            "last_write_value": control.last_write_pct,
+            "last_confirmation": (
+                control.last_confirmation_at.isoformat() if control.last_confirmation_at else None
+            ),
+            "rewrites_last_hour": control.supervisor.rewrites_last_hour(self._runtime.now()),
+        }
+
     # ----- applying plans -----------------------------------------------------------------
 
     @callback
@@ -151,6 +168,7 @@ class ControlManager:
             await self._async_min_opening(tid, thermostat)
             await self._async_external_temperature(thermostat, control, state)
             await self._async_setpoint(thermostat, control, target)
+        self._runtime.notify()
 
     async def _async_valve(
         self, room_id: str, tid: str, thermostat: Thermostat, plan: ControllerResult
@@ -170,6 +188,7 @@ class ControlManager:
             supervisor.written(output_pct, now)
             control.last_write_urgent = urgent_now
             control.last_sent_at = now
+            control.last_write_at, control.last_write_pct = now, output_pct
             return True
         if self._refresh_due(thermostat, control, now) and supervisor.last_written_pct is not None:
             # Confirm the unchanged value before the device drops it; no motor movement.
@@ -177,6 +196,7 @@ class ControlManager:
                 "number", "set_value", write_entity, value=supervisor.last_written_pct
             )
             control.last_sent_at = now
+            control.last_confirmation_at = now
             return True
         read_entity = thermostat.roles.get(Role.VALVE_READ, write_entity)
         verdict = supervisor.check(self._number(read_entity), now)
@@ -185,6 +205,7 @@ class ControlManager:
             assert rewrite is not None
             await self._async_write_number(tid, write_entity, rewrite)
             supervisor.written(rewrite, now)
+            control.last_write_at, control.last_write_pct = now, rewrite
         elif verdict is Verdict.GIVE_UP:
             await self._async_give_up(room_id, tid, thermostat)
             return False
@@ -193,10 +214,9 @@ class ControlManager:
     def _refresh_due(
         self, thermostat: Thermostat, control: ThermostatControl, now: datetime
     ) -> bool:
-        profile = self._profiles.get(thermostat.profile_id or "")
-        if profile is None or profile.valve_refresh is None or control.last_sent_at is None:
+        if thermostat.valve_refresh is None or control.last_sent_at is None:
             return False
-        return now - control.last_sent_at >= profile.valve_refresh
+        return now - control.last_sent_at >= thermostat.valve_refresh
 
     async def _async_min_opening(self, tid: str, thermostat: Thermostat) -> None:
         entity = thermostat.roles.get(Role.VALVE_MIN)

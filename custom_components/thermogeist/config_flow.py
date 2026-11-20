@@ -63,6 +63,7 @@ from .const import (
     CONF_SHARE_OUTSIDE,
     CONF_TEMPERATURE_ENTITY,
     CONF_VALVE_MIN_INVERTED,
+    CONF_VALVE_REFRESH,
     CONF_WINDOWS,
     DOMAIN,
     RATED_OUTPUT_W_MAX,
@@ -461,6 +462,7 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
         self._data: dict[str, Any] = {}
         self._detected: dict[str, str] = {}
         self._profile_name: str | None = None
+        self._refresh: float | None = None
         self._notes: str = ""
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
@@ -530,6 +532,14 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
         if profile and Role.VALVE_MIN in profile.roles.get(Source.Z2M, {}):
             inverted = profile.roles[Source.Z2M][Role.VALVE_MIN].inverted
         self._data[CONF_VALVE_MIN_INVERTED] = inverted
+        if same_device and CONF_VALVE_REFRESH in defaults:
+            self._refresh = defaults.get(CONF_VALVE_REFRESH)
+        else:
+            self._refresh = (
+                profile.valve_refresh.total_seconds() / 60
+                if profile and profile.valve_refresh
+                else None
+            )
         self._data["_device_name"] = (device.name_by_user or device.name) if device else device_id
 
     async def async_step_roles(
@@ -537,6 +547,8 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = dict(user_input)
+            self._refresh = user_input.pop(CONF_VALVE_REFRESH, None)
             roles = {role: entity for role, entity in user_input.items() if entity}
             if Role.CLIMATE.value not in roles:
                 errors[Role.CLIMATE.value] = "climate_required"
@@ -551,6 +563,12 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
             schema[marker(role.value, description=_suggested(self._detected, role.value))] = (
                 EntitySelector(EntitySelectorConfig(domain=domains))
             )
+        schema[
+            vol.Optional(
+                CONF_VALVE_REFRESH,
+                description={"suggested_value": self._refresh} if self._refresh else None,
+            )
+        ] = _number(1, 60, 1, "min")
         return self.async_show_form(
             step_id="roles",
             last_step=True,
@@ -586,6 +604,7 @@ class ThermostatSubentryFlow(ConfigSubentryFlow):
             CONF_PROFILE: self._data.get(CONF_PROFILE),
             CONF_VALVE_MIN_INVERTED: self._data.get(CONF_VALVE_MIN_INVERTED, False),
             CONF_ROLES: roles,
+            CONF_VALVE_REFRESH: self._refresh or None,
         }
         if self._data.get(CONF_RATED_OUTPUT) is not None:
             data[CONF_RATED_OUTPUT] = self._data[CONF_RATED_OUTPUT]

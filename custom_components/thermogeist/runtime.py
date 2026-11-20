@@ -24,7 +24,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOCS_URL, DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
 from .control import ControlManager
-from .core.actuator import DeviceProfile, Thermostat
+from .core.actuator import DeviceProfile, Role, Thermostat
 from .core.controller import (
     ControllerInputs,
     ControllerResult,
@@ -44,6 +44,7 @@ from .core.profiles import (
 )
 from .core.radiator import time_constant_h
 from .core.room import Room
+from .core.smoothing import MovingAverage, plausible_flow
 from .core.time_provider import SystemTimeProvider, TimeProvider
 
 REEVALUATE_EVERY = timedelta(minutes=1)
@@ -133,6 +134,8 @@ class HouseRuntime:
         self.started_at: datetime | None = None
         self.docs_url = DOCS_URL
         self.control = ControlManager(hass, self, profiles or [])
+        self._flow_average = MovingAverage()
+        self.flow_used_c: float | None = None
 
     # ----- lifecycle -------------------------------------------------------------------------
 
@@ -196,6 +199,10 @@ class HouseRuntime:
         self._reevaluate()
 
     @callback
+    def notify(self) -> None:
+        self._notify()
+
+    @callback
     def _on_delayed(self, _now: datetime) -> None:
         """Delayed re-check (startup hold, window delay); must run in the event loop."""
         self._reevaluate()
@@ -234,9 +241,16 @@ class HouseRuntime:
         return numeric_state(self._hass, self.house.outdoor_temperature_entity)
 
     def flow_temperature_c(self) -> float | None:
+        """Flow temperature as a 30-minute moving average of plausible values (CTL-038/039)."""
         if not self.house.flow_temperature_entity:
             return None
-        return numeric_state(self._hass, self.house.flow_temperature_entity)
+        now = self._clock.now()
+        raw = numeric_state(self._hass, self.house.flow_temperature_entity)
+        if plausible_flow(raw):
+            assert raw is not None
+            self._flow_average.add(now, raw)
+        self.flow_used_c = self._flow_average.value(now)
+        return self.flow_used_c
 
     def controller_settings(self) -> ControllerSettings:
         values = self.settings()
@@ -314,6 +328,17 @@ class HouseRuntime:
         if not self.startup_hold():
             self.control.schedule_apply()
 
+    def _actual_valve_pct(self, state: RoomState) -> float | None:
+        """Mean reported valve position of the room's thermostats (CTL-044)."""
+        values = []
+        for tid in state.thermostat_ids:
+            # Only a reported position counts: a write-only setting (Sonoff valve_opening_degree,
+            # 100 % from the factory) says nothing about where the valve is.
+            entity = self.thermostats[tid].roles.get(Role.VALVE_READ)
+            if entity and (value := numeric_state(self._hass, entity)) is not None:
+                values.append(value)
+        return sum(values) / len(values) if values else None
+
     def _window_open_since(self, state: RoomState) -> datetime | None:
         opened = [
             s.last_changed
@@ -357,6 +382,10 @@ class HouseRuntime:
             return
         state.plan_at = now
         state.plan_code = state.decision.code
+        if state.controller.state.last_output_pct is None:
+            actual = self._actual_valve_pct(state)
+            if actual is not None:
+                state.controller.seed(actual)
         state.feed_forward_missing = [
             name
             for name, value in (

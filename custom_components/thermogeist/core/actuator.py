@@ -155,6 +155,8 @@ class Thermostat:
     """MDL-006: radiator rated output at 75/65/20 °C."""
     profile_id: str | None = None
     valve_min_inverted: bool = False
+    valve_refresh: timedelta | None = None
+    """ACT-047: resend the unchanged valve position at this interval; None = off."""
 
     @property
     def kind(self) -> Kind:

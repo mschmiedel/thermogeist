@@ -33,6 +33,9 @@ class ValveSupervisor:
         self._deviating_since: datetime | None = None
         self._rewrites: deque[datetime] = deque()
 
+    def rewrites_last_hour(self, now: datetime) -> int:
+        return sum(1 for t in self._rewrites if now - t < REWRITE_WINDOW)
+
     def written(self, value_pct: float, now: datetime | None = None) -> None:
         self.last_written_pct = value_pct
         self.last_written_at = now

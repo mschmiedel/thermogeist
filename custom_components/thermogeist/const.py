@@ -56,6 +56,7 @@ CONF_RATED_OUTPUT: Final = "rated_output"
 CONF_PROFILE: Final = "profile"
 CONF_ROLES: Final = "roles"
 CONF_VALVE_MIN_INVERTED: Final = "valve_min_inverted"
+CONF_VALVE_REFRESH: Final = "valve_refresh_minutes"
 RATED_OUTPUT_W_MIN: Final = 50.0
 RATED_OUTPUT_W_MAX: Final = 10_000.0
 

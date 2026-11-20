@@ -17,7 +17,7 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, setup_house
-from .test_thermostats import FLOW_SENSOR, assign, z2m_device
+from .test_thermostats import FLOW_SENSOR, assign, suggested, z2m_device
 
 SWITCH = "switch.living_room_control"
 REASON = "sensor.living_room_active_reason"
@@ -246,3 +246,59 @@ async def test_plan_is_not_recomputed_on_sensor_noise(
         e for e in changes if e.data["entity_id"] == "sensor.living_room_planned_valve_position"
     ]
     assert len(planned) <= 1
+
+
+async def test_confirmation_interval_is_configurable(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-009"""
+    hass.states.async_set(FLOW_SENSOR, "40.0", {"device_class": "temperature"})
+    entry = await setup_house(
+        hass, {**HOUSE_WITH_LOAD, "flow_temperature_entity": FLOW_SENSOR}, [LIVING_ROOM]
+    )
+    room_id = next(iter(entry.subentries))
+    device_id = z2m_device(
+        hass,
+        "Bath TRV",
+        "Bosch",
+        "BTH-RA",
+        {"climate": ("climate", "heat"), "pi_heating_demand": ("number", "39", "%")},
+    )
+    hass.states.async_set(DEVICE_CLIMATE, "heat", {"temperature": 20.0})
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "thermostat"), context={"source": "user"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"room": room_id, "device": device_id}
+    )
+    roles = suggested(result)
+    assert roles.pop("valve_refresh_minutes") == 10.0  # from the Bosch profile
+    await hass.config_entries.subentries.async_configure(result["flow_id"], roles)  # cleared = off
+    await hass.async_block_till_done()
+    calls = Calls(hass)
+    await switch(hass, True)
+    await tick(hass, freezer, 91)
+
+    for _ in range(30):
+        report_room_temperature(hass, 19.5)
+        await tick(hass, freezer, 60)
+
+    assert len(Calls.values(calls.number, VALVE, "value")) == 1
+    kind = hass.states.get("sensor.living_room_kind_bath_trv").attributes
+    assert kind["valve_refresh_minutes"] is None
+    assert kind["last_write"] is not None
+    assert kind["last_confirmation"] is None
+    assert kind["rewrites_last_hour"] == 0
+
+
+async def test_restart_starts_from_the_reported_valve(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-011"""
+    entry, _ = await controlled_bosch(hass)
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    planned = hass.states.get("sensor.living_room_planned_valve_position")
+    assert float(planned.state) == pytest.approx(39, abs=1)

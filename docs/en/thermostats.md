@@ -134,7 +134,12 @@ On each room:
 |---|---|
 | `min_opening` | The valve stays at the minimum opening of your heating type (heat pump: 40 %). |
 | `min_opening_relaxed` | The room is clearly too warm, so the valve may close below the minimum opening. Typical for radiators that are too big for the room. |
+| `hold_when_warm` | The room is above its target, so the valve is not opened further, whatever the calculation says. |
 | `rate_limit` | The valve moves slowly on purpose (heat pump: max. 10 % per 30 minutes). |
 | `saturated` | The valve is fully open or at its lowest allowed position. |
 | `stopped` | Central mode *Stop*: 0 %. |
 | `safety` | The room sensor is silent: the valve goes to the minimum opening, at least 20 %. |
+
+Each thermostat's *Kind* sensor shows what Thermogeist did with it: `last_write` and `last_write_value`, `last_confirmation`, `rewrites_last_hour` and `valve_refresh_minutes`.
+
+**Confirm valve position every … minutes** (in the thermostat's settings): some thermostats drop a valve position set from outside after a while – the Bosch Radiator Thermostat II after 15 minutes. Thermogeist then resends the unchanged value at this interval (a radio message, no motor movement). Pre-filled from the device profile (Bosch: 10), empty = off.
