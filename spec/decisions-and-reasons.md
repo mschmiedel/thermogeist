@@ -20,7 +20,7 @@ is created as a `Decision` at one central place.
 | ID | Requirement | Status |
 |---|---|---|
 | RSN-001 | All reason codes live in one central catalogue (`core/decisions.py`) with severity, translated state names (en/de) and an FAQ page per language. Text templates with parameters follow with the logbook (RSN-003). | implemented |
-| RSN-002 | One sensor `active_reason` (enum) per room with the currently effective reason; attributes: severity, since, FAQ link, parameters. | implemented |
+| RSN-002 | One sensor `active_reason` (enum) per room with the currently effective reason; attributes: severity, since (when the reason started, so the state is only written on real changes), FAQ link, parameters. | implemented |
 | RSN-003 | Every change of a room's reason with `severity ≥ notice`, every adopted manual setpoint and every fallback to observe appears in the HA logbook as a readable sentence. | implemented |
 | RSN-004 | A silent room sensor (`safety_sensor_stale`) and a thermostat that overrides its valve (`device_overrides_valve`) raise a repair issue; it disappears once the cause is resolved. | implemented |
 | RSN-005 | A test ensures that every code in the catalogue has a translation and an FAQ entry in both languages. | implemented |

@@ -6,7 +6,10 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import async_fire_time_changed
+from pytest_homeassistant_custom_component.common import (
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, setup_house
 
@@ -170,3 +173,20 @@ async def test_reconfigure_room(hass: HomeAssistant, outdoor_sensor: str, room_s
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert float(state(hass, SHARE)) == pytest.approx(25.0)
+
+
+async def test_reason_is_not_rewritten_while_unchanged(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-ROOMS-007"""
+    await setup_house(hass, HOUSE_WITH_LOAD, [LIVING_ROOM])
+    since = hass.states.get(REASON).attributes["since"]
+    changes = async_capture_events(hass, "state_changed")
+
+    for _ in range(3):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert [e for e in changes if e.data["entity_id"] == REASON] == []
+    assert hass.states.get(REASON).attributes["since"] == since

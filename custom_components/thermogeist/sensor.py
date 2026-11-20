@@ -93,7 +93,7 @@ def _reason_attributes(state: RoomState, runtime: HouseRuntime) -> dict[str, Any
         return {}
     return {
         "severity": decision.severity.value,
-        "since": decision.timestamp.isoformat(),
+        "since": state.reason_since.isoformat() if state.reason_since else None,
         "faq": f"{DOCS_URL}/en/faq/{decision.code.value}.md",
         **decision.params,
     }

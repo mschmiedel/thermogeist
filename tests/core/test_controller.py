@@ -104,3 +104,20 @@ def test_window_closes_at_once_and_resumes_where_it_was() -> None:
     clock.advance(timedelta(minutes=20))
     after = controller.step(inputs(feed_forward_pct=60.0), clock.now())
     assert after.output_pct == 60.0
+
+
+def test_start_value_is_removed_when_feed_forward_arrives() -> None:
+    """Scenario: SCN-CTL-011"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+
+    controller.step(inputs(feed_forward_pct=None), clock.now())
+    assert controller.state.integral_pct == 30.0
+
+    clock.advance(timedelta(minutes=1))
+    controller.step(inputs(feed_forward_pct=36.9), clock.now())
+    assert controller.state.integral_pct == pytest.approx(0.0)
+
+    clock.advance(timedelta(minutes=1))
+    controller.step(inputs(feed_forward_pct=None), clock.now())
+    assert controller.state.integral_pct == pytest.approx(30.0)

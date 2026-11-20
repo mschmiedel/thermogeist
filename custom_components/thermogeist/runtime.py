@@ -77,6 +77,8 @@ class RoomState:
     """Sum of the known radiator outputs of this room, None if none is known."""
     feed_forward_missing: list[str] = field(default_factory=list)
     """Inputs the feed-forward is waiting for (CTL-035)."""
+    reason_since: datetime | None = None
+    """When the current reason code started (RSN-002)."""
 
 
 class HouseRuntime:
@@ -286,6 +288,7 @@ class HouseRuntime:
         flow = self.flow_temperature_c()
         settings = self.controller_settings()
         for room_id, state in self.rooms.items():
+            previous = state.decision.code if state.decision else None
             state.decision = decide_room(
                 RoomInputs(
                     user_setpoint_c=state.user_setpoint_c,
@@ -296,6 +299,8 @@ class HouseRuntime:
                 ),
                 self._clock,
             )
+            if state.decision.code != previous:
+                state.reason_since = state.decision.timestamp
             state.demand_w = current_demand_w(
                 state.heat_loss_w_per_k, state.decision.target_setpoint_c, outdoor
             )

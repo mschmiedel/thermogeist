@@ -94,6 +94,8 @@ class ControllerState:
     last_time: datetime | None = None
     min_opening_relaxed: bool = False
     before_window_pct: float | None = None
+    integral_has_start_bias: bool = False
+    """True while the integral contains the start value used without feed-forward."""
 
 
 def feed_forward_pct(
@@ -176,12 +178,7 @@ class RoomController:
     def _regulate(self, inputs: ControllerInputs, elapsed_h: float) -> ControllerResult:
         assert inputs.target_c is not None and inputs.room_c is not None
         settings = inputs.settings
-        if self.state.integral_pct is None:
-            self.state.integral_pct = (
-                0.0
-                if inputs.feed_forward_pct is not None
-                else INTEGRAL_START_WITHOUT_FEED_FORWARD_PCT
-            )
+        self._align_integral_start(has_feed_forward=inputs.feed_forward_pct is not None)
         raw_error = inputs.target_c - inputs.room_c
         error = effective_error_k(inputs.target_c, inputs.room_c, settings.dead_band_k)
         ff = inputs.feed_forward_pct or 0.0
@@ -217,6 +214,24 @@ class RoomController:
             integral_pct=integral,
             limits=tuple(limits),
         )
+
+    def _align_integral_start(self, *, has_feed_forward: bool) -> None:
+        """CTL-032: the 30 % start value replaces a missing feed-forward, never adds to one.
+
+        Seen in the field: after a restart the flow sensor came a minute late, the integral
+        started at 30 % and stayed there when the feed-forward arrived, counting twice.
+        """
+        if self.state.integral_pct is None:
+            self.state.integral_pct = (
+                0.0 if has_feed_forward else INTEGRAL_START_WITHOUT_FEED_FORWARD_PCT
+            )
+            self.state.integral_has_start_bias = not has_feed_forward
+        elif has_feed_forward and self.state.integral_has_start_bias:
+            self.state.integral_pct -= INTEGRAL_START_WITHOUT_FEED_FORWARD_PCT
+            self.state.integral_has_start_bias = False
+        elif not has_feed_forward and not self.state.integral_has_start_bias:
+            self.state.integral_pct += INTEGRAL_START_WITHOUT_FEED_FORWARD_PCT
+            self.state.integral_has_start_bias = True
 
     def _update_relaxed(self, raw_error: float, settings: ControllerSettings) -> bool:
         """Hysteresis: relax above dead band + 0.5 K, restore once back inside the dead band."""
