@@ -75,6 +75,7 @@ corrects only after hours – and again in the other direction when the device i
 | MDL-043 | The feed-forward uses `demand − heat from sources`, never below 0. When a source switches off, the feed-forward rises at once without waiting for the integral. | planned |
 | MDL-044 | Per room a sensor "Heat from devices" (W); the planned valve position shows how much of the demand the sources cover. | planned |
 | MDL-045 | Learning (LRN-001) accounts for known heat sources so they do not distort the learned heat loss. | planned |
+| MDL-046 | Room coverage on the house: how much of the house heat load the configured rooms cover (sum of room shares plus the outside share, in %), with what is missing as attributes – missing share and, with a living area, the floor area not yet in any room. Helps users see that rooms are still missing before trusting the model. | planned |
 
 ## Derived quantities
 
