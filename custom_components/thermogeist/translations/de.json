@@ -202,16 +202,30 @@
       },
       "max_setback": {
         "name": "Max. Absenkung"
+      },
+      "window_close_after": {
+        "name": "Fenster: schließen nach"
+      },
+      "window_resume_after": {
+        "name": "Fenster: wieder heizen nach"
       }
     },
     "button": {
       "reset_control_settings": {
         "name": "Regelwerte auf Profil zurücksetzen"
+      },
+      "reset_window_delays": {
+        "name": "Fenster: Zeiten auf Haus zurücksetzen"
       }
     },
     "switch": {
       "control": {
         "name": "Regeln"
+      }
+    },
+    "binary_sensor": {
+      "windows": {
+        "name": "Fenster"
       }
     }
   },
@@ -403,6 +417,9 @@
     },
     "logbook_device_overrides_valve": {
       "message": "{thermostat} verstellt seine Ventilstellung immer wieder selbst; Raum zurück auf Beobachten"
+    },
+    "logbook_frost_guard": {
+      "message": "Fenster offen, aber der Raum ist unter {setpoint} °C gefallen: Heizen auf Frostschutz"
     }
   },
   "issues": {

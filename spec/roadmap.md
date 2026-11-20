@@ -64,7 +64,7 @@ Thermogeist controls Sonoff TRVZB thermostats.
 |---|---|
 | Control switch per room; direct valve control for valve-based thermostats (Bosch BTH-RA first, Sonoff TRVZB/TRV-ZBT), device setup and restore, write verification | ACT-008, ACT-010, ACT-040 to ACT-045, ACT-100 to ACT-103, ACT-120, ACT-121 |
 | Switch per room between observe and control | ACT-014 |
-| Window rule | RUL-010 |
+| Window rule, delays, frost guard | RUL-010, RUL-014, RUL-015 |
 | Manual change on the thermostat or in HA becomes an override | OVR-001 to OVR-004, OVR-010, OVR-011 |
 | Start-up delay after HA restart | RUL-012 |
 | Logbook entries and repair issues | RSN-003, RSN-004 |

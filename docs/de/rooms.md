@@ -17,7 +17,7 @@
 | Bereich | Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet. |
 | Raumtemperatursensor | Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne. |
 | Anteil an der Heizlast | *Aus Größe und Lage schätzen* (die meisten) oder *Ich kenne den Anteil* (wenn du eine raumweise Heizlastberechnung hast). |
-| Fenster- und Türkontakte | Optional. Ist einer 30 Sekunden offen, hört der Raum auf zu heizen, bis er geschlossen ist ([Häufige Fragen](faq/window_open.md)). |
+| Fenster- und Türkontakte | Optional. Ist einer 30 Sekunden offen, hört der Raum auf zu heizen, bis alle 10 Sekunden zu sind; beide Zeiten lassen sich ändern ([Häufige Fragen](faq/window_open.md)). |
 | Auslegungs-Innentemperatur | Planungswert aus der Heizlastberechnung – nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Ein Bad mit 24 °C bekommt einen größeren Anteil. |
 | Geräte, die den Raum heizen | Optional. Leistungssensoren (W) von Geräten im Raum, siehe [unten](#geräte-die-den-raum-heizen). |
 
@@ -57,6 +57,7 @@ ergeben einen kleinen Anteil.
 | Wärmebedarf | Watt, die der Raum gerade braucht, um sein Ziel zu halten (braucht eine Heizlast beim Haus). |
 | Anteil an der Heizlast | Der Anteil des Raums, geschätzt oder eingetragen. |
 | Wärmeverlustkoeffizient | Watt pro Kelvin Temperaturunterschied nach draußen. |
+| Fenster | Nur mit Fensterkontakten: an, solange einer offen ist. Attribute: die Kontakte, `heating_paused`, `frost_guard` und die geltenden Zeiten. Unter **Konfiguration**: *Fenster: schließen nach*, *Fenster: wieder heizen nach* (Wert vom Haus, bis du ihn änderst, Attribut `source`) und *Fenster: Zeiten auf Haus zurücksetzen*. |
 | Wärme aus Geräten | Nur mit Wärmequellen: Watt, die die Geräte an den Raum abgeben (nach Faktor, Mittel über 10 Minuten). |
 
 Beim Haus siehst du zusätzlich **Heizlast ohne Raum**.

@@ -17,7 +17,7 @@ Open the Thermogeist entry of your house and choose **Add room**.
 | Area | Optional. The room device is placed in this Home Assistant area. |
 | Room temperature sensor | A sensor in the room, ideally away from the radiator and out of direct sunlight. |
 | Share of the heat load | *Estimate from size and position* (most people) or *I know the share* (if you have a room-by-room heat load calculation). |
-| Window and door contacts | Optional. If one is open for 30 seconds, the room stops heating until it is closed ([FAQ](faq/window_open.md)). |
+| Window and door contacts | Optional. If one is open for 30 seconds, the room stops heating until all are closed for 10 seconds; both times can be changed ([FAQ](faq/window_open.md)). |
 | Design indoor temperature | Planning value from the heat load calculation – not the temperature you heat to. Usually 20 °C, bathrooms 24 °C, heated halls 15 °C. A bathroom designed for 24 °C gets a larger share. |
 | Devices that heat the room | Optional. Power sensors (W) of devices in the room, see [below](#devices-that-heat-the-room). |
 
@@ -57,6 +57,7 @@ normal room; few exterior walls give them a small share.
 | Heat demand | Watts the room needs right now to hold its target (needs a heat load on the house). |
 | Share of heat load | The room's share, estimated or entered. |
 | Heat loss coefficient | Watts per kelvin of temperature difference to outside. |
+| Windows | Only with window contacts: on while one is open. Attributes: the contacts, `heating_paused`, `frost_guard`, and the times in use. In **Configuration**: *Window: close after*, *Window: resume heating after* (house value until you change it, attribute `source`) and *Window: reset times to house*. |
 | Heat from devices | Only with heat sources: watts the devices release into the room (after factors, 10-minute average). |
 
 On the house you additionally see **Heat load not assigned to a room**.

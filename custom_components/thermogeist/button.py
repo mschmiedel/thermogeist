@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Reset the control settings to the profile of the heating type (spec CTL-014)."""
+"""Reset control settings to the profile, or room window delays (CTL-014, RUL-014)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThermogeistConfigEntry
-from .entity import HouseEntity
+from .entity import HouseEntity, RoomEntity
 
 
 async def async_setup_entry(
@@ -18,6 +18,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     async_add_entities([ResetControlSettingsButton(entry)])
+    for room_id, state in entry.runtime_data.rooms.items():
+        if state.room.window_entities:
+            async_add_entities([ResetRoomWindowButton(entry, room_id)], config_subentry_id=room_id)
 
 
 class ResetControlSettingsButton(HouseEntity, ButtonEntity):
@@ -28,3 +31,15 @@ class ResetControlSettingsButton(HouseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         await self.runtime.async_reset_overrides()
+
+
+class ResetRoomWindowButton(RoomEntity, ButtonEntity):
+    """RUL-014: the room's window delays follow the house again."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
+        super().__init__(entry, room_id, "reset_window_delays")
+
+    async def async_press(self) -> None:
+        await self.runtime.async_reset_room_overrides(self._room_id)

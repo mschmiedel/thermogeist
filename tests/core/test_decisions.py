@@ -1,11 +1,14 @@
 # SPDX-License-Identifier: MIT
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from custom_components.thermogeist.core.decisions import (
+    Decision,
     ReasonCode,
     RoomInputs,
     Severity,
     decide_room,
+    is_closed_for_window,
 )
 from custom_components.thermogeist.core.house import CentralMode
 from custom_components.thermogeist.core.time_provider import FakeTimeProvider
@@ -108,6 +111,7 @@ def inputs_with(
     window: datetime | None = None,
     mode: CentralMode = CentralMode.AUTO,
     startup_hold: bool = False,
+    **extra: Any,
 ) -> RoomInputs:
     return RoomInputs(
         user_setpoint_c=21.0,
@@ -115,4 +119,52 @@ def inputs_with(
         temperature_valid_since=START,
         window_open_since=window,
         startup_hold=startup_hold,
+        **extra,
     )
+
+
+def test_heating_resumes_only_after_the_resume_delay() -> None:
+    """Scenario: SCN-DEC-008"""
+    clock = FakeTimeProvider(START)
+    clock.advance(timedelta(minutes=5))
+    closed = clock.now()
+
+    clock.advance(timedelta(seconds=9))
+    still = decide_room(inputs_with(window_closed_since=closed, window_was_active=True), clock)
+    assert still.code is ReasonCode.WINDOW_OPEN
+    # Switching to tilted: open again for a moment during the resume delay.
+    reopened = decide_room(inputs_with(window=clock.now(), window_was_active=True), clock)
+    assert reopened.code is ReasonCode.WINDOW_OPEN
+
+    clock.advance(timedelta(seconds=1))
+    resumed = decide_room(inputs_with(window_closed_since=closed, window_was_active=True), clock)
+    assert resumed.code is ReasonCode.SETPOINT
+
+    # A custom close delay of 0 s closes at once.
+    now_open = decide_room(inputs_with(window=clock.now(), window_open_after=timedelta()), clock)
+    assert now_open.code is ReasonCode.WINDOW_OPEN
+
+
+def test_frost_guard_heats_a_cold_room_with_open_window() -> None:
+    """Scenario: SCN-DEC-009"""
+    clock = FakeTimeProvider(START)
+    clock.advance(timedelta(minutes=5))
+    opened = START
+
+    def decide(room_c: float, was_active: bool) -> Decision:
+        return decide_room(
+            inputs_with(
+                window=opened,
+                room_temperature_c=room_c,
+                frost_guard_was_active=was_active,
+            ),
+            clock,
+        )
+
+    cold = decide(6.9, False)
+    assert cold.params["frost_guard"] == "on"
+    assert cold.target_setpoint_c == 7.0
+    assert not is_closed_for_window(cold)
+    assert "frost_guard" in decide(7.8, True).params  # hysteresis
+    assert "frost_guard" not in decide(8.1, True).params
+    assert is_closed_for_window(decide(7.5, False))

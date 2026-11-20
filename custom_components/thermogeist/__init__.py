@@ -19,6 +19,7 @@ from .house_config import house_from_entry, rooms_from_entry, thermostats_from_e
 from .runtime import HouseRuntime
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.NUMBER,

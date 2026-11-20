@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""The central decision point and reason catalogue (spec ARC-003, RSN-001, RSN-002, RUL-013).
+"""The central decision point and reason catalogue (ARC-003, RSN-001, RSN-002, RUL-013 to RUL-015).
 
 Every decision about what a room aims for is made here and carries a reason code. Nothing
 changes silently.
@@ -47,8 +47,14 @@ CATALOGUE: dict[ReasonCode, Severity] = {
 # RUL-013: a room temperature older than this is not trusted. Zigbee sensors usually report at
 # least every few minutes; an hour of silence means a dead battery or lost connection.
 SENSOR_STALE_AFTER = timedelta(minutes=60)
-# RUL-010: a window counts as open after 30 s, so a quick airing of a few seconds is ignored.
+# RUL-014: a window counts as open after 30 s, so a quick airing of a few seconds is ignored.
 WINDOW_OPEN_AFTER = timedelta(seconds=30)
+# RUL-014: heating resumes only after all contacts were closed for 10 s; switching from fully
+# open to tilted passes through "closed" for a moment.
+WINDOW_RESUME_AFTER = timedelta(seconds=10)
+WINDOW_DELAY_MAX = timedelta(seconds=600)
+# RUL-015: the frost guard ends 1 K above the frost setpoint, so it does not toggle every minute.
+FROST_GUARD_HYSTERESIS_K = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +69,15 @@ class RoomInputs:
     """Since when a window contact of the room is open, None if all are closed."""
     startup_hold: bool = False
     """ACT-045: Home Assistant started less than 90 s ago; nothing is written yet."""
+    window_closed_since: datetime | None = None
+    """Since when all window contacts of the room are closed, None while one is open."""
+    window_was_active: bool = False
+    """The previous decision was ``window_open`` (RUL-014: resume only after the delay)."""
+    window_open_after: timedelta = WINDOW_OPEN_AFTER
+    window_resume_after: timedelta = WINDOW_RESUME_AFTER
+    room_temperature_c: float | None = None
+    frost_guard_was_active: bool = False
+    """RUL-015: hysteresis state of the frost guard from the previous decision."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,15 +115,46 @@ def decide_room(inputs: RoomInputs, clock: TimeProvider) -> Decision:
             now,
             {"setpoint": FROST_PROTECTION_SETPOINT_C},
         )
-    if inputs.window_open_since is not None and now - inputs.window_open_since >= WINDOW_OPEN_AFTER:
-        return Decision(
-            ReasonCode.WINDOW_OPEN,
-            FROST_PROTECTION_SETPOINT_C,
-            now,
-            {"open_minutes": round((now - inputs.window_open_since).total_seconds() / 60)},
-        )
+    if window_active(inputs, now):
+        params: dict[str, float | str] = {}
+        if inputs.window_open_since is not None:
+            params["open_minutes"] = round((now - inputs.window_open_since).total_seconds() / 60)
+        if frost_guard_active(inputs):
+            params["frost_guard"] = "on"
+        return Decision(ReasonCode.WINDOW_OPEN, FROST_PROTECTION_SETPOINT_C, now, params)
     if inputs.startup_hold:
         return Decision(ReasonCode.STARTUP_HOLD, inputs.user_setpoint_c, now)
     return Decision(
         ReasonCode.SETPOINT, inputs.user_setpoint_c, now, {"setpoint": inputs.user_setpoint_c}
     )
+
+
+def window_active(inputs: RoomInputs, now: datetime) -> bool:
+    """RUL-014: close after the open delay; resume only after the closed delay."""
+    opened = inputs.window_open_since
+    if opened is not None and now - opened >= inputs.window_open_after:
+        return True
+    if not inputs.window_was_active:
+        return False
+    if opened is not None:
+        # Re-opened during the resume delay (e.g. switching to tilted): stay closed.
+        return True
+    closed = inputs.window_closed_since
+    return closed is not None and now - closed < inputs.window_resume_after
+
+
+def frost_guard_active(inputs: RoomInputs) -> bool:
+    """RUL-015: heat to the frost setpoint although the window is open."""
+    room = inputs.room_temperature_c
+    if room is None:
+        return inputs.frost_guard_was_active
+    if room < FROST_PROTECTION_SETPOINT_C:
+        return True
+    if room > FROST_PROTECTION_SETPOINT_C + FROST_GUARD_HYSTERESIS_K:
+        return False
+    return inputs.frost_guard_was_active
+
+
+def is_closed_for_window(decision: Decision) -> bool:
+    """The valve stays closed: window open and no frost guard."""
+    return decision.code is ReasonCode.WINDOW_OPEN and "frost_guard" not in decision.params

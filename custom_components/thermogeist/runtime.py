@@ -32,7 +32,13 @@ from .core.controller import (
     RoomController,
     feed_forward_pct,
 )
-from .core.decisions import Decision, ReasonCode, RoomInputs, decide_room
+from .core.decisions import (
+    Decision,
+    ReasonCode,
+    RoomInputs,
+    decide_room,
+    is_closed_for_window,
+)
 from .core.estimation import ShareResult, room_shares
 from .core.heat import (
     current_demand_w,
@@ -40,8 +46,9 @@ from .core.heat import (
     net_demand_w,
     room_heat_loss_w_per_k,
 )
-from .core.house import CentralMode, House
+from .core.house import FROST_PROTECTION_SETPOINT_C, CentralMode, House
 from .core.profiles import (
+    WINDOW_SETTINGS,
     ControlSetting,
     EffectiveSetting,
     effective_settings,
@@ -56,7 +63,7 @@ REEVALUATE_EVERY = timedelta(minutes=1)
 PLAN_EVERY = timedelta(seconds=55)
 # ACT-045: devices need a moment after a restart before Thermogeist writes to them.
 STARTUP_HOLD = timedelta(seconds=90)
-WINDOW_RECHECK_S = 31
+WINDOW_RECHECK_MARGIN_S = 1
 
 
 def update_signal(entry_id: str) -> str:
@@ -117,6 +124,8 @@ class HouseRuntime:
         self.house = house
         self.central_mode = CentralMode.AUTO
         self.overrides: dict[ControlSetting, float] = {}
+        self.room_overrides: dict[str, dict[ControlSetting, float]] = {}
+        """RUL-014: window delays set on a room."""
         self.shares: ShareResult = room_shares(house, rooms)
         self.rooms: dict[str, RoomState] = {
             room_id: RoomState(
@@ -157,6 +166,12 @@ class HouseRuntime:
             ControlSetting(key): float(value)
             for key, value in stored.get("overrides", {}).items()
             if key in {setting.value for setting in ControlSetting}
+        }
+        known = {setting.value for setting in WINDOW_SETTINGS}
+        self.room_overrides = {
+            room_id: {ControlSetting(k): float(v) for k, v in values.items() if k in known}
+            for room_id, values in stored.get("room_overrides", {}).items()
+            if room_id in self.rooms
         }
         for room_id, setpoint in stored.get("setpoints", {}).items():
             if room_id in self.rooms:
@@ -237,6 +252,27 @@ class HouseRuntime:
         await self._save()
         self._reevaluate()
 
+    def window_setting(self, room_id: str, setting: ControlSetting) -> tuple[float, str]:
+        """RUL-014: the room's own value, else the house value; with its source."""
+        own = self.room_overrides.get(room_id, {}).get(setting)
+        if own is not None:
+            return own, "room"
+        return self.settings()[setting].value, "house"
+
+    async def async_set_room_override(
+        self, room_id: str, setting: ControlSetting, value: float
+    ) -> None:
+        if not is_valid_override(setting, value):
+            raise ValueError(f"{setting} out of range: {value}")
+        self.room_overrides.setdefault(room_id, {})[setting] = value
+        await self._save()
+        self._reevaluate()
+
+    async def async_reset_room_overrides(self, room_id: str) -> None:
+        self.room_overrides.pop(room_id, None)
+        await self._save()
+        self._reevaluate()
+
     async def async_reset_overrides(self) -> None:
         self.overrides.clear()
         await self._save()
@@ -294,13 +330,15 @@ class HouseRuntime:
     def _on_state_change(self, event: Event[EventStateChangedData]) -> None:
         now = self._clock.now()
         new_state = event.data["new_state"]
-        if (
-            new_state is not None
-            and new_state.state == "on"
-            and any(event.data["entity_id"] in s.room.window_entities for s in self.rooms.values())
-        ):
-            # Check again once the 30 s window delay has passed (RUL-010).
-            async_call_later(self._hass, WINDOW_RECHECK_S, self._on_delayed)
+        if new_state is not None:
+            for room_id, state in self.rooms.items():
+                if event.data["entity_id"] in state.room.window_entities:
+                    # Check again once the window delays have passed (RUL-014).
+                    for setting in WINDOW_SETTINGS:
+                        delay = self.window_setting(room_id, setting)[0] + WINDOW_RECHECK_MARGIN_S
+                        self._unsubscribe.append(
+                            async_call_later(self._hass, delay, self._on_delayed)
+                        )
         for state in self.rooms.values():
             if state.room.temperature_entity == event.data["entity_id"]:
                 self._read_temperature(state, now)
@@ -349,7 +387,9 @@ class HouseRuntime:
         spread = self.spread_k(flow)
         settings = self.controller_settings()
         for room_id, state in self.rooms.items():
-            previous = state.decision.code if state.decision else None
+            before = state.decision
+            previous = before.code if before else None
+            guard_before = before is not None and "frost_guard" in before.params
             state.decision = decide_room(
                 RoomInputs(
                     user_setpoint_c=state.user_setpoint_c,
@@ -357,11 +397,29 @@ class HouseRuntime:
                     temperature_valid_since=state.temperature_valid_since,
                     window_open_since=self._window_open_since(state),
                     startup_hold=self.startup_hold() and self.control.is_enabled(room_id),
+                    window_closed_since=self._window_closed_since(state),
+                    window_was_active=previous is ReasonCode.WINDOW_OPEN,
+                    window_open_after=timedelta(
+                        seconds=self.window_setting(room_id, ControlSetting.WINDOW_CLOSE_AFTER)[0]
+                    ),
+                    window_resume_after=timedelta(
+                        seconds=self.window_setting(room_id, ControlSetting.WINDOW_RESUME_AFTER)[0]
+                    ),
+                    room_temperature_c=state.current_temperature_c,
+                    frost_guard_was_active=guard_before,
                 ),
                 self._clock,
             )
             if state.decision.code != previous:
                 state.reason_since = state.decision.timestamp
+            if "frost_guard" in state.decision.params and not guard_before:
+                self._hass.async_create_task(
+                    self.control.async_logbook(
+                        state.room.name,
+                        "logbook_frost_guard",
+                        setpoint=FROST_PROTECTION_SETPOINT_C,
+                    )
+                )
             state.demand_w = current_demand_w(
                 state.heat_loss_w_per_k, state.decision.target_setpoint_c, outdoor
             )
@@ -382,6 +440,14 @@ class HouseRuntime:
             if entity and (value := numeric_state(self._hass, entity)) is not None:
                 values.append(value)
         return sum(values) / len(values) if values else None
+
+    def _window_closed_since(self, state: RoomState) -> datetime | None:
+        """Since when all contacts are closed; None while one is open or without contacts."""
+        states = [self._hass.states.get(entity) for entity in state.room.window_entities]
+        known = [s for s in states if s is not None]
+        if not known or any(s.state == "on" for s in known):
+            return None
+        return max(s.last_changed for s in known)
 
     def _window_open_since(self, state: RoomState) -> datetime | None:
         opened = [
@@ -460,7 +526,7 @@ class HouseRuntime:
                 time_constant_h=time_constant_h(state.room.floor_area_m2, state.heat_loss_w_per_k),
                 safety=state.decision.code is ReasonCode.SAFETY_SENSOR_STALE,
                 settings=settings,
-                window_open=state.decision.code is ReasonCode.WINDOW_OPEN,
+                window_open=is_closed_for_window(state.decision),
             ),
             self._clock.now(),
         )
@@ -473,6 +539,10 @@ class HouseRuntime:
         await self._store.async_save(
             {
                 "overrides": {key.value: value for key, value in self.overrides.items()},
+                "room_overrides": {
+                    rid: {key.value: value for key, value in values.items()}
+                    for rid, values in self.room_overrides.items()
+                },
                 "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
                 **self.control.dump(),
             }

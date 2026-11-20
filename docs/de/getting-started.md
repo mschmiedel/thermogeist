@@ -68,6 +68,8 @@ Voreinstellungen je Heizungsart:
 | Totband über dem Sollwert | 0,5 K | 0,2 K | 0,2 K |
 | Max. Ventiländerung pro 30 min | 10 % | 30 % | 100 % |
 | Max. Absenkung | 2 K | 4 K | 4 K |
+| Fenster: schließen nach | 30 s | 30 s | 30 s |
+| Fenster: wieder heizen nach | 10 s | 10 s | 10 s |
 
 Warum so unterschiedlich? Eine Wärmepumpe arbeitet am besten, wenn das Wasser in Bewegung
 bleibt. Deshalb hält Thermogeist die Ventile offen und bewegt sie langsam. Ein Kessel reagiert

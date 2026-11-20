@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
+from .decisions import WINDOW_DELAY_MAX, WINDOW_OPEN_AFTER, WINDOW_RESUME_AFTER
 from .house import HeatingType
 
 
@@ -58,6 +59,12 @@ class ControlSetting(StrEnum):
     DEAD_BAND = "dead_band"
     MAX_VALVE_CHANGE = "max_valve_change"
     MAX_SETBACK = "max_setback"
+    WINDOW_CLOSE_AFTER = "window_close_after"
+    WINDOW_RESUME_AFTER = "window_resume_after"
+
+
+WINDOW_SETTINGS = (ControlSetting.WINDOW_CLOSE_AFTER, ControlSetting.WINDOW_RESUME_AFTER)
+"""RUL-014: also settable per room."""
 
 
 class SettingSource(StrEnum):
@@ -81,6 +88,8 @@ LIMITS: dict[ControlSetting, SettingLimits] = {
     ControlSetting.DEAD_BAND: SettingLimits(0.0, 2.0, 0.1),
     ControlSetting.MAX_VALVE_CHANGE: SettingLimits(1.0, 100.0, 1.0),
     ControlSetting.MAX_SETBACK: SettingLimits(0.0, 6.0, 0.5),
+    ControlSetting.WINDOW_CLOSE_AFTER: SettingLimits(0.0, WINDOW_DELAY_MAX.total_seconds(), 1.0),
+    ControlSetting.WINDOW_RESUME_AFTER: SettingLimits(0.0, WINDOW_DELAY_MAX.total_seconds(), 1.0),
 }
 
 
@@ -97,6 +106,9 @@ def profile_value(profile: Profile, setting: ControlSetting) -> float:
         ControlSetting.DEAD_BAND: profile.dead_band_k,
         ControlSetting.MAX_VALVE_CHANGE: profile.max_valve_change_pct_per_30min,
         ControlSetting.MAX_SETBACK: profile.max_setback_k,
+        # RUL-014: the same for every heating type.
+        ControlSetting.WINDOW_CLOSE_AFTER: WINDOW_OPEN_AFTER.total_seconds(),
+        ControlSetting.WINDOW_RESUME_AFTER: WINDOW_RESUME_AFTER.total_seconds(),
     }[setting]
 
 

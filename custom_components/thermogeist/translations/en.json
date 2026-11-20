@@ -202,16 +202,30 @@
       },
       "max_setback": {
         "name": "Max. setback"
+      },
+      "window_close_after": {
+        "name": "Window: close after"
+      },
+      "window_resume_after": {
+        "name": "Window: resume heating after"
       }
     },
     "button": {
       "reset_control_settings": {
         "name": "Reset control settings to profile"
+      },
+      "reset_window_delays": {
+        "name": "Window: reset times to house"
       }
     },
     "switch": {
       "control": {
         "name": "Control"
+      }
+    },
+    "binary_sensor": {
+      "windows": {
+        "name": "Windows"
       }
     }
   },
@@ -403,6 +417,9 @@
     },
     "logbook_device_overrides_valve": {
       "message": "{thermostat} keeps changing its valve position on its own; room switched back to observe"
+    },
+    "logbook_frost_guard": {
+      "message": "window open, but the room fell below {setpoint} °C: heating to frost protection"
     }
   },
   "issues": {

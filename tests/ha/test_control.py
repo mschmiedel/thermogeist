@@ -181,7 +181,9 @@ async def test_window_closes_valve_and_reopens(
     assert Calls.values(calls.number, VALVE, "value")[-1] == 0.0
 
     hass.states.async_set(WINDOW, "off", {"device_class": "window"})
-    await hass.async_block_till_done()
+    await tick(hass, freezer, 5)
+    assert hass.states.get(REASON).state == "window_open"  # resume delay 10 s
+    await tick(hass, freezer, 6)
     assert hass.states.get(REASON).state == "setpoint"
     assert Calls.values(calls.number, VALVE, "value")[-1] == pytest.approx(before, abs=1)
 
@@ -236,7 +238,7 @@ async def test_setpoint_thermostat_window_and_knob(
     await tick(hass, freezer, 31)
     assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 5.0
     hass.states.async_set(WINDOW, "off", {"device_class": "window"})
-    await hass.async_block_till_done()
+    await tick(hass, freezer, 11)
     assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 22.5
     hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 22.5, "current_temperature": 22.0})
     await hass.async_block_till_done()

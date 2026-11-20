@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .core.actuation import should_write
 from .core.actuator import DeviceProfile, Kind, Role, Source, Thermostat
 from .core.controller import ControllerResult, Limit
-from .core.decisions import ReasonCode
+from .core.decisions import ReasonCode, is_closed_for_window
 from .core.setpoint import (
     CLOSED_SETPOINT_C,
     device_setpoint_c,
@@ -206,7 +206,7 @@ class ControlManager:
         if not external and room_c is not None and device_c is not None:
             control.offset_average.add(now, device_c - room_c)
         code = state.decision.code
-        target = None if code is ReasonCode.WINDOW_OPEN else state.decision.target_setpoint_c
+        target = None if is_closed_for_window(state.decision) else state.decision.target_setpoint_c
         offset = None if external else control.offset_average.value(now)
         desired = device_setpoint_c(
             target,
@@ -393,7 +393,7 @@ class ControlManager:
             translation_placeholders={"thermostat": thermostat.name, "room": room_name},
             learn_more_url=f"{self._runtime.docs_url}/en/faq/device_overrides_valve.md",
         )
-        await self._async_logbook(
+        await self.async_logbook(
             room_name, "logbook_device_overrides_valve", thermostat=thermostat.name
         )
         await self.async_set_enabled(room_id, False)
@@ -437,7 +437,7 @@ class ControlManager:
         if thermostat.kind is Kind.SETPOINT:
             control.setpoint_offset_k = value - room_setpoint
         room_name = self._rooms[thermostat.room_id].room.name
-        await self._async_logbook(
+        await self.async_logbook(
             room_name, "logbook_manual_setpoint", thermostat=thermostat.name, setpoint=room_setpoint
         )
         await self._runtime.async_set_room_setpoint(thermostat.room_id, room_setpoint)
@@ -449,7 +449,7 @@ class ControlManager:
             domain, service, {"entity_id": entity_id, **data}, blocking=True
         )
 
-    async def _async_logbook(self, name: str, key: str, **placeholders: Any) -> None:
+    async def async_logbook(self, name: str, key: str, **placeholders: Any) -> None:
         language = self._hass.config.language
         translations = await async_get_translations(self._hass, language, "exceptions", {DOMAIN})
         template = translations.get(f"component.{DOMAIN}.exceptions.{key}.message", key)

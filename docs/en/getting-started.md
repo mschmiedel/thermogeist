@@ -69,6 +69,8 @@ Defaults per heating type:
 | Dead band above the setpoint | 0.5 K | 0.2 K | 0.2 K |
 | Max. valve change per 30 min | 10 % | 30 % | 100 % |
 | Max. setback | 2 K | 4 K | 4 K |
+| Window: close after | 30 s | 30 s | 30 s |
+| Window: resume heating after | 10 s | 10 s | 10 s |
 
 Why so different? A heat pump works best when water keeps flowing, so Thermogeist keeps
 valves open and moves them slowly. A boiler can react faster and cope with valves that close.

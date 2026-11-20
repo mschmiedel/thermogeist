@@ -22,10 +22,19 @@
       },
       "max_setback": {
         "default": "mdi:thermometer-minus"
+      },
+      "window_close_after": {
+        "default": "mdi:window-open-variant"
+      },
+      "window_resume_after": {
+        "default": "mdi:window-closed-variant"
       }
     },
     "button": {
       "reset_control_settings": {
+        "default": "mdi:restore"
+      },
+      "reset_window_delays": {
         "default": "mdi:restore"
       }
     },
@@ -97,6 +106,14 @@
         "state": {
           "on": "mdi:radiator",
           "off": "mdi:eye-outline"
+        }
+      }
+    },
+    "binary_sensor": {
+      "windows": {
+        "default": "mdi:window-closed-variant",
+        "state": {
+          "on": "mdi:window-open-variant"
         }
       }
     }
