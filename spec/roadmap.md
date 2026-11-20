@@ -42,16 +42,17 @@ The user adds rooms to the house. Thermogeist knows each room's need, but contro
 | Editable control settings on the house, icons | CTL-014, HAI-013 |
 | Sensor failure handling for the room temperature | RUL-013 |
 
-## M3 – Thermostats, observe mode
+## M3 – Thermostats, observe mode (done)
 
 Thermostats are assigned to rooms. Thermogeist calculates what it *would* do and shows it,
 without writing to the devices.
 
 | Scope | Requirements |
 |---|---|
-| Assign one or more thermostats to a room, capability detection | ACT-001 to ACT-007, HAI-006 |
-| Controller: feed-forward, feedback, output shaping, heat-pump profile | CTL-001, CTL-002, CTL-004, CTL-005, CTL-010 |
-| Observe mode: planned valve position and reason per room, nothing is written | ACT-014 |
+| Assign thermostats to rooms: roles, kinds, device profiles | ACT-001 to ACT-009, ACT-020, ACT-021, ACT-030 to ACT-033, HAI-006 |
+| Radiator output and flow temperature (optional) | MDL-006, MDL-007, MDL-012, MDL-014 |
+| Controller: feed-forward, feedback, output shaping, heat-pump profile | CTL-001, CTL-002, CTL-004, CTL-005, CTL-010, CTL-030 to CTL-035 |
+| Observe mode: planned valve position and reason per room, actual position per thermostat, nothing is written | ACT-014, ACT-015 |
 | Room simulator for controller tests | TST-010, TST-011, TST-013 |
 | Control quality metrics in tests | TST-030 |
 

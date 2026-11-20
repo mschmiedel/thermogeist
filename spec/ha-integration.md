@@ -12,7 +12,7 @@ entities and forwards everything to the core (ARC-001).
 | HAI-003 | Every setting can be changed later through the options flow, without removing the integration. | implemented |
 | HAI-004 | The house appears as a device. Entities: `select` central mode; editable control settings (CTL-014) with a reset button; diagnostic sensors heating type, heat load, design outdoor temperature, share outside Thermogeist, heat load not assigned to a room. | implemented |
 | HAI-005 | Rooms are config sub-entries of the house ("Add room" on the house entry; reconfigure to change). Step 1: name, optional HA area, room temperature sensor, share mode. Step 2: size and position (MDL-033) or known share (MDL-030). Each room is a device below the house device, placed in the chosen area. Entities: `climate` (OVR-012), sensors active reason, target temperature, heat demand, and diagnostic share and heat loss coefficient. | implemented |
-| HAI-006 | Thermostats are assigned to a room by picking their HA device. Thermogeist detects the device type and shows the detected capabilities before saving. | planned |
+| HAI-006 | Thermostats are config sub-entries of the house ("Add thermostat"). Step 1: room, HA device with a climate entity, optional radiator rated output. Step 2: detected profile and kind, every role pre-filled and editable (ACT-030 to ACT-033). Entities on the room device: planned valve position (with parts as attributes) per room; actual valve position per thermostat where readable. | implemented |
 
 ## Conventions
 

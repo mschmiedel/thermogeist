@@ -13,8 +13,8 @@ truth: learning corrects it (see [learning.md](learning.md)).
 | MDL-018 | Look up the design outdoor temperature from the HA location using a table, not an estimate. Open: a data source that may be redistributed under MIT (the DIN/TS 12831-1 table may not; candidate: computed from open DWD climate data). | house | optional | planned |
 | MDL-004 | Room share of the heat load in % | room | recommended | implemented |
 | MDL-005 | Room floor area and height | room | optional | rejected (replaced by MDL-033) |
-| MDL-006 | Radiator: rated output (W at 75/65/20) or type + dimensions | radiator | optional | planned |
-| MDL-007 | Flow temperature: sensor entity or heating curve as two points | house | optional | planned |
+| MDL-006 | Radiator rated output in W at 75/65/20 °C, per thermostat (type + dimensions later) | thermostat | optional | implemented |
+| MDL-007 | Flow temperature: sensor entity (heating curve as two points later) | house | optional | implemented |
 | MDL-008 | Outdoor temperature: sensor entity with device class temperature (e.g. weather station, heat pump outdoor sensor) | house | yes | implemented |
 | MDL-009 | Share of the heat load outside Thermogeist in %, 0–100 (rooms it does not control, e.g. a bathroom with floor heating). Only needed when the value is known from a heat load calculation; otherwise it follows from MDL-016 as the part not covered by rooms. Default 0 %. | house | optional | implemented |
 | MDL-016 | Heated living area in m², 10–10 000. Reference for estimating room shares (MDL-031): a room's share starts at its floor area divided by the living area. Input implemented; used from M2. | house | recommended | implemented |
@@ -65,9 +65,9 @@ them.
 |---|---|---|---|
 | MDL-010 | Room heat loss coefficient H (W/K) | `P_room / (T_design_in − T_design_out)` with `P_room = heat load · share`, `T_design_in` from MDL-039 | implemented |
 | MDL-011 | Current demand (W) | `H · (T_set − T_outdoor)` | implemented |
-| MDL-012 | Available radiator output (W) | rated output · (ΔT_log / 49.8)^n, n ≈ 1.3 (EN 442) | planned |
+| MDL-012 | Available radiator output (W) | rated output · (ΔT / 49.8 K)^1.3 (EN 442), with `ΔT = flow − 2.5 K − room` (half of a typical 5 K spread); 0 if ΔT ≤ 0 | implemented |
 | MDL-013 | Expected heat demand | demand / available output | planned |
-| MDL-014 | Time constant τ = C / H | C estimated from room volume and construction | planned |
+| MDL-014 | Time constant τ = C / H | C estimated from room volume and construction | implemented |
 | MDL-015 | Oversizing factor | available output at design temperature / demand | planned |
 
 ## Without inputs

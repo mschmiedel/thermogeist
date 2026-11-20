@@ -10,8 +10,11 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
-from .house_config import house_from_entry, rooms_from_entry
+from .const import DOMAIN, MANUFACTURER
+from .house_config import house_from_entry, rooms_from_entry, thermostats_from_entry
 from .runtime import HouseRuntime
 
 PLATFORMS: list[Platform] = [
@@ -27,8 +30,16 @@ type ThermogeistConfigEntry = ConfigEntry[HouseRuntime]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> bool:
     """Set up one house with its rooms."""
-    runtime = HouseRuntime(hass, entry.entry_id, house_from_entry(entry), rooms_from_entry(entry))
+    runtime = HouseRuntime(
+        hass,
+        entry.entry_id,
+        house_from_entry(entry),
+        rooms_from_entry(entry),
+        thermostats_from_entry(entry),
+    )
     await runtime.async_load()
+    runtime.house_device_id = _house_device(hass, entry).id
+    _remove_orphaned_entities(hass, entry)
     entry.runtime_data = runtime
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     runtime.async_start()
@@ -45,6 +56,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry)
 async def async_remove_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:
     """Delete stored settings when the house is removed."""
     await HouseRuntime(hass, entry.entry_id, house_from_entry(entry), {}).async_remove()
+
+
+def _house_device(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> dr.DeviceEntry:
+    """Create the house device up front so rooms can link to it by id."""
+    return dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=house_from_entry(entry).name,
+        manufacturer=MANUFACTURER,
+        model="Thermogeist House",
+    )
+
+
+def _remove_orphaned_entities(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:
+    """Drop entities of rooms or thermostats that were removed."""
+    owners = {entry.entry_id, *entry.subentries}
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        # Unique ids are "<owner id>_<key>"; owner ids (entry and sub-entry ids) have no "_".
+        if entity.unique_id.split("_", 1)[0] not in owners:
+            registry.async_remove(entity.entity_id)
 
 
 async def _async_reload_on_change(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:

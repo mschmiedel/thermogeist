@@ -22,13 +22,15 @@
           "heat_load": "Heat load",
           "design_outdoor_temperature": "Design outdoor temperature",
           "living_area": "Heated living area",
-          "share_outside": "Share outside Thermogeist"
+          "share_outside": "Share outside Thermogeist",
+          "flow_temperature_entity": "Flow temperature sensor"
         },
         "data_description": {
           "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
-          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %."
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
+          "flow_temperature_entity": "Optional. The heating water temperature going to the radiators, e.g. from your heat pump. Together with radiator outputs it lets Thermogeist calculate a good starting valve position."
         }
       }
     },
@@ -52,7 +54,8 @@
           "heat_load": "Heat load",
           "design_outdoor_temperature": "Design outdoor temperature",
           "living_area": "Heated living area",
-          "share_outside": "Share outside Thermogeist"
+          "share_outside": "Share outside Thermogeist",
+          "flow_temperature_entity": "Flow temperature sensor"
         },
         "data_description": {
           "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
@@ -60,7 +63,8 @@
           "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
-          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %."
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
+          "flow_temperature_entity": "Optional. The heating water temperature going to the radiators, e.g. from your heat pump. Together with radiator outputs it lets Thermogeist calculate a good starting valve position."
         }
       }
     },
@@ -154,6 +158,19 @@
       },
       "heat_loss_coefficient": {
         "name": "Heat loss coefficient"
+      },
+      "planned_valve_position": {
+        "name": "Planned valve position"
+      },
+      "thermostat_kind": {
+        "name": "Kind {thermostat}",
+        "state": {
+          "setpoint": "Setpoint-based",
+          "valve": "Valve-based"
+        }
+      },
+      "thermostat_valve_position": {
+        "name": "Valve position {thermostat}"
       }
     },
     "number": {
@@ -266,6 +283,72 @@
       },
       "abort": {
         "reconfigure_successful": "The room was updated."
+      }
+    },
+    "thermostat": {
+      "initiate_flow": {
+        "user": "Add thermostat"
+      },
+      "entry_type": "Thermostat",
+      "step": {
+        "user": {
+          "title": "Add a thermostat",
+          "description": "Choose the room and the thermostat device. Thermogeist recognises known models and fills in the rest.",
+          "data": {
+            "room": "Room",
+            "device": "Thermostat",
+            "rated_output": "Radiator rated output"
+          },
+          "data_description": {
+            "room": "The room this thermostat heats.",
+            "device": "The thermostat device in Home Assistant (it must have a climate entity).",
+            "rated_output": "Optional. The radiator's output in W at 75/65/20 °C from its data sheet or type plate. Enables the feed-forward and, later, sizing diagnostics."
+          }
+        },
+        "reconfigure": {
+          "title": "Change thermostat",
+          "description": "Choose the room and the thermostat device. Thermogeist recognises known models and fills in the rest.",
+          "data": {
+            "room": "Room",
+            "device": "Thermostat",
+            "rated_output": "Radiator rated output"
+          },
+          "data_description": {
+            "room": "The room this thermostat heats.",
+            "device": "The thermostat device in Home Assistant (it must have a climate entity).",
+            "rated_output": "Optional. The radiator's output in W at 75/65/20 °C from its data sheet or type plate. Enables the feed-forward and, later, sizing diagnostics."
+          }
+        },
+        "roles": {
+          "title": "What does what?",
+          "description": "Detected profile: {profile}. Check the entities below; empty fields are simply not used. {notes}",
+          "data": {
+            "climate": "Climate entity",
+            "valve_read": "Valve position (read)",
+            "valve_write": "Valve position (set)",
+            "valve_min": "Minimum opening on the device",
+            "external_temperature": "External temperature input",
+            "child_lock": "Child lock",
+            "calibration_trigger": "Start calibration",
+            "calibration_status": "Calibration status",
+            "setpoint_source": "Setpoint source"
+          },
+          "data_description": {
+            "climate": "The thermostat's own climate entity (setpoint, its temperature).",
+            "valve_read": "Shows how far the valve is open.",
+            "valve_write": "Lets Thermogeist set the valve position directly. Without it the thermostat is controlled by setpoint.",
+            "valve_min": "A fallback stored on the device; it still works when Home Assistant is down.",
+            "external_temperature": "Lets the thermostat use the room sensor instead of its own.",
+            "setpoint_source": "Tells whether a setpoint was changed on the device."
+          }
+        }
+      },
+      "error": {
+        "climate_required": "The climate entity is required."
+      },
+      "abort": {
+        "no_rooms": "Add a room first, then assign thermostats to it.",
+        "reconfigure_successful": "The thermostat was updated."
       }
     }
   }

@@ -18,17 +18,25 @@ from .const import (
     CONF_DESIGN_TEMPERATURE,
     CONF_EXTERIOR_WALLS,
     CONF_FLOOR_AREA,
+    CONF_FLOW_TEMPERATURE_ENTITY,
     CONF_HEAT_LOAD,
     CONF_HEATING_TYPE,
     CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
     CONF_NAME,
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
+    CONF_PROFILE,
+    CONF_RATED_OUTPUT,
+    CONF_ROLES,
+    CONF_ROOM,
     CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
     CONF_TEMPERATURE_ENTITY,
+    CONF_VALVE_MIN_INVERTED,
     SUBENTRY_ROOM,
+    SUBENTRY_THERMOSTAT,
 )
+from .core.actuator import Role, Thermostat
 from .core.house import HeatingType, House
 from .core.room import (
     DEFAULT_CEILING_HEIGHT_M,
@@ -51,6 +59,7 @@ def house_from_config(config: Mapping[str, Any]) -> House:
         design_outdoor_temperature_c=_optional_float(config.get(CONF_DESIGN_TEMPERATURE)),
         share_outside_pct=_optional_float(config.get(CONF_SHARE_OUTSIDE)) or 0.0,
         living_area_m2=_optional_float(config.get(CONF_LIVING_AREA)),
+        flow_temperature_entity=config.get(CONF_FLOW_TEMPERATURE_ENTITY) or None,
     )
 
 
@@ -86,6 +95,33 @@ def rooms_from_entry(entry: ConfigEntry, *, exclude: str | None = None) -> dict[
         for subentry_id, subentry in entry.subentries.items()
         if subentry.subentry_type == SUBENTRY_ROOM and subentry_id != exclude
     }
+
+
+def thermostat_from_config(config: Mapping[str, Any], name: str) -> Thermostat:
+    roles = {
+        Role(role): entity_id
+        for role, entity_id in (config.get(CONF_ROLES) or {}).items()
+        if entity_id and role in {r.value for r in Role}
+    }
+    return Thermostat(
+        room_id=str(config.get(CONF_ROOM, "")),
+        name=name,
+        roles=roles,
+        rated_output_w=_optional_float(config.get(CONF_RATED_OUTPUT)),
+        profile_id=config.get(CONF_PROFILE) or None,
+        valve_min_inverted=bool(config.get(CONF_VALVE_MIN_INVERTED, False)),
+    )
+
+
+def thermostats_from_entry(entry: ConfigEntry) -> dict[str, Thermostat]:
+    """All thermostats of a house whose room still exists, keyed by sub-entry id."""
+    rooms = {sid for sid, s in entry.subentries.items() if s.subentry_type == SUBENTRY_ROOM}
+    thermostats = {
+        subentry_id: thermostat_from_config(subentry.data, subentry.title)
+        for subentry_id, subentry in entry.subentries.items()
+        if subentry.subentry_type == SUBENTRY_THERMOSTAT
+    }
+    return {sid: t for sid, t in thermostats.items() if t.room_id in rooms}
 
 
 def room_area_id(entry: ConfigEntry, subentry_id: str) -> str | None:

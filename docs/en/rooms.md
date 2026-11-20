@@ -59,3 +59,5 @@ normal room; few exterior walls give them a small share.
 On the house you additionally see **Heat load not assigned to a room**.
 
 To change a room, open it in the Thermogeist entry and choose **Reconfigure**.
+
+Next: [assign thermostats](thermostats.md).

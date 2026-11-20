@@ -1,0 +1,43 @@
+{
+  "id": "bosch_bth_ra",
+  "name": "Bosch Radiator Thermostat II (BTH-RA)",
+  "kind": "valve",
+  "match": {
+    "manufacturer": [
+      "Bosch"
+    ],
+    "model_id": [
+      "BTH-RA"
+    ]
+  },
+  "roles": {
+    "z2m": {
+      "valve_read": {
+        "expose": "pi_heating_demand"
+      },
+      "valve_write": {
+        "expose": "pi_heating_demand"
+      },
+      "external_temperature": {
+        "expose": "remote_temperature"
+      },
+      "child_lock": {
+        "expose": "child_lock"
+      },
+      "calibration_trigger": {
+        "expose": "valve_adapt_process"
+      },
+      "calibration_status": {
+        "expose": "valve_adapt_status"
+      },
+      "setpoint_source": {
+        "expose": "setpoint_change_source"
+      }
+    }
+  },
+  "notes": [
+    "No minimum opening on the device: if Home Assistant stops, the thermostat regulates on its own.",
+    "remote_temperature must be sent at least every 30 minutes.",
+    "Whether the device holds a written valve position is still being tested."
+  ]
+}

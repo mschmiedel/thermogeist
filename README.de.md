@@ -4,7 +4,8 @@
 
 [English](README.md) | **Deutsch**
 
-> **Status: frühe Entwicklung.** Du kannst Haus und Räume beschreiben, das Regeln der Thermostate folgt.
+> **Status: frühe Entwicklung.** Haus und Räume beschreiben, Thermostate zuordnen und sehen, was
+> Thermogeist tun würde (Beobachtungsmodus). Das echte Regeln der Ventile folgt.
 > Los geht's mit [Erste Schritte](docs/de/getting-started.md).
 
 Ruhige, nachvollziehbare Heizkörperregelung für Home Assistant – für das ganze Haus, nicht nur

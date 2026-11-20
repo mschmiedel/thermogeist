@@ -55,6 +55,8 @@ class House:
     design_outdoor_temperature_c: float | None = None
     share_outside_pct: float = 0.0
     living_area_m2: float | None = None
+    flow_temperature_entity: str | None = None
+    """MDL-007: optional; enables the feed-forward together with radiator output."""
 
 
 @dataclass(frozen=True, slots=True)

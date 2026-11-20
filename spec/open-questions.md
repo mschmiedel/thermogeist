@@ -37,6 +37,13 @@ Test setup: pipe probe (e.g. SNZB-02LD) on the flow pipe at the valve, values in
 | Battery drain with frequent position commands? | open | open |
 | In which `operating_mode` does writing `pi_heating_demand` take effect? | – | open |
 
+## Controller findings from the simulator (M3)
+
+- The Bosch HT II scatter of the opening point (10–20 %) is not modelled yet; the simulator uses
+  a fixed 10 %. Add scatter and backlash (TST-011) before tuning further.
+- Oversized radiators (guest bathroom) cycle between about 12 % and 40 % a few times a day with
+  the heat-pump profile. Check on the real device whether this is acceptable.
+
 ## Open domain questions
 
 - Thresholds for "significant jump" in the learning state (LRN-011).

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Runtime state of one house: stored settings, central mode and room decisions.
+"""Runtime state of one house: stored settings, central mode, room decisions and plans.
 
 This is HA glue: it collects inputs from Home Assistant, asks the core for decisions and
 tells the entities to refresh. The decisions themselves are made in ``core``.
@@ -7,7 +7,7 @@ tells the entities to refresh. The decisions themselves are made in ``core``.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -18,7 +18,15 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
-from .core.decisions import Decision, RoomInputs, decide_room
+from .core.actuator import Thermostat
+from .core.controller import (
+    ControllerInputs,
+    ControllerResult,
+    ControllerSettings,
+    RoomController,
+    feed_forward_pct,
+)
+from .core.decisions import Decision, ReasonCode, RoomInputs, decide_room
 from .core.estimation import ShareResult, room_shares
 from .core.heat import current_demand_w, room_heat_loss_w_per_k
 from .core.house import CentralMode, House
@@ -28,6 +36,7 @@ from .core.profiles import (
     effective_settings,
     is_valid_override,
 )
+from .core.radiator import time_constant_h
 from .core.room import Room
 from .core.time_provider import SystemTimeProvider, TimeProvider
 
@@ -51,6 +60,12 @@ class RoomState:
     current_temperature_c: float | None = None
     decision: Decision | None = None
     demand_w: float | None = None
+    thermostat_ids: list[str] = field(default_factory=list)
+    controller: RoomController = field(default_factory=RoomController)
+    plan: ControllerResult | None = None
+    """Planned valve position (observe mode, ACT-014)."""
+    rated_output_w: float | None = None
+    """Sum of the known radiator outputs of this room, None if none is known."""
 
 
 class HouseRuntime:
@@ -62,6 +77,7 @@ class HouseRuntime:
         entry_id: str,
         house: House,
         rooms: dict[str, Room],
+        thermostats: dict[str, Thermostat] | None = None,
         clock: TimeProvider | None = None,
     ) -> None:
         self._hass = hass
@@ -69,6 +85,8 @@ class HouseRuntime:
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}")
         self._clock = clock or SystemTimeProvider()
         self._unsubscribe: list[CALLBACK_TYPE] = []
+        self.house_device_id: str | None = None
+        self._started = False
         self.house = house
         self.central_mode = CentralMode.AUTO
         self.overrides: dict[ControlSetting, float] = {}
@@ -84,6 +102,17 @@ class HouseRuntime:
             )
             for room_id, room in rooms.items()
         }
+        self.thermostats: dict[str, Thermostat] = thermostats or {}
+        for thermostat_id, thermostat in self.thermostats.items():
+            if thermostat.room_id in self.rooms:
+                self.rooms[thermostat.room_id].thermostat_ids.append(thermostat_id)
+        for state in self.rooms.values():
+            outputs = [
+                self.thermostats[t].rated_output_w
+                for t in state.thermostat_ids
+                if self.thermostats[t].rated_output_w
+            ]
+            state.rated_output_w = sum(outputs) if outputs else None
 
     # ----- lifecycle -------------------------------------------------------------------------
 
@@ -100,11 +129,16 @@ class HouseRuntime:
 
     @callback
     def async_start(self) -> None:
+        # Plans are only computed from here on: before, room temperatures are not read yet and
+        # the controller would start from a false safe state (seen when restoring central mode).
+        self._started = True
         now = self._clock.now()
         for state in self.rooms.values():
             self._read_temperature(state, now, initial=True)
         watched = [s.room.temperature_entity for s in self.rooms.values()]
         watched.append(self.house.outdoor_temperature_entity)
+        if self.house.flow_temperature_entity:
+            watched.append(self.house.flow_temperature_entity)
         self._unsubscribe.append(
             async_track_state_change_event(self._hass, watched, self._on_state_change)
         )
@@ -131,12 +165,12 @@ class HouseRuntime:
             raise ValueError(f"{setting} out of range: {value}")
         self.overrides[setting] = value
         await self._save()
-        self._notify()
+        self._reevaluate()
 
     async def async_reset_overrides(self) -> None:
         self.overrides.clear()
         await self._save()
-        self._notify()
+        self._reevaluate()
 
     @callback
     def set_central_mode(self, mode: CentralMode) -> None:
@@ -149,7 +183,20 @@ class HouseRuntime:
         self._reevaluate()
 
     def outdoor_temperature_c(self) -> float | None:
-        return _numeric_state(self._hass, self.house.outdoor_temperature_entity)
+        return numeric_state(self._hass, self.house.outdoor_temperature_entity)
+
+    def flow_temperature_c(self) -> float | None:
+        if not self.house.flow_temperature_entity:
+            return None
+        return numeric_state(self._hass, self.house.flow_temperature_entity)
+
+    def controller_settings(self) -> ControllerSettings:
+        values = self.settings()
+        return ControllerSettings(
+            min_opening_pct=values[ControlSetting.MIN_VALVE_OPENING].value,
+            dead_band_k=values[ControlSetting.DEAD_BAND].value,
+            max_change_pct_per_30min=values[ControlSetting.MAX_VALVE_CHANGE].value,
+        )
 
     # ----- evaluation ------------------------------------------------------------------------
 
@@ -170,7 +217,7 @@ class HouseRuntime:
 
     def _read_temperature(self, state: RoomState, now: datetime, *, initial: bool = False) -> None:
         ha_state = self._hass.states.get(state.room.temperature_entity)
-        value = _numeric_state(self._hass, state.room.temperature_entity)
+        value = numeric_state(self._hass, state.room.temperature_entity)
         state.current_temperature_c = value
         if value is not None and ha_state is not None:
             state.temperature_valid_since = ha_state.last_reported
@@ -181,6 +228,8 @@ class HouseRuntime:
     @callback
     def _reevaluate(self) -> None:
         outdoor = self.outdoor_temperature_c()
+        flow = self.flow_temperature_c()
+        settings = self.controller_settings()
         for state in self.rooms.values():
             state.decision = decide_room(
                 RoomInputs(
@@ -193,7 +242,26 @@ class HouseRuntime:
             state.demand_w = current_demand_w(
                 state.heat_loss_w_per_k, state.decision.target_setpoint_c, outdoor
             )
+            if state.thermostat_ids and self._started:
+                self._plan(state, flow, settings)
         self._notify()
+
+    def _plan(self, state: RoomState, flow: float | None, settings: ControllerSettings) -> None:
+        """Observe mode: compute what the valves would do, write nothing (ACT-014)."""
+        assert state.decision is not None
+        state.plan = state.controller.step(
+            ControllerInputs(
+                target_c=state.decision.target_setpoint_c,
+                room_c=state.current_temperature_c,
+                feed_forward_pct=feed_forward_pct(
+                    state.demand_w, state.rated_output_w, flow, state.current_temperature_c
+                ),
+                time_constant_h=time_constant_h(state.room.floor_area_m2, state.heat_loss_w_per_k),
+                safety=state.decision.code is ReasonCode.SAFETY_SENSOR_STALE,
+                settings=settings,
+            ),
+            self._clock.now(),
+        )
 
     @callback
     def _notify(self) -> None:
@@ -208,7 +276,7 @@ class HouseRuntime:
         )
 
 
-def _numeric_state(hass: HomeAssistant, entity_id: str) -> float | None:
+def numeric_state(hass: HomeAssistant, entity_id: str) -> float | None:
     state = hass.states.get(entity_id)
     if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
         return None

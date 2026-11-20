@@ -1,0 +1,38 @@
+{
+  "id": "sonoff_trv_zbt",
+  "name": "Sonoff TRV-ZBT (Gen2)",
+  "kind": "valve",
+  "match": {
+    "manufacturer": [
+      "SONOFF"
+    ],
+    "model_id": [
+      "TRV-ZBT"
+    ]
+  },
+  "roles": {
+    "z2m": {
+      "valve_write": {
+        "expose": "heating_valve_position"
+      },
+      "valve_min": {
+        "expose": "idle_valve_position"
+      },
+      "external_temperature": {
+        "expose": "external_temperature_input"
+      },
+      "child_lock": {
+        "expose": "child_lock"
+      },
+      "calibration_trigger": {
+        "expose": "valve_travel_calibration"
+      },
+      "calibration_status": {
+        "expose": "motor_travel_calibration_status"
+      }
+    }
+  },
+  "notes": [
+    "Switch off smart_temperature_control: it disables manual valve positions."
+  ]
+}

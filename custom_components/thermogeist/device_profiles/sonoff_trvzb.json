@@ -1,0 +1,35 @@
+{
+  "id": "sonoff_trvzb",
+  "name": "Sonoff TRVZB",
+  "kind": "valve",
+  "match": {
+    "manufacturer": [
+      "SONOFF"
+    ],
+    "model_id": [
+      "TRVZB"
+    ]
+  },
+  "roles": {
+    "z2m": {
+      "valve_write": {
+        "expose": "valve_opening_degree"
+      },
+      "valve_min": {
+        "expose": "valve_closing_degree",
+        "inverted": true
+      },
+      "external_temperature": {
+        "expose": "external_temperature_input"
+      },
+      "child_lock": {
+        "expose": "child_lock"
+      }
+    }
+  },
+  "notes": [
+    "Firmware 1.1.4 or newer is needed for valve_opening_degree and valve_closing_degree.",
+    "Set temperature_sensor_select to remote_temperature to use the external temperature.",
+    "Switch off smart_temperature_control: it disables manual valve positions."
+  ]
+}

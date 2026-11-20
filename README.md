@@ -4,7 +4,8 @@
 
 **English** | [Deutsch](README.de.md)
 
-> **Status: early development.** You can describe your house and rooms; controlling thermostats follows.
+> **Status: early development.** Describe your house and rooms, assign thermostats and see what
+> Thermogeist would do (observe mode). Actually controlling the valves follows.
 > Start with [Getting started](docs/en/getting-started.md).
 
 Calm, understandable radiator control for Home Assistant – for the whole house, not just one

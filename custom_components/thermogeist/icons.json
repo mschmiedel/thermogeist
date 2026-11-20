@@ -70,6 +70,19 @@
       },
       "heat_loss_coefficient": {
         "default": "mdi:home-export-outline"
+      },
+      "planned_valve_position": {
+        "default": "mdi:valve"
+      },
+      "thermostat_kind": {
+        "default": "mdi:thermostat",
+        "state": {
+          "setpoint": "mdi:thermostat",
+          "valve": "mdi:valve"
+        }
+      },
+      "thermostat_valve_position": {
+        "default": "mdi:valve-open"
       }
     }
   }

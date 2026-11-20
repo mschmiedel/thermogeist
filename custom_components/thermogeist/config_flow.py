@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Setup and options dialogs for a house and its rooms (spec HAI-001 to HAI-005)."""
+"""Setup and options dialogs for a house, its rooms and thermostats (spec HAI-001 to HAI-006)."""
 
 from __future__ import annotations
 
@@ -19,8 +19,13 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfArea, UnitOfPower, UnitOfTemperature
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     AreaSelector,
+    DeviceSelector,
+    DeviceSelectorConfig,
+    EntityFilterSelectorConfig,
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
@@ -40,20 +45,31 @@ from .const import (
     CONF_CEILING_LOW,
     CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
+    CONF_DEVICE,
     CONF_EXTERIOR_WALLS,
     CONF_FLOOR_AREA,
+    CONF_FLOW_TEMPERATURE_ENTITY,
     CONF_HEAT_LOAD,
     CONF_HEATING_TYPE,
     CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
     CONF_NAME,
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
+    CONF_PROFILE,
+    CONF_RATED_OUTPUT,
+    CONF_ROLES,
+    CONF_ROOM,
     CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
     CONF_TEMPERATURE_ENTITY,
+    CONF_VALVE_MIN_INVERTED,
     DOMAIN,
+    RATED_OUTPUT_W_MAX,
+    RATED_OUTPUT_W_MIN,
     SUBENTRY_ROOM,
+    SUBENTRY_THERMOSTAT,
 )
+from .core.actuator import DeviceEntity, Role, Source, find_profile, resolve_roles
 from .core.estimation import known_shares_exceed_total
 from .core.house import (
     DESIGN_TEMP_C_MAX,
@@ -87,9 +103,16 @@ from .core.room import (
     validate_design_indoor,
     validate_room,
 )
+from .device_profiles import async_get_profiles
 from .house_config import house_from_config, house_from_entry, room_from_config, rooms_from_entry
 
-DETAIL_KEYS = (CONF_HEAT_LOAD, CONF_DESIGN_TEMPERATURE, CONF_SHARE_OUTSIDE, CONF_LIVING_AREA)
+DETAIL_KEYS = (
+    CONF_HEAT_LOAD,
+    CONF_DESIGN_TEMPERATURE,
+    CONF_SHARE_OUTSIDE,
+    CONF_LIVING_AREA,
+    CONF_FLOW_TEMPERATURE_ENTITY,
+)
 
 
 def _number(minimum: float, maximum: float, step: float, unit: str) -> NumberSelector:
@@ -150,6 +173,9 @@ def _detail_schema(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
             LIVING_AREA_M2_MIN, LIVING_AREA_M2_MAX, 1, UnitOfArea.SQUARE_METERS
         ),
         optional(CONF_SHARE_OUTSIDE): _number(SHARE_PCT_MIN, SHARE_PCT_MAX, 1, PERCENTAGE),
+        optional(CONF_FLOW_TEMPERATURE_ENTITY): EntitySelector(
+            EntitySelectorConfig(domain="sensor", device_class=SensorDeviceClass.TEMPERATURE)
+        ),
     }
 
 
@@ -204,7 +230,7 @@ class ThermogeistConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
-        return {SUBENTRY_ROOM: RoomSubentryFlow}
+        return {SUBENTRY_ROOM: RoomSubentryFlow, SUBENTRY_THERMOSTAT: ThermostatSubentryFlow}
 
 
 class ThermogeistOptionsFlow(OptionsFlow):
@@ -387,3 +413,141 @@ class RoomSubentryFlow(ConfigSubentryFlow):
 
 def _room_errors(config: Mapping[str, Any]) -> dict[str, str]:
     return {issue.field: issue.code for issue in validate_room(room_from_config(config))}
+
+
+# Which entity domains may fill a role (ACT-001 to ACT-009).
+ROLE_DOMAINS: dict[Role, list[str]] = {
+    Role.CLIMATE: ["climate"],
+    Role.VALVE_READ: ["number", "sensor"],
+    Role.VALVE_WRITE: ["number"],
+    Role.VALVE_MIN: ["number"],
+    Role.EXTERNAL_TEMPERATURE: ["number"],
+    Role.CHILD_LOCK: ["switch", "lock", "select"],
+    Role.CALIBRATION_TRIGGER: ["button", "select", "switch"],
+    Role.CALIBRATION_STATUS: ["sensor", "select"],
+    Role.SETPOINT_SOURCE: ["sensor", "select"],
+}
+
+
+class ThermostatSubentryFlow(ConfigSubentryFlow):
+    """Assign a thermostat to a room (HAI-006): pick device, then confirm the detected roles."""
+
+    def __init__(self) -> None:
+        self._data: dict[str, Any] = {}
+        self._entity_ids: list[str] = []
+        self._detected: dict[str, str] = {}
+        self._profile_name: str | None = None
+        self._notes: str = ""
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        return await self._device_step("user", user_input, {})
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        return await self._device_step(
+            "reconfigure", user_input, self._get_reconfigure_subentry().data
+        )
+
+    async def _device_step(
+        self, step_id: str, user_input: dict[str, Any] | None, defaults: Mapping[str, Any]
+    ) -> SubentryFlowResult:
+        rooms = {
+            sid: s.title
+            for sid, s in self._get_entry().subentries.items()
+            if s.subentry_type == SUBENTRY_ROOM
+        }
+        if not rooms:
+            return self.async_abort(reason="no_rooms")
+        if user_input is not None:
+            self._data = {**defaults, **user_input}
+            if user_input.get(CONF_RATED_OUTPUT) is None:
+                self._data.pop(CONF_RATED_OUTPUT, None)
+            await self._detect(user_input[CONF_DEVICE], defaults)
+            return await self.async_step_roles()
+        values = defaults
+        schema = {
+            vol.Required(CONF_ROOM, default=values.get(CONF_ROOM, vol.UNDEFINED)): SelectSelector(
+                SelectSelectorConfig(
+                    options=[{"value": sid, "label": title} for sid, title in rooms.items()],
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Required(
+                CONF_DEVICE, default=values.get(CONF_DEVICE, vol.UNDEFINED)
+            ): DeviceSelector(
+                DeviceSelectorConfig(entity=[EntityFilterSelectorConfig(domain="climate")])
+            ),
+            vol.Optional(
+                CONF_RATED_OUTPUT, description=_suggested(values, CONF_RATED_OUTPUT)
+            ): _number(RATED_OUTPUT_W_MIN, RATED_OUTPUT_W_MAX, 10, "W"),
+        }
+        return self.async_show_form(step_id=step_id, data_schema=vol.Schema(schema))
+
+    async def _detect(self, device_id: str, defaults: Mapping[str, Any]) -> None:
+        """Find profile and roles for the device (ACT-031, ACT-032)."""
+        device = dr.async_get(self.hass).async_get(device_id)
+        entries = er.async_entries_for_device(er.async_get(self.hass), device_id)
+        self._entity_ids = [e.entity_id for e in entries]
+        profiles = await async_get_profiles(self.hass)
+        profile = find_profile(profiles, device.manufacturer, device.model_id) if device else None
+        detected = resolve_roles(
+            [DeviceEntity(e.entity_id, e.unique_id, e.domain) for e in entries], profile
+        )
+        same_device = defaults.get(CONF_DEVICE) == device_id and defaults.get(CONF_ROLES)
+        self._detected = (
+            dict(defaults[CONF_ROLES]) if same_device else {r.value: e for r, e in detected.items()}
+        )
+        self._profile_name = profile.name if profile else None
+        self._notes = " ".join(profile.notes) if profile else ""
+        self._data[CONF_PROFILE] = profile.profile_id if profile else None
+        inverted = False
+        if profile and Role.VALVE_MIN in profile.roles.get(Source.Z2M, {}):
+            inverted = profile.roles[Source.Z2M][Role.VALVE_MIN].inverted
+        self._data[CONF_VALVE_MIN_INVERTED] = inverted
+        self._data["_device_name"] = (device.name_by_user or device.name) if device else device_id
+
+    async def async_step_roles(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            roles = {role: entity for role, entity in user_input.items() if entity}
+            if Role.CLIMATE.value not in roles:
+                errors[Role.CLIMATE.value] = "climate_required"
+            else:
+                return self._finish(roles)
+        schema: dict[vol.Marker, Any] = {}
+        for role, domains in ROLE_DOMAINS.items():
+            marker = vol.Required if role is Role.CLIMATE else vol.Optional
+            schema[marker(role.value, description=_suggested(self._detected, role.value))] = (
+                EntitySelector(
+                    EntitySelectorConfig(domain=domains, include_entities=self._entity_ids)
+                )
+            )
+        return self.async_show_form(
+            step_id="roles",
+            data_schema=vol.Schema(schema),
+            errors=errors,
+            description_placeholders={
+                "profile": self._profile_name or "-",
+                "notes": self._notes,
+            },
+        )
+
+    def _finish(self, roles: dict[str, str]) -> SubentryFlowResult:
+        title = str(self._data.pop("_device_name"))
+        data = {
+            CONF_ROOM: self._data[CONF_ROOM],
+            CONF_DEVICE: self._data[CONF_DEVICE],
+            CONF_PROFILE: self._data.get(CONF_PROFILE),
+            CONF_VALVE_MIN_INVERTED: self._data.get(CONF_VALVE_MIN_INVERTED, False),
+            CONF_ROLES: roles,
+        }
+        if self._data.get(CONF_RATED_OUTPUT) is not None:
+            data[CONF_RATED_OUTPUT] = self._data[CONF_RATED_OUTPUT]
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_and_abort(
+                self._get_entry(), self._get_reconfigure_subentry(), title=title, data=data
+            )
+        return self.async_create_entry(title=title, data=data)

@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import ThermogeistConfigEntry
 from .const import DOMAIN, MANUFACTURER
+from .core.actuator import Thermostat
 from .house_config import room_area_id
 from .runtime import HouseRuntime, RoomState, update_signal
 
@@ -68,7 +69,7 @@ class RoomEntity(ThermogeistEntity):
             name=self.room_state.room.name,
             manufacturer=MANUFACTURER,
             model="Thermogeist Room",
-            via_device=(DOMAIN, entry.entry_id),
+            via_device_id=entry.runtime_data.house_device_id,
         )
 
     @property
@@ -82,3 +83,18 @@ class RoomEntity(ThermogeistEntity):
             area = ar.async_get(self.hass).async_get_area(area_id)
             if area is not None:
                 dr.async_get(self.hass).async_update_device(self.device_entry.id, area_id=area_id)
+
+
+class ThermostatEntity(RoomEntity):
+    """Entity of one assigned thermostat, shown on the room device (HAI-006)."""
+
+    def __init__(self, entry: ThermogeistConfigEntry, thermostat_id: str, key: str) -> None:
+        thermostat = entry.runtime_data.thermostats[thermostat_id]
+        super().__init__(entry, thermostat.room_id, key)
+        self._thermostat_id = thermostat_id
+        self._attr_unique_id = f"{thermostat_id}_{key}"
+        self._attr_translation_placeholders = {"thermostat": thermostat.name}
+
+    @property
+    def thermostat(self) -> Thermostat:
+        return self.runtime.thermostats[self._thermostat_id]

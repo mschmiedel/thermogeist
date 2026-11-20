@@ -31,6 +31,7 @@ CONF_HEAT_LOAD: Final = FIELD_HEAT_LOAD
 CONF_DESIGN_TEMPERATURE: Final = FIELD_DESIGN_TEMPERATURE
 CONF_SHARE_OUTSIDE: Final = FIELD_SHARE_OUTSIDE
 CONF_LIVING_AREA: Final = FIELD_LIVING_AREA
+CONF_FLOW_TEMPERATURE_ENTITY: Final = "flow_temperature_entity"
 
 # Room keys.
 SUBENTRY_ROOM: Final = "room"
@@ -45,6 +46,17 @@ CONF_EXTERIOR_WALLS: Final = FIELD_EXTERIOR_WALLS
 CONF_ABOVE: Final = "above"
 CONF_BELOW: Final = "below"
 CONF_DESIGN_INDOOR: Final = FIELD_DESIGN_INDOOR
+
+# Thermostat keys.
+SUBENTRY_THERMOSTAT: Final = "thermostat"
+CONF_ROOM: Final = "room"
+CONF_DEVICE: Final = "device"
+CONF_RATED_OUTPUT: Final = "rated_output"
+CONF_PROFILE: Final = "profile"
+CONF_ROLES: Final = "roles"
+CONF_VALVE_MIN_INVERTED: Final = "valve_min_inverted"
+RATED_OUTPUT_W_MIN: Final = 50.0
+RATED_OUTPUT_W_MAX: Final = 10_000.0
 
 # Room setpoint limits and default (OVR-012). 20 °C is the usual design indoor temperature.
 ROOM_SETPOINT_MIN_C: Final = 5.0
