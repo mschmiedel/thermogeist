@@ -27,7 +27,7 @@ The user installs Thermogeist and describes the house once.
 | Profile defaults derived from the heating type | CTL-010, CTL-011, CTL-012 (defaults only) |
 | Getting-started docs en/de | DOC-001 to DOC-003 |
 
-## M2 – Rooms
+## M2 – Rooms (done)
 
 The user adds rooms to the house. Thermogeist knows each room's need, but controls nothing yet.
 
@@ -38,7 +38,8 @@ The user adds rooms to the house. Thermogeist knows each room's need, but contro
 | Derived values: heat loss coefficient, current demand | MDL-010, MDL-011 |
 | Plausibility: room shares add up to at most 100 %, missing inputs explained | MDL-020, MDL-021 |
 | Per room: setpoint, `active_reason` | OVR-012, RSN-002 |
-| Decision point and reason catalogue (first codes: `schedule`, `central_stop`, `frost_protection`, `safety_sensor_stale`) | ARC-003, RSN-001, RSN-005 |
+| Decision point and reason catalogue (first codes: `setpoint`, `central_stop`, `frost_protection`, `safety_sensor_stale`) | ARC-003, RSN-001, RSN-005, RUL-030 |
+| Editable control settings on the house, icons | CTL-014, HAI-013 |
 | Sensor failure handling for the room temperature | RUL-013 |
 
 ## M3 – Thermostats, observe mode

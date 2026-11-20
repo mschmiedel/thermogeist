@@ -4,7 +4,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-> **Status: early development.** You can describe your house; rooms and thermostats follow.
+> **Status: early development.** You can describe your house and rooms; controlling thermostats follows.
 > Start with [Getting started](docs/en/getting-started.md).
 
 Calm, understandable radiator control for Home Assistant – for the whole house, not just one

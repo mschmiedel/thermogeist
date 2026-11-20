@@ -28,7 +28,7 @@ Device (TRV via Zigbee2MQTT / climate entity)
 |---|---|---|
 | ARC-001 | The core imports nothing from `homeassistant` and is testable without HA. | implemented |
 | ARC-002 | The core gets time exclusively through `TimeProvider`. | implemented |
-| ARC-003 | Every change to an actuator passes through one central decision point and produces a Decision with a reason code. | planned |
+| ARC-003 | Every change to an actuator passes through one central decision point and produces a Decision with a reason code. In M2 the decision covers the room's target temperature. | implemented |
 | ARC-004 | The controller always outputs a device-independent heat demand (0–100 %). The adapter decides how to apply it. | planned |
 | ARC-005 | Settings are inherited house → group → room and can be overridden at every level. The effective source of each value is visible. | planned |
 

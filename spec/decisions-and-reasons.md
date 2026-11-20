@@ -19,16 +19,17 @@ is created as a `Decision` at one central place.
 
 | ID | Requirement | Status |
 |---|---|---|
-| RSN-001 | All reason codes live in one central catalogue with a text template (en/de) and an FAQ link. | planned |
-| RSN-002 | One sensor `active_reason` (enum) per room with the currently effective reason and its parameters as attributes. | planned |
+| RSN-001 | All reason codes live in one central catalogue (`core/decisions.py`) with severity, translated state names (en/de) and an FAQ page per language. Text templates with parameters follow with the logbook (RSN-003). | implemented |
+| RSN-002 | One sensor `active_reason` (enum) per room with the currently effective reason; attributes: severity, since, FAQ link, parameters. | implemented |
 | RSN-003 | Every decision with `severity ≥ notice` appears in the HA logbook as a readable sentence. | planned |
 | RSN-004 | Decisions with `severity = safety` additionally raise a repair issue that only disappears once the cause is resolved. | planned |
-| RSN-005 | A test ensures that every code in the catalogue has text, translation and an FAQ entry. | planned |
+| RSN-005 | A test ensures that every code in the catalogue has a translation and an FAQ entry in both languages. | implemented |
 
 ## Catalogue (initial set)
 
 | Code | Severity | Example text |
 |---|---|---|
+| `setpoint` | info | "Holding the setpoint 21.0 °C" |
 | `schedule` | info | "Schedule: setpoint 20.0 °C from 06:00" |
 | `window_open` | notice | "Window open for 30 s: room set to frost protection" |
 | `manual_override_device` | info | "Set to 22.0 °C on the thermostat, valid until 22:00" |

@@ -41,6 +41,7 @@ users can see what their heating type implies.
 | ID | Requirement | Status |
 |---|---|---|
 | CTL-013 | The profile for a heating type provides the default values above. | implemented |
+| CTL-014 | The four values are editable on the house device (number entities, category configuration). A changed value overrides the profile until reset; attribute `source` shows `profile` or `user`. A button resets all four to the profile. Changing the heating type keeps user values; untouched values follow the new profile. Allowed ranges: minimum opening 0–100 %, dead band 0–2 K, max. change 1–100 % per 30 min, max. setback 0–6 K. | implemented |
 
 ## Special cases
 

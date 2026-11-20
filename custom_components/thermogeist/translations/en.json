@@ -80,6 +80,26 @@
         "boiler": "Boiler (gas, oil, pellets) or district heating",
         "direct_electric": "Direct electric heating"
       }
+    },
+    "share_mode": {
+      "options": {
+        "estimated": "Estimate from size and position",
+        "known": "I know the share (heat load calculation)"
+      }
+    },
+    "above": {
+      "options": {
+        "heated": "Heated room",
+        "unheated": "Unheated room or attic",
+        "roof": "Roof directly above"
+      }
+    },
+    "below": {
+      "options": {
+        "heated": "Heated room",
+        "unheated": "Unheated room or basement",
+        "ground": "Ground (floor slab)"
+      }
     }
   },
   "entity": {
@@ -111,6 +131,32 @@
       "share_outside": {
         "name": "Share outside Thermogeist"
       },
+      "unassigned_share": {
+        "name": "Heat load not assigned to a room"
+      },
+      "active_reason": {
+        "name": "Active reason",
+        "state": {
+          "setpoint": "Holding the setpoint",
+          "central_stop": "Heating stopped (central mode)",
+          "frost_protection": "Frost protection (central mode)",
+          "safety_sensor_stale": "Temperature sensor silent"
+        }
+      },
+      "target_setpoint": {
+        "name": "Target temperature"
+      },
+      "heat_demand": {
+        "name": "Heat demand"
+      },
+      "room_share": {
+        "name": "Share of heat load"
+      },
+      "heat_loss_coefficient": {
+        "name": "Heat loss coefficient"
+      }
+    },
+    "number": {
       "min_valve_opening": {
         "name": "Minimum valve opening"
       },
@@ -122,6 +168,99 @@
       },
       "max_setback": {
         "name": "Max. setback"
+      }
+    },
+    "button": {
+      "reset_control_settings": {
+        "name": "Reset control settings to profile"
+      }
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "initiate_flow": {
+        "user": "Add room"
+      },
+      "entry_type": "Room",
+      "step": {
+        "user": {
+          "title": "Add a room",
+          "description": "Which room, which temperature sensor, and how should Thermogeist get its share of the heat load?",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "temperature_entity": "Room temperature sensor",
+            "share_mode": "Share of the heat load"
+          },
+          "data_description": {
+            "name": "Shown as the device name, e.g. \"Living room\".",
+            "area": "Optional. The room device is placed in this Home Assistant area.",
+            "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
+            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead."
+          }
+        },
+        "reconfigure": {
+          "title": "Change room",
+          "description": "Which room, which temperature sensor, and how should Thermogeist get its share of the heat load?",
+          "data": {
+            "name": "Name",
+            "area": "Area",
+            "temperature_entity": "Room temperature sensor",
+            "share_mode": "Share of the heat load"
+          },
+          "data_description": {
+            "name": "Shown as the device name, e.g. \"Living room\".",
+            "area": "Optional. The room device is placed in this Home Assistant area.",
+            "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
+            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead."
+          }
+        },
+        "geometry": {
+          "title": "Size and position",
+          "description": "Rough values are fine. Learning will correct the estimate later.",
+          "data": {
+            "floor_area": "Floor area",
+            "ceiling_height": "Ceiling height",
+            "ceiling_low": "Lowest point under a sloped ceiling",
+            "exterior_walls": "Exterior walls",
+            "above": "Above the room",
+            "below": "Below the room"
+          },
+          "data_description": {
+            "floor_area": "Galleries and open spaces count their floor area once.",
+            "ceiling_height": "With a sloped ceiling: the highest point.",
+            "ceiling_low": "Only for sloped ceilings. Thermogeist uses the mean of lowest and highest point.",
+            "exterior_walls": "Walls that face outside. A corner room usually has 2, a hallway inside the house 0.",
+            "above": "What is directly above the ceiling.",
+            "below": "What is directly below the floor."
+          }
+        },
+        "known_share": {
+          "title": "Known share",
+          "description": "Enter the room's share of the house heat load from your heat load calculation.",
+          "data": {
+            "known_share": "Share of the heat load"
+          },
+          "data_description": {
+            "known_share": "Room heat load divided by house heat load, in percent."
+          }
+        }
+      },
+      "error": {
+        "name_empty": "Please enter a name.",
+        "floor_area_required": "Please enter the floor area.",
+        "floor_area_out_of_range": "Floor area must be between 1 and 500 m².",
+        "ceiling_height_required": "Please enter the ceiling height.",
+        "ceiling_height_out_of_range": "Ceiling height must be between 1 and 12 m.",
+        "ceiling_low_out_of_range": "The lowest point must be between 1 and 12 m.",
+        "ceiling_low_above_height": "The lowest point cannot be higher than the ceiling height.",
+        "exterior_walls_out_of_range": "Exterior walls must be between 0 and 4.",
+        "known_share_required": "Please enter the share.",
+        "known_share_out_of_range": "The share must be between 0 and 100 %.",
+        "known_shares_exceed_total": "Together with the other rooms and the share outside Thermogeist this is more than 100 %."
+      },
+      "abort": {
+        "reconfigure_successful": "The room was updated."
       }
     }
   }

@@ -15,7 +15,7 @@
 |---|---|---|
 | OVR-010 | Configurable at house level, overridable per room: until the next schedule change (default) / for X hours / permanently. | planned |
 | OVR-011 | Changes from the HA UI and from voice assistants use the same mechanism, with their own source. | planned |
-| OVR-012 | Each room exposes one `climate` entity with the room setpoint and the room temperature. This is the entity users and voice assistants operate. | planned |
+| OVR-012 | Each room exposes one `climate` entity with the room setpoint (5–30 °C, step 0.5, default 20 °C) and the room temperature. This is the entity users and voice assistants operate. The setpoint survives restarts. | implemented |
 
 ## Device functions
 

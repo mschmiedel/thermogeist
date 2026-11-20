@@ -2,8 +2,8 @@
 
 **English** | [Deutsch](../de/getting-started.md)
 
-> Thermogeist is in an early stage. Right now you can describe your house. Rooms and
-> thermostats follow in the next versions.
+> Thermogeist is in an early stage. You can describe your house and its [rooms](rooms.md).
+> Controlling thermostats follows in the next versions.
 
 ## Install
 
@@ -51,8 +51,14 @@ Thermogeist creates a device for your house:
 
 - **Central mode** – *Auto*, *Stop* or *Frost protection* for the whole house. The setting
   survives restarts.
-- **Diagnostic values** – your heating type, heat load and design temperature, plus the
-  defaults that follow from the heating type:
+- **Control settings** – four values you can change right on the device page. They start
+  with the defaults of your heating type; the attribute `source` shows `profile` or `user`.
+  **Reset control settings to profile** brings the defaults back. If you change the heating
+  type later, your own values stay and the untouched ones follow the new profile.
+- **Diagnostic values** – heating type, heat load, design temperature, share outside
+  Thermogeist and heat load not assigned to a room.
+
+Defaults per heating type:
 
 | Default | Heat pump | Boiler | Direct electric |
 |---|---|---|---|
@@ -68,3 +74,5 @@ valves open and moves them slowly. A boiler can react faster and cope with valve
 
 Open the Thermogeist entry and choose **Configure**. You can change everything except the name;
 Thermogeist reloads afterwards.
+
+Next: [add your rooms](rooms.md).

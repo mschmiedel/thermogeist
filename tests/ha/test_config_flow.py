@@ -28,7 +28,7 @@ async def test_minimal_setup_creates_house(hass: HomeAssistant, outdoor_sensor: 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home"
     assert hass.states.get("select.home_central_mode").state == "auto"
-    assert hass.states.get("sensor.home_minimum_valve_opening").state == "40.0"
+    assert hass.states.get("number.home_minimum_valve_opening").state == "40.0"
     assert hass.states.get("sensor.home_heating_type").state == "heat_pump"
 
 
@@ -55,7 +55,7 @@ async def test_heat_load_without_design_temperature_shows_error(
 async def test_options_change_heating_type(hass: HomeAssistant, outdoor_sensor: str) -> None:
     """Scenario: SCN-SETUP-003"""
     entry = await setup_house(hass)
-    assert hass.states.get("sensor.home_minimum_valve_opening").state == "40.0"
+    assert hass.states.get("number.home_minimum_valve_opening").state == "40.0"
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -67,7 +67,7 @@ async def test_options_change_heating_type(hass: HomeAssistant, outdoor_sensor: 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert hass.states.get("sensor.home_heating_type").state == "boiler"
-    assert hass.states.get("sensor.home_minimum_valve_opening").state == "0.0"
+    assert hass.states.get("number.home_minimum_valve_opening").state == "0.0"
 
 
 async def test_two_houses_can_be_added(hass: HomeAssistant, outdoor_sensor: str) -> None:

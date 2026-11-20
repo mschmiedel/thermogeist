@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: MIT
-"""Controller profile defaults per heating type (spec CTL-010 to CTL-013).
+"""Controller profile defaults per heating type and user overrides (spec CTL-010 to CTL-014).
 
-The values are provisional until the controller is tuned with the simulator (M3).
+The default values are provisional until the controller is tuned with the simulator (M3).
 The reasons for each value are documented in spec/controller.md.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 
 from .house import HeatingType
 
@@ -47,3 +49,72 @@ PROFILES: dict[HeatingType, Profile] = {
 def profile_for(heating_type: HeatingType) -> Profile:
     """Return the default profile for a heating type."""
     return PROFILES[heating_type]
+
+
+class ControlSetting(StrEnum):
+    """Control settings the user may override (CTL-014)."""
+
+    MIN_VALVE_OPENING = "min_valve_opening"
+    DEAD_BAND = "dead_band"
+    MAX_VALVE_CHANGE = "max_valve_change"
+    MAX_SETBACK = "max_setback"
+
+
+class SettingSource(StrEnum):
+    """Where an effective value comes from (RUL-002)."""
+
+    PROFILE = "profile"
+    USER = "user"
+
+
+@dataclass(frozen=True, slots=True)
+class SettingLimits:
+    minimum: float
+    maximum: float
+    step: float
+
+
+# Allowed ranges for overrides. A dead band above 2 K or a setback above 6 K would defeat the
+# purpose of room control; a max. change below 1 % per 30 min would freeze the valve.
+LIMITS: dict[ControlSetting, SettingLimits] = {
+    ControlSetting.MIN_VALVE_OPENING: SettingLimits(0.0, 100.0, 1.0),
+    ControlSetting.DEAD_BAND: SettingLimits(0.0, 2.0, 0.1),
+    ControlSetting.MAX_VALVE_CHANGE: SettingLimits(1.0, 100.0, 1.0),
+    ControlSetting.MAX_SETBACK: SettingLimits(0.0, 6.0, 0.5),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class EffectiveSetting:
+    value: float
+    source: SettingSource
+
+
+def profile_value(profile: Profile, setting: ControlSetting) -> float:
+    """Read one setting from a profile."""
+    return {
+        ControlSetting.MIN_VALVE_OPENING: profile.min_valve_opening_pct,
+        ControlSetting.DEAD_BAND: profile.dead_band_k,
+        ControlSetting.MAX_VALVE_CHANGE: profile.max_valve_change_pct_per_30min,
+        ControlSetting.MAX_SETBACK: profile.max_setback_k,
+    }[setting]
+
+
+def effective_settings(
+    heating_type: HeatingType, overrides: Mapping[ControlSetting, float]
+) -> dict[ControlSetting, EffectiveSetting]:
+    """Overrides win; everything else follows the profile of the heating type."""
+    profile = profile_for(heating_type)
+    return {
+        setting: (
+            EffectiveSetting(overrides[setting], SettingSource.USER)
+            if setting in overrides
+            else EffectiveSetting(profile_value(profile, setting), SettingSource.PROFILE)
+        )
+        for setting in ControlSetting
+    }
+
+
+def is_valid_override(setting: ControlSetting, value: float) -> bool:
+    limits = LIMITS[setting]
+    return limits.minimum <= value <= limits.maximum

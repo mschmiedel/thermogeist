@@ -11,7 +11,7 @@ A house set up as heat pump.
 
 ## Expected result
 - The integration reloads.
-- The minimum-opening sensor shows 0 %.
+- The minimum-opening setting shows 0 %.
 
 ## Why it matters
 Users can correct their setup at any time without removing and re-adding the house.

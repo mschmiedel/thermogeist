@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Setup and options dialogs for a house (spec HAI-001 to HAI-003)."""
+"""Setup and options dialogs for a house and its rooms (spec HAI-001 to HAI-005)."""
 
 from __future__ import annotations
 
@@ -9,14 +9,18 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryFlow,
     OptionsFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import PERCENTAGE, UnitOfArea, UnitOfPower, UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    AreaSelector,
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
@@ -29,15 +33,27 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_ABOVE,
+    CONF_AREA,
+    CONF_BELOW,
+    CONF_CEILING_HEIGHT,
+    CONF_CEILING_LOW,
     CONF_DESIGN_TEMPERATURE,
+    CONF_EXTERIOR_WALLS,
+    CONF_FLOOR_AREA,
     CONF_HEAT_LOAD,
     CONF_HEATING_TYPE,
+    CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
     CONF_NAME,
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
+    CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
+    CONF_TEMPERATURE_ENTITY,
     DOMAIN,
+    SUBENTRY_ROOM,
 )
+from .core.estimation import known_shares_exceed_total
 from .core.house import (
     DESIGN_TEMP_C_MAX,
     DESIGN_TEMP_C_MIN,
@@ -50,7 +66,23 @@ from .core.house import (
     HeatingType,
     validate_house,
 )
-from .house_config import house_from_config
+from .core.room import (
+    CEILING_M_MAX,
+    CEILING_M_MIN,
+    DEFAULT_CEILING_HEIGHT_M,
+    DEFAULT_EXTERIOR_WALLS,
+    EXTERIOR_WALLS_MAX,
+    EXTERIOR_WALLS_MIN,
+    FLOOR_AREA_M2_MAX,
+    FLOOR_AREA_M2_MIN,
+    KNOWN_SHARE_PCT_MAX,
+    KNOWN_SHARE_PCT_MIN,
+    Above,
+    Below,
+    ShareMode,
+    validate_room,
+)
+from .house_config import house_from_config, house_from_entry, room_from_config, rooms_from_entry
 
 DETAIL_KEYS = (CONF_HEAT_LOAD, CONF_DESIGN_TEMPERATURE, CONF_SHARE_OUTSIDE, CONF_LIVING_AREA)
 
@@ -162,6 +194,13 @@ class ThermogeistConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         return ThermogeistOptionsFlow()
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        return {SUBENTRY_ROOM: RoomSubentryFlow}
+
 
 class ThermogeistOptionsFlow(OptionsFlow):
     """Change every house setting later (HAI-003). The name stays the entry title."""
@@ -187,3 +226,150 @@ class ThermogeistOptionsFlow(OptionsFlow):
             ),
             errors=errors,
         )
+
+
+def _select(options: list[str], translation_key: str) -> SelectSelector:
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=options, translation_key=translation_key, mode=SelectSelectorMode.DROPDOWN
+        )
+    )
+
+
+def _suggested(defaults: Mapping[str, Any], key: str) -> dict[str, Any] | None:
+    value = defaults.get(key)
+    return {"suggested_value": value} if value is not None else None
+
+
+class RoomSubentryFlow(ConfigSubentryFlow):
+    """Add or change a room (HAI-005). Step 1: basics; step 2: geometry or known share."""
+
+    def __init__(self) -> None:
+        self._data: dict[str, Any] = {}
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        return await self._basics("user", user_input, {})
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        return await self._basics("reconfigure", user_input, self._get_reconfigure_subentry().data)
+
+    async def _basics(
+        self, step_id: str, user_input: dict[str, Any] | None, defaults: Mapping[str, Any]
+    ) -> SubentryFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if not str(user_input.get(CONF_NAME, "")).strip():
+                errors[CONF_NAME] = "name_empty"
+            else:
+                self._data = {**defaults, **user_input}
+                if user_input.get(CONF_AREA) is None:
+                    self._data.pop(CONF_AREA, None)
+                if ShareMode(user_input[CONF_SHARE_MODE]) is ShareMode.KNOWN:
+                    return await self.async_step_known_share()
+                return await self.async_step_geometry()
+        values = user_input or defaults
+        schema = {
+            vol.Required(CONF_NAME, default=values.get(CONF_NAME, vol.UNDEFINED)): TextSelector(),
+            vol.Optional(CONF_AREA, description=_suggested(values, CONF_AREA)): AreaSelector(),
+            vol.Required(
+                CONF_TEMPERATURE_ENTITY, default=values.get(CONF_TEMPERATURE_ENTITY, vol.UNDEFINED)
+            ): EntitySelector(
+                EntitySelectorConfig(domain="sensor", device_class=SensorDeviceClass.TEMPERATURE)
+            ),
+            vol.Required(
+                CONF_SHARE_MODE, default=values.get(CONF_SHARE_MODE, ShareMode.ESTIMATED.value)
+            ): _select([m.value for m in ShareMode], CONF_SHARE_MODE),
+        }
+        return self.async_show_form(step_id=step_id, data_schema=vol.Schema(schema), errors=errors)
+
+    async def async_step_geometry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            candidate = {**self._data, **user_input}
+            if user_input.get(CONF_CEILING_LOW) is None:
+                candidate.pop(CONF_CEILING_LOW, None)
+            errors = _room_errors(candidate)
+            if not errors:
+                self._data = candidate
+                return self._finish()
+        values = user_input or self._data
+        schema = {
+            vol.Required(CONF_FLOOR_AREA, description=_suggested(values, CONF_FLOOR_AREA)): _number(
+                FLOOR_AREA_M2_MIN, FLOOR_AREA_M2_MAX, 0.5, UnitOfArea.SQUARE_METERS
+            ),
+            vol.Required(
+                CONF_CEILING_HEIGHT,
+                default=values.get(CONF_CEILING_HEIGHT, DEFAULT_CEILING_HEIGHT_M),
+            ): _number(CEILING_M_MIN, CEILING_M_MAX, 0.05, "m"),
+            vol.Optional(
+                CONF_CEILING_LOW, description=_suggested(values, CONF_CEILING_LOW)
+            ): _number(CEILING_M_MIN, CEILING_M_MAX, 0.05, "m"),
+            vol.Required(
+                CONF_EXTERIOR_WALLS,
+                default=values.get(CONF_EXTERIOR_WALLS, DEFAULT_EXTERIOR_WALLS),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=EXTERIOR_WALLS_MIN,
+                    max=EXTERIOR_WALLS_MAX,
+                    step=1,
+                    mode=NumberSelectorMode.SLIDER,
+                )
+            ),
+            vol.Required(CONF_ABOVE, default=values.get(CONF_ABOVE, Above.HEATED.value)): _select(
+                [a.value for a in Above], CONF_ABOVE
+            ),
+            vol.Required(CONF_BELOW, default=values.get(CONF_BELOW, Below.HEATED.value)): _select(
+                [b.value for b in Below], CONF_BELOW
+            ),
+        }
+        return self.async_show_form(
+            step_id="geometry", data_schema=vol.Schema(schema), errors=errors
+        )
+
+    async def async_step_known_share(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            candidate = {**self._data, **user_input}
+            errors = _room_errors(candidate)
+            if not errors and self._known_shares_too_high(candidate):
+                errors[CONF_KNOWN_SHARE] = "known_shares_exceed_total"
+            if not errors:
+                self._data = candidate
+                return self._finish()
+        values = user_input or self._data
+        schema = {
+            vol.Required(
+                CONF_KNOWN_SHARE, description=_suggested(values, CONF_KNOWN_SHARE)
+            ): _number(KNOWN_SHARE_PCT_MIN, KNOWN_SHARE_PCT_MAX, 0.1, PERCENTAGE),
+        }
+        return self.async_show_form(
+            step_id="known_share", data_schema=vol.Schema(schema), errors=errors
+        )
+
+    def _known_shares_too_high(self, candidate: Mapping[str, Any]) -> bool:
+        entry = self._get_entry()
+        own_id = (
+            self._get_reconfigure_subentry().subentry_id
+            if self.source == SOURCE_RECONFIGURE
+            else None
+        )
+        rooms = rooms_from_entry(entry, exclude=own_id) | {"new": room_from_config(candidate)}
+        return known_shares_exceed_total(house_from_entry(entry), rooms)
+
+    def _finish(self) -> SubentryFlowResult:
+        title = str(self._data[CONF_NAME]).strip()
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_and_abort(
+                self._get_entry(), self._get_reconfigure_subentry(), title=title, data=self._data
+            )
+        return self.async_create_entry(title=title, data=self._data)
+
+
+def _room_errors(config: Mapping[str, Any]) -> dict[str, str]:
+    return {issue.field: issue.code for issue in validate_room(room_from_config(config))}

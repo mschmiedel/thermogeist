@@ -1,0 +1,218 @@
+# SPDX-License-Identifier: MIT
+"""Runtime state of one house: stored settings, central mode and room decisions.
+
+This is HA glue: it collects inputs from Home Assistant, asks the core for decisions and
+tells the entities to refresh. The decisions themselves are made in ``core``.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
+from homeassistant.helpers.storage import Store
+
+from .const import DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
+from .core.decisions import Decision, RoomInputs, decide_room
+from .core.estimation import ShareResult, room_shares
+from .core.heat import current_demand_w, room_heat_loss_w_per_k
+from .core.house import CentralMode, House
+from .core.profiles import (
+    ControlSetting,
+    EffectiveSetting,
+    effective_settings,
+    is_valid_override,
+)
+from .core.room import Room
+from .core.time_provider import SystemTimeProvider, TimeProvider
+
+REEVALUATE_EVERY = timedelta(minutes=1)
+
+
+def update_signal(entry_id: str) -> str:
+    """Dispatcher signal sent whenever anything of this house changed."""
+    return f"{DOMAIN}_{entry_id}_updated"
+
+
+@dataclass(slots=True)
+class RoomState:
+    """Live values of one room."""
+
+    room: Room
+    user_setpoint_c: float
+    share_pct: float
+    heat_loss_w_per_k: float | None
+    temperature_valid_since: datetime | None = None
+    current_temperature_c: float | None = None
+    decision: Decision | None = None
+    demand_w: float | None = None
+
+
+class HouseRuntime:
+    """Everything that changes while Home Assistant runs."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_id: str,
+        house: House,
+        rooms: dict[str, Room],
+        clock: TimeProvider | None = None,
+    ) -> None:
+        self._hass = hass
+        self._entry_id = entry_id
+        self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}")
+        self._clock = clock or SystemTimeProvider()
+        self._unsubscribe: list[CALLBACK_TYPE] = []
+        self.house = house
+        self.central_mode = CentralMode.AUTO
+        self.overrides: dict[ControlSetting, float] = {}
+        self.shares: ShareResult = room_shares(house, rooms)
+        self.rooms: dict[str, RoomState] = {
+            room_id: RoomState(
+                room=room,
+                user_setpoint_c=ROOM_SETPOINT_DEFAULT_C,
+                share_pct=self.shares.shares_pct.get(room_id, 0.0),
+                heat_loss_w_per_k=room_heat_loss_w_per_k(
+                    house, self.shares.shares_pct.get(room_id, 0.0)
+                ),
+            )
+            for room_id, room in rooms.items()
+        }
+
+    # ----- lifecycle -------------------------------------------------------------------------
+
+    async def async_load(self) -> None:
+        stored = await self._store.async_load() or {}
+        self.overrides = {
+            ControlSetting(key): float(value)
+            for key, value in stored.get("overrides", {}).items()
+            if key in {setting.value for setting in ControlSetting}
+        }
+        for room_id, setpoint in stored.get("setpoints", {}).items():
+            if room_id in self.rooms:
+                self.rooms[room_id].user_setpoint_c = float(setpoint)
+
+    @callback
+    def async_start(self) -> None:
+        now = self._clock.now()
+        for state in self.rooms.values():
+            self._read_temperature(state, now, initial=True)
+        watched = [s.room.temperature_entity for s in self.rooms.values()]
+        watched.append(self.house.outdoor_temperature_entity)
+        self._unsubscribe.append(
+            async_track_state_change_event(self._hass, watched, self._on_state_change)
+        )
+        self._unsubscribe.append(
+            async_track_time_interval(self._hass, self._on_interval, REEVALUATE_EVERY)
+        )
+        self._reevaluate()
+
+    @callback
+    def async_stop(self) -> None:
+        while self._unsubscribe:
+            self._unsubscribe.pop()()
+
+    async def async_remove(self) -> None:
+        await self._store.async_remove()
+
+    # ----- settings --------------------------------------------------------------------------
+
+    def settings(self) -> dict[ControlSetting, EffectiveSetting]:
+        return effective_settings(self.house.heating_type, self.overrides)
+
+    async def async_set_override(self, setting: ControlSetting, value: float) -> None:
+        if not is_valid_override(setting, value):
+            raise ValueError(f"{setting} out of range: {value}")
+        self.overrides[setting] = value
+        await self._save()
+        self._notify()
+
+    async def async_reset_overrides(self) -> None:
+        self.overrides.clear()
+        await self._save()
+        self._notify()
+
+    @callback
+    def set_central_mode(self, mode: CentralMode) -> None:
+        self.central_mode = mode
+        self._reevaluate()
+
+    async def async_set_room_setpoint(self, room_id: str, setpoint_c: float) -> None:
+        self.rooms[room_id].user_setpoint_c = setpoint_c
+        await self._save()
+        self._reevaluate()
+
+    def outdoor_temperature_c(self) -> float | None:
+        return _numeric_state(self._hass, self.house.outdoor_temperature_entity)
+
+    # ----- evaluation ------------------------------------------------------------------------
+
+    @callback
+    def _on_state_change(self, event: Event[EventStateChangedData]) -> None:
+        now = self._clock.now()
+        for state in self.rooms.values():
+            if state.room.temperature_entity == event.data["entity_id"]:
+                self._read_temperature(state, now)
+        self._reevaluate()
+
+    @callback
+    def _on_interval(self, _now: datetime) -> None:
+        now = self._clock.now()
+        for state in self.rooms.values():
+            self._read_temperature(state, now)
+        self._reevaluate()
+
+    def _read_temperature(self, state: RoomState, now: datetime, *, initial: bool = False) -> None:
+        ha_state = self._hass.states.get(state.room.temperature_entity)
+        value = _numeric_state(self._hass, state.room.temperature_entity)
+        state.current_temperature_c = value
+        if value is not None and ha_state is not None:
+            state.temperature_valid_since = ha_state.last_reported
+        elif initial:
+            # Give a sensor that is still starting up the full grace period.
+            state.temperature_valid_since = now
+
+    @callback
+    def _reevaluate(self) -> None:
+        outdoor = self.outdoor_temperature_c()
+        for state in self.rooms.values():
+            state.decision = decide_room(
+                RoomInputs(
+                    user_setpoint_c=state.user_setpoint_c,
+                    central_mode=self.central_mode,
+                    temperature_valid_since=state.temperature_valid_since,
+                ),
+                self._clock,
+            )
+            state.demand_w = current_demand_w(
+                state.heat_loss_w_per_k, state.decision.target_setpoint_c, outdoor
+            )
+        self._notify()
+
+    @callback
+    def _notify(self) -> None:
+        async_dispatcher_send(self._hass, update_signal(self._entry_id))
+
+    async def _save(self) -> None:
+        await self._store.async_save(
+            {
+                "overrides": {key.value: value for key, value in self.overrides.items()},
+                "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
+            }
+        )
+
+
+def _numeric_state(hass: HomeAssistant, entity_id: str) -> float | None:
+    state = hass.states.get(entity_id)
+    if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return None
+    try:
+        return float(state.state)
+    except ValueError:
+        return None

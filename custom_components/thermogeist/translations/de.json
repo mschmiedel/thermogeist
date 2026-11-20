@@ -80,6 +80,26 @@
         "boiler": "Kessel (Gas, Öl, Pellets) oder Fernwärme",
         "direct_electric": "Elektro-Direktheizung"
       }
+    },
+    "share_mode": {
+      "options": {
+        "estimated": "Aus Größe und Lage schätzen",
+        "known": "Ich kenne den Anteil (Heizlastberechnung)"
+      }
+    },
+    "above": {
+      "options": {
+        "heated": "Beheizter Raum",
+        "unheated": "Unbeheizter Raum oder Dachboden",
+        "roof": "Dach direkt darüber"
+      }
+    },
+    "below": {
+      "options": {
+        "heated": "Beheizter Raum",
+        "unheated": "Unbeheizter Raum oder Keller",
+        "ground": "Erdreich (Bodenplatte)"
+      }
     }
   },
   "entity": {
@@ -111,6 +131,32 @@
       "share_outside": {
         "name": "Anteil außerhalb von Thermogeist"
       },
+      "unassigned_share": {
+        "name": "Heizlast ohne Raum"
+      },
+      "active_reason": {
+        "name": "Aktueller Grund",
+        "state": {
+          "setpoint": "Hält den Sollwert",
+          "central_stop": "Heizung aus (Zentralmodus)",
+          "frost_protection": "Frostschutz (Zentralmodus)",
+          "safety_sensor_stale": "Temperatursensor meldet sich nicht"
+        }
+      },
+      "target_setpoint": {
+        "name": "Zieltemperatur"
+      },
+      "heat_demand": {
+        "name": "Wärmebedarf"
+      },
+      "room_share": {
+        "name": "Anteil an der Heizlast"
+      },
+      "heat_loss_coefficient": {
+        "name": "Wärmeverlustkoeffizient"
+      }
+    },
+    "number": {
       "min_valve_opening": {
         "name": "Mindestöffnung Ventil"
       },
@@ -122,6 +168,99 @@
       },
       "max_setback": {
         "name": "Max. Absenkung"
+      }
+    },
+    "button": {
+      "reset_control_settings": {
+        "name": "Regelwerte auf Profil zurücksetzen"
+      }
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "initiate_flow": {
+        "user": "Raum hinzufügen"
+      },
+      "entry_type": "Raum",
+      "step": {
+        "user": {
+          "title": "Raum hinzufügen",
+          "description": "Welcher Raum, welcher Temperatursensor, und wie soll Thermogeist den Anteil an der Heizlast bestimmen?",
+          "data": {
+            "name": "Name",
+            "area": "Bereich",
+            "temperature_entity": "Raumtemperatursensor",
+            "share_mode": "Anteil an der Heizlast"
+          },
+          "data_description": {
+            "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
+            "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
+            "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
+            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein."
+          }
+        },
+        "reconfigure": {
+          "title": "Raum ändern",
+          "description": "Welcher Raum, welcher Temperatursensor, und wie soll Thermogeist den Anteil an der Heizlast bestimmen?",
+          "data": {
+            "name": "Name",
+            "area": "Bereich",
+            "temperature_entity": "Raumtemperatursensor",
+            "share_mode": "Anteil an der Heizlast"
+          },
+          "data_description": {
+            "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
+            "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
+            "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
+            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein."
+          }
+        },
+        "geometry": {
+          "title": "Größe und Lage",
+          "description": "Grobe Werte reichen. Das Lernen korrigiert die Schätzung später.",
+          "data": {
+            "floor_area": "Grundfläche",
+            "ceiling_height": "Raumhöhe",
+            "ceiling_low": "Niedrigste Stelle unter der Dachschräge",
+            "exterior_walls": "Außenwände",
+            "above": "Über dem Raum",
+            "below": "Unter dem Raum"
+          },
+          "data_description": {
+            "floor_area": "Galerien und Lufträume zählen ihre Grundfläche einmal.",
+            "ceiling_height": "Bei Dachschräge: die höchste Stelle.",
+            "ceiling_low": "Nur bei Dachschräge. Thermogeist rechnet mit dem Mittel aus niedrigster und höchster Stelle.",
+            "exterior_walls": "Wände nach draußen. Ein Eckraum hat meist 2, ein innenliegender Flur 0.",
+            "above": "Was direkt über der Decke liegt.",
+            "below": "Was direkt unter dem Boden liegt."
+          }
+        },
+        "known_share": {
+          "title": "Bekannter Anteil",
+          "description": "Trag den Anteil des Raums an der Heizlast des Hauses aus deiner Heizlastberechnung ein.",
+          "data": {
+            "known_share": "Anteil an der Heizlast"
+          },
+          "data_description": {
+            "known_share": "Heizlast des Raums geteilt durch die Heizlast des Hauses, in Prozent."
+          }
+        }
+      },
+      "error": {
+        "name_empty": "Bitte gib einen Namen ein.",
+        "floor_area_required": "Bitte gib die Grundfläche ein.",
+        "floor_area_out_of_range": "Die Grundfläche muss zwischen 1 und 500 m² liegen.",
+        "ceiling_height_required": "Bitte gib die Raumhöhe ein.",
+        "ceiling_height_out_of_range": "Die Raumhöhe muss zwischen 1 und 12 m liegen.",
+        "ceiling_low_out_of_range": "Die niedrigste Stelle muss zwischen 1 und 12 m liegen.",
+        "ceiling_low_above_height": "Die niedrigste Stelle kann nicht höher als die Raumhöhe sein.",
+        "exterior_walls_out_of_range": "Es sind 0 bis 4 Außenwände möglich.",
+        "known_share_required": "Bitte gib den Anteil ein.",
+        "known_share_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
+        "known_shares_exceed_total": "Zusammen mit den anderen Räumen und dem Anteil außerhalb von Thermogeist sind das mehr als 100 %."
+      },
+      "abort": {
+        "reconfigure_successful": "Der Raum wurde geändert."
       }
     }
   }

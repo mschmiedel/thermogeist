@@ -4,7 +4,7 @@
 
 [English](README.md) | **Deutsch**
 
-> **Status: frühe Entwicklung.** Du kannst dein Haus beschreiben, Räume und Thermostate folgen.
+> **Status: frühe Entwicklung.** Du kannst Haus und Räume beschreiben, das Regeln der Thermostate folgt.
 > Los geht's mit [Erste Schritte](docs/de/getting-started.md).
 
 Ruhige, nachvollziehbare Heizkörperregelung für Home Assistant – für das ganze Haus, nicht nur

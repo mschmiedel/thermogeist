@@ -17,7 +17,7 @@
 | RUL-010 | Window: open for a configurable time (default 30 s) → frost protection. After closing, back with its own delay. | planned |
 | RUL-011 | Away: setback, limited to max. 2 K in the heat-pump profile. | planned |
 | RUL-012 | Start-up delay after an HA restart until devices are available (`startup_hold`). | planned |
-| RUL-013 | Sensor failure: after a configurable time, safe state (minimum opening), always with reason code `safety_sensor_stale`. | planned |
+| RUL-013 | Sensor failure: if the room temperature sensor has not reported a valid value for 60 min (named constant; configurable later), the room's reason is `safety_sensor_stale`. A sensor that is unavailable at start-up gets the full 60 min grace period. From M4 the safe state is the minimum opening. | implemented |
 
 ## Schedules
 
@@ -40,4 +40,4 @@ With several reasons active at once (highest first):
 
 | ID | Requirement | Status |
 |---|---|---|
-| RUL-030 | The precedence order is fixed and documented. `active_reason` shows the effective reason, other active reasons as an attribute. | planned |
+| RUL-030 | The precedence order is fixed and documented. `active_reason` shows the effective reason. Other active reasons as an attribute follow later. | implemented |

@@ -7,35 +7,32 @@ anything from ``homeassistant`` (spec ARC-001).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .core.house import House
-from .core.profiles import Profile, profile_for
-from .house_config import house_from_entry
+from .house_config import house_from_entry, rooms_from_entry
+from .runtime import HouseRuntime
 
-PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
-
-@dataclass(slots=True)
-class ThermogeistData:
-    """Runtime data of one house."""
-
-    house: House
-    profile: Profile
-
-
-type ThermogeistConfigEntry = ConfigEntry[ThermogeistData]
+type ThermogeistConfigEntry = ConfigEntry[HouseRuntime]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> bool:
-    """Set up one house."""
-    house = house_from_entry(entry)
-    entry.runtime_data = ThermogeistData(house=house, profile=profile_for(house.heating_type))
+    """Set up one house with its rooms."""
+    runtime = HouseRuntime(hass, entry.entry_id, house_from_entry(entry), rooms_from_entry(entry))
+    await runtime.async_load()
+    entry.runtime_data = runtime
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    runtime.async_start()
+    entry.async_on_unload(runtime.async_stop)
     entry.async_on_unload(entry.add_update_listener(_async_reload_on_change))
     return True
 
@@ -43,6 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) 
 async def async_unload_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> bool:
     """Unload one house."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:
+    """Delete stored settings when the house is removed."""
+    await HouseRuntime(hass, entry.entry_id, house_from_entry(entry), {}).async_remove()
 
 
 async def _async_reload_on_change(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:

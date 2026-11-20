@@ -1,0 +1,76 @@
+{
+  "entity": {
+    "select": {
+      "central_mode": {
+        "default": "mdi:home-thermometer-outline",
+        "state": {
+          "auto": "mdi:home-automation",
+          "stop": "mdi:power",
+          "frost_protection": "mdi:snowflake-thermometer"
+        }
+      }
+    },
+    "number": {
+      "min_valve_opening": {
+        "default": "mdi:valve-open"
+      },
+      "dead_band": {
+        "default": "mdi:arrow-expand-vertical"
+      },
+      "max_valve_change": {
+        "default": "mdi:speedometer-slow"
+      },
+      "max_setback": {
+        "default": "mdi:thermometer-minus"
+      }
+    },
+    "button": {
+      "reset_control_settings": {
+        "default": "mdi:restore"
+      }
+    },
+    "sensor": {
+      "heating_type": {
+        "default": "mdi:heat-pump-outline",
+        "state": {
+          "heat_pump": "mdi:heat-pump-outline",
+          "boiler": "mdi:water-boiler",
+          "direct_electric": "mdi:radiator"
+        }
+      },
+      "heat_load": {
+        "default": "mdi:home-lightning-bolt-outline"
+      },
+      "design_outdoor_temperature": {
+        "default": "mdi:thermometer-low"
+      },
+      "share_outside": {
+        "default": "mdi:home-percent-outline"
+      },
+      "unassigned_share": {
+        "default": "mdi:home-search-outline"
+      },
+      "active_reason": {
+        "default": "mdi:message-text-outline",
+        "state": {
+          "setpoint": "mdi:check-circle-outline",
+          "central_stop": "mdi:power",
+          "frost_protection": "mdi:snowflake",
+          "safety_sensor_stale": "mdi:alert-outline"
+        }
+      },
+      "target_setpoint": {
+        "default": "mdi:target"
+      },
+      "heat_demand": {
+        "default": "mdi:fire"
+      },
+      "room_share": {
+        "default": "mdi:chart-pie"
+      },
+      "heat_loss_coefficient": {
+        "default": "mdi:home-export-outline"
+      }
+    }
+  }
+}

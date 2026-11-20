@@ -2,8 +2,8 @@
 
 [English](../en/getting-started.md) | **Deutsch**
 
-> Thermogeist steht noch am Anfang. Im Moment kannst du dein Haus beschreiben. Räume und
-> Thermostate folgen in den nächsten Versionen.
+> Thermogeist steht noch am Anfang. Du kannst dein Haus und seine [Räume](rooms.md) beschreiben.
+> Das Regeln von Thermostaten folgt in den nächsten Versionen.
 
 ## Installieren
 
@@ -51,8 +51,14 @@ Thermogeist legt ein Gerät für dein Haus an:
 
 - **Zentralmodus** – *Automatisch*, *Aus* oder *Frostschutz* für das ganze Haus. Die Einstellung
   bleibt auch nach einem Neustart erhalten.
-- **Diagnosewerte** – deine Heizungsart, Heizlast und Normaußentemperatur sowie die
-  Voreinstellungen, die sich aus der Heizungsart ergeben:
+- **Regelwerte** – vier Werte, die du direkt auf der Geräteseite ändern kannst. Sie starten
+  mit den Voreinstellungen deiner Heizungsart; das Attribut `source` zeigt `profile` oder `user`.
+  **Regelwerte auf Profil zurücksetzen** holt die Voreinstellungen zurück. Wechselst du später
+  die Heizungsart, bleiben deine eigenen Werte, die unveränderten folgen dem neuen Profil.
+- **Diagnosewerte** – Heizungsart, Heizlast, Normaußentemperatur, Anteil außerhalb von
+  Thermogeist und Heizlast ohne Raum.
+
+Voreinstellungen je Heizungsart:
 
 | Voreinstellung | Wärmepumpe | Kessel | Elektro-Direkt |
 |---|---|---|---|
@@ -69,3 +75,5 @@ schneller und kommt mit schließenden Ventilen gut zurecht.
 
 Öffne den Thermogeist-Eintrag und wähle **Konfigurieren**. Du kannst alles außer dem Namen
 ändern, Thermogeist lädt danach neu.
+
+Weiter: [Räume anlegen](rooms.md).

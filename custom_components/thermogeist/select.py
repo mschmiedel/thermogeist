@@ -27,14 +27,16 @@ class CentralModeSelect(HouseEntity, SelectEntity, RestoreEntity):
     def __init__(self, entry: ThermogeistConfigEntry) -> None:
         super().__init__(entry, "central_mode")
         self._attr_options = [mode.value for mode in CentralMode]
-        self._attr_current_option = CentralMode.AUTO.value
+
+    @property
+    def current_option(self) -> str:
+        return self.runtime.central_mode.value
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is not None and last.state in self._attr_options:
-            self._attr_current_option = last.state
+            self.runtime.set_central_mode(CentralMode(last.state))
 
     async def async_select_option(self, option: str) -> None:
-        self._attr_current_option = CentralMode(option).value
-        self.async_write_ha_state()
+        self.runtime.set_central_mode(CentralMode(option))

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Translate between config entry data and the core house model."""
+"""Translate between config entry data and the core house and room models."""
 
 from __future__ import annotations
 
@@ -9,15 +9,34 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 
 from .const import (
+    CONF_ABOVE,
+    CONF_AREA,
+    CONF_BELOW,
+    CONF_CEILING_HEIGHT,
+    CONF_CEILING_LOW,
     CONF_DESIGN_TEMPERATURE,
+    CONF_EXTERIOR_WALLS,
+    CONF_FLOOR_AREA,
     CONF_HEAT_LOAD,
     CONF_HEATING_TYPE,
+    CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
     CONF_NAME,
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
+    CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
+    CONF_TEMPERATURE_ENTITY,
+    SUBENTRY_ROOM,
 )
 from .core.house import HeatingType, House
+from .core.room import (
+    DEFAULT_CEILING_HEIGHT_M,
+    DEFAULT_EXTERIOR_WALLS,
+    Above,
+    Below,
+    Room,
+    ShareMode,
+)
 
 
 def house_from_config(config: Mapping[str, Any]) -> House:
@@ -36,6 +55,37 @@ def house_from_config(config: Mapping[str, Any]) -> House:
 def house_from_entry(entry: ConfigEntry) -> House:
     """The effective house: stored data, overridden by later changes in the options."""
     return house_from_config({**entry.data, **entry.options})
+
+
+def room_from_config(config: Mapping[str, Any]) -> Room:
+    """Build a room from flow input or stored sub-entry data."""
+    walls = config.get(CONF_EXTERIOR_WALLS)
+    return Room(
+        name=str(config.get(CONF_NAME, "")),
+        temperature_entity=str(config.get(CONF_TEMPERATURE_ENTITY, "")),
+        share_mode=ShareMode(config.get(CONF_SHARE_MODE, ShareMode.ESTIMATED)),
+        known_share_pct=_optional_float(config.get(CONF_KNOWN_SHARE)),
+        floor_area_m2=_optional_float(config.get(CONF_FLOOR_AREA)),
+        ceiling_height_m=_optional_float(config.get(CONF_CEILING_HEIGHT))
+        or DEFAULT_CEILING_HEIGHT_M,
+        ceiling_low_m=_optional_float(config.get(CONF_CEILING_LOW)),
+        exterior_walls=int(walls) if walls is not None else DEFAULT_EXTERIOR_WALLS,
+        above=Above(config.get(CONF_ABOVE, Above.HEATED)),
+        below=Below(config.get(CONF_BELOW, Below.HEATED)),
+    )
+
+
+def rooms_from_entry(entry: ConfigEntry, *, exclude: str | None = None) -> dict[str, Room]:
+    """All rooms of a house, keyed by sub-entry id."""
+    return {
+        subentry_id: room_from_config(subentry.data)
+        for subentry_id, subentry in entry.subentries.items()
+        if subentry.subentry_type == SUBENTRY_ROOM and subentry_id != exclude
+    }
+
+
+def room_area_id(entry: ConfigEntry, subentry_id: str) -> str | None:
+    return entry.subentries[subentry_id].data.get(CONF_AREA)
 
 
 def _optional_float(value: Any) -> float | None:
