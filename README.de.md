@@ -1,9 +1,4 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="brand/logo-dark.svg">
-    <img src="brand/logo-light.svg" alt="Thermogeist" width="480">
-  </picture>
-</p>
+<p align="center"><img src="brand/logo.png" alt="Thermogeist" width="480"></p>
 
 # Thermogeist
 
