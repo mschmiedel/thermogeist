@@ -190,13 +190,15 @@
             "name": "Name",
             "area": "Area",
             "temperature_entity": "Room temperature sensor",
-            "share_mode": "Share of the heat load"
+            "share_mode": "Share of the heat load",
+            "design_indoor_temperature": "Design indoor temperature"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
             "area": "Optional. The room device is placed in this Home Assistant area.",
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
-            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead."
+            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
+            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets."
           }
         },
         "reconfigure": {
@@ -206,13 +208,15 @@
             "name": "Name",
             "area": "Area",
             "temperature_entity": "Room temperature sensor",
-            "share_mode": "Share of the heat load"
+            "share_mode": "Share of the heat load",
+            "design_indoor_temperature": "Design indoor temperature"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
             "area": "Optional. The room device is placed in this Home Assistant area.",
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
-            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead."
+            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
+            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets."
           }
         },
         "geometry": {
@@ -257,7 +261,8 @@
         "exterior_walls_out_of_range": "Exterior walls must be between 0 and 4.",
         "known_share_required": "Please enter the share.",
         "known_share_out_of_range": "The share must be between 0 and 100 %.",
-        "known_shares_exceed_total": "Together with the other rooms and the share outside Thermogeist this is more than 100 %."
+        "known_shares_exceed_total": "Together with the other rooms and the share outside Thermogeist this is more than 100 %.",
+        "design_indoor_temperature_out_of_range": "Design indoor temperature must be between 10 and 30 °C."
       },
       "abort": {
         "reconfigure_successful": "The room was updated."

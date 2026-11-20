@@ -14,6 +14,7 @@ from .const import (
     CONF_BELOW,
     CONF_CEILING_HEIGHT,
     CONF_CEILING_LOW,
+    CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
     CONF_EXTERIOR_WALLS,
     CONF_FLOOR_AREA,
@@ -31,6 +32,7 @@ from .const import (
 from .core.house import HeatingType, House
 from .core.room import (
     DEFAULT_CEILING_HEIGHT_M,
+    DEFAULT_DESIGN_INDOOR_C,
     DEFAULT_EXTERIOR_WALLS,
     Above,
     Below,
@@ -72,6 +74,8 @@ def room_from_config(config: Mapping[str, Any]) -> Room:
         exterior_walls=int(walls) if walls is not None else DEFAULT_EXTERIOR_WALLS,
         above=Above(config.get(CONF_ABOVE, Above.HEATED)),
         below=Below(config.get(CONF_BELOW, Below.HEATED)),
+        design_indoor_temperature_c=_optional_float(config.get(CONF_DESIGN_INDOOR))
+        or DEFAULT_DESIGN_INDOOR_C,
     )
 
 

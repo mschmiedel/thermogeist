@@ -190,13 +190,15 @@
             "name": "Name",
             "area": "Bereich",
             "temperature_entity": "Raumtemperatursensor",
-            "share_mode": "Anteil an der Heizlast"
+            "share_mode": "Anteil an der Heizlast",
+            "design_indoor_temperature": "Auslegungs-Innentemperatur"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
             "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
-            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein."
+            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
+            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert."
           }
         },
         "reconfigure": {
@@ -206,13 +208,15 @@
             "name": "Name",
             "area": "Bereich",
             "temperature_entity": "Raumtemperatursensor",
-            "share_mode": "Anteil an der Heizlast"
+            "share_mode": "Anteil an der Heizlast",
+            "design_indoor_temperature": "Auslegungs-Innentemperatur"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
             "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
-            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein."
+            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
+            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert."
           }
         },
         "geometry": {
@@ -257,7 +261,8 @@
         "exterior_walls_out_of_range": "Es sind 0 bis 4 Außenwände möglich.",
         "known_share_required": "Bitte gib den Anteil ein.",
         "known_share_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
-        "known_shares_exceed_total": "Zusammen mit den anderen Räumen und dem Anteil außerhalb von Thermogeist sind das mehr als 100 %."
+        "known_shares_exceed_total": "Zusammen mit den anderen Räumen und dem Anteil außerhalb von Thermogeist sind das mehr als 100 %.",
+        "design_indoor_temperature_out_of_range": "Die Auslegungs-Innentemperatur muss zwischen 10 und 30 °C liegen."
       },
       "abort": {
         "reconfigure_successful": "Der Raum wurde geändert."

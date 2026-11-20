@@ -22,3 +22,4 @@ entities and forwards everything to the core (ARC-001).
 | HAI-011 | Entities use `has_entity_name` and stable unique IDs based on the config entry and sub-entry IDs. | implemented |
 | HAI-012 | Minimum Home Assistant version: 2026.10.0 (as in `hacs.json`), Python 3.14. | implemented |
 | HAI-013 | Every entity has a meaningful icon from `icons.json`, with state-dependent icons for enums. | implemented |
+| HAI-014 | Device models are "Thermogeist House" and "Thermogeist Room" (model names cannot be translated in HA, so they are neutral product names). | implemented |

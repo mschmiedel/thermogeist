@@ -38,3 +38,10 @@ def test_every_python_file_has_spdx_header() -> None:
     files = _python_files(INTEGRATION_DIR) + _python_files(ROOT / "tests")
     offenders = [p for p in files if not p.read_text().startswith(SPDX_HEADER)]
     assert not offenders, f"missing SPDX header: {offenders}"
+
+
+def test_integration_ships_brand_images() -> None:
+    """Spec BRD-007: Home Assistant shows these from the integration folder."""
+    brand = INTEGRATION_DIR / "brand"
+    for name in ("icon.png", "icon@2x.png", "logo.png", "logo@2x.png", "dark_logo.png"):
+        assert (brand / name).is_file(), f"missing brand/{name}"

@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: MIT
-"""Generate the Thermogeist logo files (spec BRD-001 to BRD-004).
+"""Generate the Thermogeist logo files (spec BRD-001 to BRD-004, BRD-007).
 
-Writes the SVG sources to ``brand/`` and, if ``rsvg-convert`` is installed, the PNG exports.
+Writes the SVG sources to ``brand/`` and, if ``rsvg-convert`` is installed, the PNG exports,
+including the images Home Assistant shows for the integration
+(``custom_components/thermogeist/brand/``).
 Usage: python3 scripts/build_brand.py
 """
 
@@ -9,7 +11,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-BRAND_DIR = Path(__file__).resolve().parent.parent / "brand"
+ROOT = Path(__file__).resolve().parent.parent
+BRAND_DIR = ROOT / "brand"
+INTEGRATION_BRAND_DIR = ROOT / "custom_components" / "thermogeist" / "brand"
 
 NIGHT_BLUE = "#0F1720"
 CAP = "#DDE4EB"
@@ -76,6 +80,7 @@ FILES = {
     "icon-transparent.svg": _svg(256, 256, MARK_256),
     "logo.svg": _logo(NIGHT_BLUE, BODY, MINT, GREY_TEXT_DARK),
     "logo-light.svg": _logo(None, NIGHT_BLUE, MINT_ON_LIGHT, GREY_TEXT_LIGHT),
+    "logo-dark.svg": _logo(None, BODY, MINT, GREY_TEXT_DARK),
 }
 
 PNG_EXPORTS = [
@@ -85,6 +90,18 @@ PNG_EXPORTS = [
     ("icon-transparent.svg", "icon-transparent@2x.png", 512),
     ("logo.svg", "logo.png", 640),
     ("logo-light.svg", "logo-light.png", 640),
+    ("logo-dark.svg", "logo-dark.png", 640),
+]
+
+# Home Assistant reads these names from the integration's brand folder (transparent images;
+# logo.png for light themes, dark_logo.png for dark themes).
+HA_EXPORTS = [
+    ("icon-transparent.svg", "icon.png", 256),
+    ("icon-transparent.svg", "icon@2x.png", 512),
+    ("logo-light.svg", "logo.png", 640),
+    ("logo-light.svg", "logo@2x.png", 1280),
+    ("logo-dark.svg", "dark_logo.png", 640),
+    ("logo-dark.svg", "dark_logo@2x.png", 1280),
 ]
 
 
@@ -96,9 +113,13 @@ def main() -> None:
     if converter is None:
         print("rsvg-convert not found: SVGs written, PNG export skipped")
         return
-    for source, target, width in PNG_EXPORTS:
+    INTEGRATION_BRAND_DIR.mkdir(exist_ok=True)
+    exports = [(s, BRAND_DIR / t, w) for s, t, w in PNG_EXPORTS] + [
+        (s, INTEGRATION_BRAND_DIR / t, w) for s, t, w in HA_EXPORTS
+    ]
+    for source, target, width in exports:
         subprocess.run(
-            [converter, "-w", str(width), str(BRAND_DIR / source), "-o", str(BRAND_DIR / target)],
+            [converter, "-w", str(width), str(BRAND_DIR / source), "-o", str(target)],
             check=True,
         )
     print(f"Brand files written to {BRAND_DIR}")

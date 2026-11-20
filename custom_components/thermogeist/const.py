@@ -13,6 +13,7 @@ from .core.house import (
 from .core.room import (
     FIELD_CEILING_HEIGHT,
     FIELD_CEILING_LOW,
+    FIELD_DESIGN_INDOOR,
     FIELD_EXTERIOR_WALLS,
     FIELD_FLOOR_AREA,
     FIELD_KNOWN_SHARE,
@@ -43,6 +44,7 @@ CONF_CEILING_LOW: Final = FIELD_CEILING_LOW
 CONF_EXTERIOR_WALLS: Final = FIELD_EXTERIOR_WALLS
 CONF_ABOVE: Final = "above"
 CONF_BELOW: Final = "below"
+CONF_DESIGN_INDOOR: Final = FIELD_DESIGN_INDOOR
 
 # Room setpoint limits and default (OVR-012). 20 °C is the usual design indoor temperature.
 ROOM_SETPOINT_MIN_C: Final = 5.0

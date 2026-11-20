@@ -79,7 +79,7 @@ class HouseRuntime:
                 user_setpoint_c=ROOM_SETPOINT_DEFAULT_C,
                 share_pct=self.shares.shares_pct.get(room_id, 0.0),
                 heat_loss_w_per_k=room_heat_loss_w_per_k(
-                    house, self.shares.shares_pct.get(room_id, 0.0)
+                    house, room, self.shares.shares_pct.get(room_id, 0.0)
                 ),
             )
             for room_id, room in rooms.items()

@@ -39,6 +39,7 @@ gets to it.
 | MDL-036 | Without a house heat load, weights still give relative shares; absolute watts are missing and the controller starts cautiously (MDL-020). | implemented |
 | MDL-037 | Halls, corridors and stairwells: without a thermostat they may be left out (their part stays "not assigned") or entered as rooms without a thermostat to complete the house balance (DIA-040) and to act as neighbouring zone for doors (OPN-002). With a thermostat they are normal rooms; few exterior walls give them a small weight. | implemented |
 | MDL-038 | The heated living area excludes balconies and terraces, even though residential floor area rules count them partly. | implemented |
+| MDL-039 | Design indoor temperature per room (default 20 °C, 10–30 °C; EN 12831: bathrooms 24 °C, heated halls 15 °C). Planning value only: it scales the estimated share by `(T_design_in − T_design_out) / (20 − T_design_out)` (only when the design outdoor temperature is known) and is the indoor value for the heat loss coefficient (MDL-010). How warm the room is heated is decided by the setpoint alone. | implemented |
 
 ### Weighting factors (MDL-034)
 
@@ -62,7 +63,7 @@ them.
 
 | ID | Quantity | Formula / derivation | Status |
 |---|---|---|---|
-| MDL-010 | Room heat loss coefficient H (W/K) | `P_room / (T_set − T_design)` with `P_room = heat load · share` | implemented |
+| MDL-010 | Room heat loss coefficient H (W/K) | `P_room / (T_design_in − T_design_out)` with `P_room = heat load · share`, `T_design_in` from MDL-039 | implemented |
 | MDL-011 | Current demand (W) | `H · (T_set − T_outdoor)` | implemented |
 | MDL-012 | Available radiator output (W) | rated output · (ΔT_log / 49.8)^n, n ≈ 1.3 (EN 442) | planned |
 | MDL-013 | Expected heat demand | demand / available output | planned |

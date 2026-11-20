@@ -35,3 +35,18 @@ def test_known_share_is_required_and_checked() -> None:
         ValidationIssue("known_share", "known_share_out_of_range")
     ]
     assert validate_room(replace(known, known_share_pct=14.5)) == []
+
+
+def test_design_indoor_temperature_is_checked_in_both_modes() -> None:
+    """Scenario: SCN-ROOM-004"""
+    estimated = replace(OFFICE, floor_area_m2=8.0, design_indoor_temperature_c=24.0)
+    assert validate_room(estimated) == []
+    assert validate_room(replace(estimated, design_indoor_temperature_c=35.0)) == [
+        ValidationIssue("design_indoor_temperature", "design_indoor_temperature_out_of_range")
+    ]
+    known = replace(
+        OFFICE, share_mode=ShareMode.KNOWN, known_share_pct=5.0, design_indoor_temperature_c=9.0
+    )
+    assert validate_room(known) == [
+        ValidationIssue("design_indoor_temperature", "design_indoor_temperature_out_of_range")
+    ]

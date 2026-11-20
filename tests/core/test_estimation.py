@@ -107,3 +107,30 @@ def test_known_shares_exceeding_total_are_detected() -> None:
     )
     assert known_shares_exceed_total(house, {"a": known(60.0), "b": known(35.0)})
     assert not known_shares_exceed_total(house, {"a": known(55.0), "b": known(35.0)})
+
+
+def test_bathroom_design_temperature_raises_share() -> None:
+    """Scenario: SCN-SHARE-006"""
+    house = House(
+        name="Home",
+        heating_type=HeatingType.HEAT_PUMP,
+        outdoor_temperature_entity="sensor.outdoor",
+        living_area_m2=160.0,
+        design_outdoor_temperature_c=-10.5,
+    )
+    bath = Room(
+        name="Bath",
+        temperature_entity="sensor.t",
+        floor_area_m2=8.0,
+        exterior_walls=2,
+        design_indoor_temperature_c=24.0,
+    )
+    assert room_shares(house, {"b": bath}).shares_pct["b"] == pytest.approx(5.0 * 34.5 / 30.5)
+
+    without_design = House(
+        name="Home",
+        heating_type=HeatingType.HEAT_PUMP,
+        outdoor_temperature_entity="sensor.outdoor",
+        living_area_m2=160.0,
+    )
+    assert room_shares(without_design, {"b": bath}).shares_pct["b"] == pytest.approx(5.0)

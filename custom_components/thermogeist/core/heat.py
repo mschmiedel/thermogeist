@@ -1,20 +1,19 @@
 # SPDX-License-Identifier: MIT
-"""Heat loss and current demand of a room (spec MDL-010, MDL-011, MDL-036)."""
+"""Heat loss and current demand of a room (spec MDL-010, MDL-011, MDL-036, MDL-039)."""
 
 from __future__ import annotations
 
 from .house import House
+from .room import Room
 
-# Heat load calculations (EN 12831) are usually done for 20 °C indoors.
-DESIGN_INDOOR_TEMP_C = 20.0
 WATTS_PER_KILOWATT = 1000.0
 
 
-def room_heat_loss_w_per_k(house: House, share_pct: float) -> float | None:
+def room_heat_loss_w_per_k(house: House, room: Room, share_pct: float) -> float | None:
     """Heat loss coefficient H of a room, or None without heat load and design temperature."""
     if house.heat_load_kw is None or house.design_outdoor_temperature_c is None:
         return None
-    temperature_span = DESIGN_INDOOR_TEMP_C - house.design_outdoor_temperature_c
+    temperature_span = room.design_indoor_temperature_c - house.design_outdoor_temperature_c
     if temperature_span <= 0:
         return None
     room_load_w = house.heat_load_kw * WATTS_PER_KILOWATT * share_pct / 100

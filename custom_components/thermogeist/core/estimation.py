@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Room shares of the house heat load (spec MDL-021, MDL-031, MDL-034, MDL-035).
+"""Room shares of the house heat load (spec MDL-021, MDL-031, MDL-034, MDL-035, MDL-039).
 
 The weighting is deliberately simple and explainable; the reasons for every factor are in
 spec/house-and-room-model.md. Learning will correct the estimate later (MDL-032).
@@ -26,6 +26,8 @@ EXPOSURE_ABOVE: dict[Above, float] = {Above.HEATED: 0.0, Above.UNHEATED: 0.15, A
 EXPOSURE_BELOW: dict[Below, float] = {Below.HEATED: 0.0, Below.UNHEATED: 0.15, Below.GROUND: 0.1}
 
 FULL_SHARE_PCT = 100.0
+# The living-area reference assumes rooms designed for 20 °C (typical living rooms).
+REFERENCE_INDOOR_C = 20.0
 
 
 def height_factor(mean_height_m: float) -> float:
@@ -43,6 +45,16 @@ def exposure_factor(room: Room) -> float:
         + EXPOSURE_ABOVE[room.above]
         + EXPOSURE_BELOW[room.below]
     )
+
+
+def temperature_factor(room: Room, house: House) -> float:
+    """A room designed for 24 °C needs more than one for 20 °C. Needs the design temperature."""
+    if house.design_outdoor_temperature_c is None:
+        return 1.0
+    reference_span = REFERENCE_INDOOR_C - house.design_outdoor_temperature_c
+    if reference_span <= 0:
+        return 1.0
+    return (room.design_indoor_temperature_c - house.design_outdoor_temperature_c) / reference_span
 
 
 def room_weight(room: Room) -> float:
@@ -69,7 +81,7 @@ def room_shares(house: House, rooms: Mapping[str, Room]) -> ShareResult:
         if room.share_mode is ShareMode.KNOWN
     }
     weights = {
-        rid: room_weight(room)
+        rid: room_weight(room) * temperature_factor(room, house)
         for rid, room in rooms.items()
         if room.share_mode is ShareMode.ESTIMATED
     }

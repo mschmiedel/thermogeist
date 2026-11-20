@@ -38,6 +38,7 @@ from .const import (
     CONF_BELOW,
     CONF_CEILING_HEIGHT,
     CONF_CEILING_LOW,
+    CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
     CONF_EXTERIOR_WALLS,
     CONF_FLOOR_AREA,
@@ -70,7 +71,10 @@ from .core.room import (
     CEILING_M_MAX,
     CEILING_M_MIN,
     DEFAULT_CEILING_HEIGHT_M,
+    DEFAULT_DESIGN_INDOOR_C,
     DEFAULT_EXTERIOR_WALLS,
+    DESIGN_INDOOR_C_MAX,
+    DESIGN_INDOOR_C_MIN,
     EXTERIOR_WALLS_MAX,
     EXTERIOR_WALLS_MIN,
     FLOOR_AREA_M2_MAX,
@@ -80,6 +84,7 @@ from .core.room import (
     Above,
     Below,
     ShareMode,
+    validate_design_indoor,
     validate_room,
 )
 from .house_config import house_from_config, house_from_entry, room_from_config, rooms_from_entry
@@ -262,7 +267,12 @@ class RoomSubentryFlow(ConfigSubentryFlow):
         if user_input is not None:
             if not str(user_input.get(CONF_NAME, "")).strip():
                 errors[CONF_NAME] = "name_empty"
-            else:
+            design_issue = validate_design_indoor(
+                float(user_input.get(CONF_DESIGN_INDOOR, DEFAULT_DESIGN_INDOOR_C))
+            )
+            if design_issue is not None:
+                errors[design_issue.field] = design_issue.code
+            if not errors:
                 self._data = {**defaults, **user_input}
                 if user_input.get(CONF_AREA) is None:
                     self._data.pop(CONF_AREA, None)
@@ -281,6 +291,10 @@ class RoomSubentryFlow(ConfigSubentryFlow):
             vol.Required(
                 CONF_SHARE_MODE, default=values.get(CONF_SHARE_MODE, ShareMode.ESTIMATED.value)
             ): _select([m.value for m in ShareMode], CONF_SHARE_MODE),
+            vol.Required(
+                CONF_DESIGN_INDOOR,
+                default=values.get(CONF_DESIGN_INDOOR, DEFAULT_DESIGN_INDOOR_C),
+            ): _number(DESIGN_INDOOR_C_MIN, DESIGN_INDOOR_C_MAX, 0.5, UnitOfTemperature.CELSIUS),
         }
         return self.async_show_form(step_id=step_id, data_schema=vol.Schema(schema), errors=errors)
 

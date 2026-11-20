@@ -53,7 +53,7 @@ class HouseEntity(ThermogeistEntity):
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.runtime_data.house.name,
             manufacturer=MANUFACTURER,
-            model="House",
+            model="Thermogeist House",
         )
 
 
@@ -67,7 +67,7 @@ class RoomEntity(ThermogeistEntity):
             identifiers={(DOMAIN, room_id)},
             name=self.room_state.room.name,
             manufacturer=MANUFACTURER,
-            model="Room",
+            model="Thermogeist Room",
             via_device=(DOMAIN, entry.entry_id),
         )
 
