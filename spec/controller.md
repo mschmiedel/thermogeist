@@ -67,6 +67,7 @@ of EN ISO 13790 (165 kJ/(m²·K)).
 |---|---|---|
 | CTL-020 | Cycling only as a last resort when the room is heavily oversized. Always accompanied by the diagnosis "radiator too big" (DIA-001). | planned |
 | CTL-021 | Do not operate near the opening point: the minimum opening stays well above the learned opening point plus its scatter. | planned |
+| CTL-023 | Minimum opening per thermostat: measured opening point + scatter + 5 % safety margin, once known from calibration (CAL-005) or learning (LRN-003). Until then the house value applies. The source ("measured" or "house value") is visible per thermostat. The house value of 40 % (heat pump) is an informed estimate, not a calculation; on the Bosch HT II, 30 % has proven safe (flow starts at 10–20 %, 20 % not guaranteed). | planned |
 | CTL-022 | Always approach target positions from the same direction to avoid gear backlash. Do not readjust below the backlash size. | planned |
 
 ## Deliberately not

@@ -14,6 +14,7 @@ room; it is not installed permanently.
 | CAL-003 | Fulfil the adapter's preconditions (e.g. child lock off), optionally trigger the device's stroke calibration and wait for it. | planned |
 | CAL-004 | Run a step sequence up and down, twice. Detect flow onset from the pipe temperature rise. | planned |
 | CAL-005 | Store the result: opening point, direction difference, scatter, date, probe used. Visible in the room. | planned |
+| CAL-007 | The measured opening point and scatter set the thermostat's minimum opening (CTL-023). | planned |
 | CAL-006 | Restore the device state (ACT-008). Can be aborted at any time, cleanly even after a restart. | planned |
 
 ## Recalibration recommended

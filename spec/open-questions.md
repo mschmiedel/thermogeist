@@ -47,6 +47,7 @@ Test setup: pipe probe (e.g. SNZB-02LD) on the flow pipe at the valve, values in
 ## Open domain questions
 
 - Thresholds for "significant jump" in the learning state (LRN-011).
-- Default minimum opening in the heat-pump profile: 40 % as a start value, to be checked after the
-  device test.
+- Default minimum opening in the heat-pump profile: 40 % as a start value. Field experience with the
+  Bosch HT II: flow is not guaranteed at 20 %, likely at 25 %, safe at 30 %. Replaced per
+  thermostat by CTL-023 once measured.
 - Whether the heating curve is needed as an input at all when a flow sensor exists.
