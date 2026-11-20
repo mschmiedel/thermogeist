@@ -1,5 +1,8 @@
 {
   "config": {
+    "initiate_flow": {
+      "user": "Haus hinzufügen"
+    },
     "step": {
       "user": {
         "title": "Beschreibe dein Haus",
