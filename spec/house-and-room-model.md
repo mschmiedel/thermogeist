@@ -75,7 +75,7 @@ corrects only after hours – and again in the other direction when the device i
 | MDL-043 | The feed-forward uses `demand − heat from sources`, never below 0. When a source switches off, the feed-forward rises within the 10-minute average, without waiting for the slow correction (integral). | implemented |
 | MDL-044 | Per room with sources a sensor "Heat from devices" (W, after factors, averaged); the planned valve position shows `heat_from_devices_w` and how much of the demand they cover (`demand_covered_by_devices_pct`). | implemented |
 | MDL-045 | Learning (LRN-001) accounts for known heat sources so they do not distort the learned heat loss. | planned |
-| MDL-046 | Room coverage on the house: how much of the house heat load the configured rooms cover (sum of room shares plus the outside share, in %), with what is missing as attributes – missing share and, with a living area, the floor area not yet in any room. Helps users see that rooms are still missing before trusting the model. | planned |
+| MDL-046 | Room coverage on the house: how much of the house heat load the configured rooms and the share outside Thermogeist cover (100 % − heat load not assigned to a room), with attributes `missing_pct` and, with a living area, `floor_area_not_in_rooms_m2` (living area minus the floor area of all rooms that have one, never negative) and the number of rooms. Helps users see that rooms are still missing before trusting the model. | implemented |
 | MDL-047 | Stretch: a switch or binary sensor with a fixed power as heat source (e.g. aquarium heater on = 100 W), for devices without power measurement. | planned |
 
 ## Derived quantities

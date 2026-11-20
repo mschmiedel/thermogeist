@@ -60,9 +60,14 @@ normal room; few exterior walls give them a small share.
 | Windows | Only with window contacts: on while one is open. Attributes: the contacts, `heating_paused`, `frost_guard`, and the times in use. In **Configuration**: *Window: close after*, *Window: resume heating after* (house value until you change it, attribute `source`) and *Window: reset times to house*. |
 | Heat from devices | Only with heat sources: watts the devices release into the room (after factors, 10-minute average). |
 
-On the house you additionally see **Heat load not assigned to a room**.
+On the house you additionally see **Heat load not assigned to a room** and **Room coverage**:
+how much of the heat load your rooms (and the share outside Thermogeist) cover, with the missing
+share and the living area not yet in any room as attributes. With flow and return sensors the
+house also shows **Flow temperature**, **Return temperature** and **Spread** – the averaged
+values the controller uses.
 
-To change a room, open the Thermogeist entry and click the gear icon (⚙) next to the room.
+To change a room, open the Thermogeist entry, click the gear icon (⚙) next to the room and choose
+**Edit room**. The same menu adds, edits and removes the room's thermostats.
 
 
 ## Devices that heat the room

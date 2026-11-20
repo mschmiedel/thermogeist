@@ -60,9 +60,15 @@ ergeben einen kleinen Anteil.
 | Fenster | Nur mit Fensterkontakten: an, solange einer offen ist. Attribute: die Kontakte, `heating_paused`, `frost_guard` und die geltenden Zeiten. Unter **Konfiguration**: *Fenster: schließen nach*, *Fenster: wieder heizen nach* (Wert vom Haus, bis du ihn änderst, Attribut `source`) und *Fenster: Zeiten auf Haus zurücksetzen*. |
 | Wärme aus Geräten | Nur mit Wärmequellen: Watt, die die Geräte an den Raum abgeben (nach Faktor, Mittel über 10 Minuten). |
 
-Beim Haus siehst du zusätzlich **Heizlast ohne Raum**.
+Beim Haus siehst du zusätzlich **Heizlast ohne Raum** und **Abdeckung durch Räume**: wie viel
+der Heizlast deine Räume (und der Anteil außerhalb von Thermogeist) abdecken, mit dem fehlenden
+Anteil und der Wohnfläche, die noch in keinem Raum steckt, als Attribute. Mit Vor- und
+Rücklaufsensor zeigt das Haus außerdem **Vorlauftemperatur**, **Rücklauftemperatur** und
+**Spreizung** – die gemittelten Werte, mit denen die Regelung rechnet.
 
-Um einen Raum zu ändern, öffne den Thermogeist-Eintrag und klick auf das Zahnrad (⚙) neben dem Raum.
+Um einen Raum zu ändern, öffne den Thermogeist-Eintrag, klick auf das Zahnrad (⚙) neben dem Raum
+und wähle **Raum bearbeiten**. Im selben Menü fügst du die Thermostate des Raums hinzu, änderst
+oder entfernst sie.
 
 
 ## Geräte, die den Raum heizen

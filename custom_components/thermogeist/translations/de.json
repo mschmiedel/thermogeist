@@ -188,6 +188,18 @@
       },
       "heat_from_devices": {
         "name": "Wärme aus Geräten"
+      },
+      "room_coverage": {
+        "name": "Abdeckung durch Räume"
+      },
+      "flow_temperature_used": {
+        "name": "Vorlauftemperatur"
+      },
+      "return_temperature_used": {
+        "name": "Rücklauftemperatur"
+      },
+      "spread_used": {
+        "name": "Spreizung"
       }
     },
     "number": {
@@ -258,28 +270,6 @@
             "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
           }
         },
-        "reconfigure": {
-          "title": "Raum ändern",
-          "description": "Welcher Raum, welcher Temperatursensor, und wie soll Thermogeist den Anteil an der Heizlast bestimmen?",
-          "data": {
-            "name": "Name",
-            "area": "Bereich",
-            "temperature_entity": "Raumtemperatursensor",
-            "share_mode": "Anteil an der Heizlast",
-            "design_indoor_temperature": "Auslegungs-Innentemperatur",
-            "window_sensors": "Fenster- und Türkontakte",
-            "heat_sources": "Geräte, die den Raum heizen"
-          },
-          "data_description": {
-            "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
-            "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
-            "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
-            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
-            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
-            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
-            "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
-          }
-        },
         "geometry": {
           "title": "Größe und Lage",
           "description": "Grobe Werte reichen. Das Lernen korrigiert die Schätzung später.",
@@ -313,56 +303,47 @@
         "heat_source_factors": {
           "title": "Wie viel Wärme bleibt im Raum?",
           "description": "Pro Gerät: der Anteil seiner Leistung, der als Wärme im Raum bleibt ({devices}). 100 % für Elektronik, Licht, Kühlschränke und Wärmepumpentrockner. Weniger für Geräte, deren Wärme mit Abluft oder Abwasser hinausgeht, z. B. Ablufttrockner 10–20 %, Waschmaschine 10–20 %, Spülmaschine 20–40 %. Mehr in der Doku: Räume → Geräte, die den Raum heizen."
-        }
-      },
-      "error": {
-        "name_empty": "Bitte gib einen Namen ein.",
-        "floor_area_required": "Bitte gib die Grundfläche ein.",
-        "floor_area_out_of_range": "Die Grundfläche muss zwischen 1 und 500 m² liegen.",
-        "ceiling_height_required": "Bitte gib die Raumhöhe ein.",
-        "ceiling_height_out_of_range": "Die Raumhöhe muss zwischen 1 und 12 m liegen.",
-        "ceiling_low_out_of_range": "Die niedrigste Stelle muss zwischen 1 und 12 m liegen.",
-        "ceiling_low_above_height": "Die niedrigste Stelle kann nicht höher als die Raumhöhe sein.",
-        "exterior_walls_out_of_range": "Es sind 0 bis 4 Außenwände möglich.",
-        "known_share_required": "Bitte gib den Anteil ein.",
-        "known_share_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
-        "known_shares_exceed_total": "Zusammen mit den anderen Räumen und dem Anteil außerhalb von Thermogeist sind das mehr als 100 %.",
-        "design_indoor_temperature_out_of_range": "Die Auslegungs-Innentemperatur muss zwischen 10 und 30 °C liegen."
-      },
-      "abort": {
-        "reconfigure_successful": "Der Raum wurde geändert."
-      }
-    },
-    "thermostat": {
-      "initiate_flow": {
-        "user": "Thermostat hinzufügen"
-      },
-      "entry_type": "Thermostat",
-      "step": {
-        "user": {
-          "title": "Thermostat hinzufügen",
-          "description": "Wähle den Raum und das Thermostat-Gerät. Bekannte Modelle erkennt Thermogeist und füllt den Rest aus.",
+        },
+        "edit_room": {
+          "title": "Raum ändern",
+          "description": "Welcher Raum, welcher Temperatursensor, und wie soll Thermogeist den Anteil an der Heizlast bestimmen?",
           "data": {
-            "room": "Raum",
-            "device": "Thermostat",
-            "rated_output": "Heizkörper-Nennleistung"
+            "name": "Name",
+            "area": "Bereich",
+            "temperature_entity": "Raumtemperatursensor",
+            "share_mode": "Anteil an der Heizlast",
+            "design_indoor_temperature": "Auslegungs-Innentemperatur",
+            "window_sensors": "Fenster- und Türkontakte",
+            "heat_sources": "Geräte, die den Raum heizen"
           },
           "data_description": {
-            "room": "Der Raum, den dieses Thermostat beheizt.",
-            "device": "Das Thermostat-Gerät in Home Assistant (es braucht eine Klima-Entität).",
-            "rated_output": "Optional. Die Leistung des Heizkörpers in W bei 75/65/20 °C laut Datenblatt oder Typenschild. Ermöglicht die Vorsteuerung und später Hinweise zur Dimensionierung."
+            "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
+            "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
+            "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
+            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
+            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
+            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
+            "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
           }
         },
         "reconfigure": {
-          "title": "Thermostat ändern",
-          "description": "Wähle den Raum und das Thermostat-Gerät. Bekannte Modelle erkennt Thermogeist und füllt den Rest aus.",
+          "title": "Raum ändern",
+          "description": "Was möchtest du ändern?",
+          "menu_options": {
+            "edit_room": "Raum bearbeiten",
+            "add_thermostat": "Thermostat hinzufügen",
+            "edit_thermostat": "Thermostat bearbeiten",
+            "remove_thermostat": "Thermostat entfernen"
+          }
+        },
+        "thermostat": {
+          "title": "Thermostat",
+          "description": "Wähle das Thermostat-Gerät. Thermogeist erkennt bekannte Modelle und füllt den Rest aus.",
           "data": {
-            "room": "Raum",
             "device": "Thermostat",
             "rated_output": "Heizkörper-Nennleistung"
           },
           "data_description": {
-            "room": "Der Raum, den dieses Thermostat beheizt.",
             "device": "Das Thermostat-Gerät in Home Assistant (es braucht eine Klima-Entität).",
             "rated_output": "Optional. Die Leistung des Heizkörpers in W bei 75/65/20 °C laut Datenblatt oder Typenschild. Ermöglicht die Vorsteuerung und später Hinweise zur Dimensionierung."
           }
@@ -393,9 +374,34 @@
             "valve_refresh_minutes": "Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile (Bosch: nach 15 Minuten). Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut – eine Funknachricht, keine Motorbewegung. Leer = aus.",
             "strategy": "Automatisch: über die Ventilstellung, wenn das Thermostat sie erlaubt, sonst über den Sollwert. Ventilstellung: Thermogeist stellt das Ventil selbst (ruhig, mit Mindestöffnung). Sollwert: Thermogeist sagt dem Thermostat, welche Temperatur es anpeilen soll, und das Thermostat bewegt sein Ventil selbst."
           }
+        },
+        "edit_thermostat": {
+          "title": "Thermostat bearbeiten",
+          "data": {
+            "thermostat": "Thermostat"
+          }
+        },
+        "remove_thermostat": {
+          "title": "Thermostat entfernen",
+          "description": "Das Thermostat bekommt seine eigenen Geräteeinstellungen zurück und regelt wieder selbst.",
+          "data": {
+            "thermostat": "Thermostat"
+          }
         }
       },
       "error": {
+        "name_empty": "Bitte gib einen Namen ein.",
+        "floor_area_required": "Bitte gib die Grundfläche ein.",
+        "floor_area_out_of_range": "Die Grundfläche muss zwischen 1 und 500 m² liegen.",
+        "ceiling_height_required": "Bitte gib die Raumhöhe ein.",
+        "ceiling_height_out_of_range": "Die Raumhöhe muss zwischen 1 und 12 m liegen.",
+        "ceiling_low_out_of_range": "Die niedrigste Stelle muss zwischen 1 und 12 m liegen.",
+        "ceiling_low_above_height": "Die niedrigste Stelle kann nicht höher als die Raumhöhe sein.",
+        "exterior_walls_out_of_range": "Es sind 0 bis 4 Außenwände möglich.",
+        "known_share_required": "Bitte gib den Anteil ein.",
+        "known_share_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
+        "known_shares_exceed_total": "Zusammen mit den anderen Räumen und dem Anteil außerhalb von Thermogeist sind das mehr als 100 %.",
+        "design_indoor_temperature_out_of_range": "Die Auslegungs-Innentemperatur muss zwischen 10 und 30 °C liegen.",
         "climate_required": "Die Klima-Entität wird benötigt.",
         "role_needs_percent": "Diese Entität meldet keinen Prozentwert. Wähle die Ventilstellung (Einheit %).",
         "role_needs_temperature": "Diese Entität ist kein Temperatureingang.",
@@ -403,8 +409,7 @@
         "valve_strategy_needs_valve_write": "Die Strategie „Über Ventilstellung“ braucht die Entität „Ventilstellung (setzen)“. Wähle sie oder eine andere Strategie."
       },
       "abort": {
-        "no_rooms": "Leg zuerst einen Raum an und ordne ihm dann Thermostate zu.",
-        "reconfigure_successful": "Das Thermostat wurde geändert."
+        "reconfigure_successful": "Erledigt."
       }
     }
   },

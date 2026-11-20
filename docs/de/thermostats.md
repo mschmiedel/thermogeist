@@ -7,14 +7,18 @@
 
 ## Thermostat hinzufügen
 
-Öffne den Thermogeist-Eintrag deines Hauses und wähle **Thermostat hinzufügen**. Dafür brauchst
-du mindestens einen Raum.
+Thermostate gehören zu ihrem Raum. Öffne den Thermogeist-Eintrag deines Hauses, klick auf das
+Zahnrad (⚙) neben dem Raum und wähle **Thermostat hinzufügen**. Ein Raum kann mehrere
+Thermostate haben.
 
-### Schritt 1: Raum und Gerät
+Dasselbe Menü bietet **Raum bearbeiten**, **Thermostat bearbeiten** und **Thermostat entfernen**.
+Um ein Thermostat in einen anderen Raum zu verschieben, entferne es hier und füge es dort hinzu;
+beim Entfernen bekommt es seine eigenen Geräteeinstellungen zurück.
+
+### Schritt 1: Gerät
 
 | Feld | Was du einträgst |
 |---|---|
-| Raum | Der Raum, den dieses Thermostat beheizt. Ein Raum kann mehrere Thermostate haben. |
 | Thermostat | Das Thermostat-Gerät in Home Assistant (es braucht eine Klima-Entität). |
 | Heizkörper-Nennleistung | Optional. Die Leistung des Heizkörpers in W bei 75/65/20 °C laut Datenblatt oder Typenschild. |
 
@@ -25,8 +29,7 @@ und ändere, was nicht passt; leere Felder werden einfach nicht genutzt. Du kann
 anderer Geräte wählen – manche Integrationen (z. B. Bosch Smart Home) legen Klima und
 Ventilposition auf getrennte Geräte.
 
-Um ein Thermostat später zu ändern, öffne den Thermogeist-Eintrag, such das Thermostat unter
-dem Haus und klick auf sein Zahnrad (⚙).
+Um ein Thermostat später zu ändern: Zahnrad (⚙) neben seinem Raum → **Thermostat bearbeiten**.
 
 | Rolle | Bedeutung |
 |---|---|

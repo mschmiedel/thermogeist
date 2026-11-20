@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -77,6 +77,36 @@ def suggested(result: dict[str, Any]) -> dict[str, str]:
     return values
 
 
+async def start_thermostat(
+    hass: HomeAssistant,
+    entry_id: str,
+    room_id: str,
+    device_id: str,
+    rated: float | None = None,
+) -> dict[str, Any]:
+    """Room gear icon → Add thermostat → device step (HAI-007); returns the roles form."""
+    result = await hass.config_entries.subentries.async_init(
+        (entry_id, "room"), context={"source": SOURCE_RECONFIGURE, "subentry_id": room_id}
+    )
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "add_thermostat"}
+    )
+    answers: dict[str, Any] = {"device": device_id}
+    if rated is not None:
+        answers["rated_output"] = rated
+    return await hass.config_entries.subentries.async_configure(result["flow_id"], answers)
+
+
+def thermostat_ids(entry: MockConfigEntry) -> list[str]:
+    return [
+        tid
+        for s in entry.subentries.values()
+        if s.subentry_type == "room"
+        for tid in s.data.get("thermostats", {})
+    ]
+
+
 async def assign(
     hass: HomeAssistant,
     entry_id: str,
@@ -85,13 +115,7 @@ async def assign(
     rated: float | None,
     strategy: str | None = None,
 ) -> dict[str, Any]:
-    result = await hass.config_entries.subentries.async_init(
-        (entry_id, "thermostat"), context={"source": SOURCE_USER}
-    )
-    answers: dict[str, Any] = {"room": room_id, "device": device_id}
-    if rated is not None:
-        answers["rated_output"] = rated
-    result = await hass.config_entries.subentries.async_configure(result["flow_id"], answers)
+    result = await start_thermostat(hass, entry_id, room_id, device_id, rated)
     assert result["step_id"] == "roles"
     roles_form = result
     answers = suggested(result)
@@ -99,7 +123,7 @@ async def assign(
         answers["strategy"] = strategy
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], answers)
     await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["reason"] == "reconfigure_successful"
     return roles_form
 
 
@@ -162,16 +186,52 @@ async def test_bosch_shows_actual_next_to_planned(
     assert planned["feed_forward_missing"] == ["radiator_output"]
 
 
-async def test_thermostat_needs_a_room(hass: HomeAssistant, outdoor_sensor: str) -> None:
-    """Scenario: SCN-THERMO-003"""
-    entry = await setup_house(hass)
+async def test_room_menu_offers_thermostat_actions(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-014"""
+    entry, room_id = await house_with_room(hass)
+
+    def menu() -> Any:
+        return hass.config_entries.subentries.async_init(
+            (entry.entry_id, "room"), context={"source": SOURCE_RECONFIGURE, "subentry_id": room_id}
+        )
+
+    assert (await menu())["menu_options"] == ["edit_room", "add_thermostat"]
+    await assign(hass, entry.entry_id, room_id, sonoff(hass), None)
+    assert (await menu())["menu_options"] == [
+        "edit_room",
+        "add_thermostat",
+        "edit_thermostat",
+        "remove_thermostat",
+    ]
+    types = {s.subentry_type for s in entry.subentries.values()}
+    assert types == {"room"}  # no separate thermostat entries any more
+
+
+async def test_remove_thermostat_from_room(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-015"""
+    entry, room_id = await house_with_room(hass)
+    await assign(hass, entry.entry_id, room_id, sonoff(hass), None)
+    assert hass.states.get("sensor.living_room_kind_living_trv") is not None
+    (thermostat_id,) = thermostat_ids(entry)
 
     result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
+        (entry.entry_id, "room"), context={"source": SOURCE_RECONFIGURE, "subentry_id": room_id}
     )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "remove_thermostat"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"thermostat": thermostat_id}
+    )
+    await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_rooms"
+    assert result["reason"] == "reconfigure_successful"
+    assert thermostat_ids(entry) == []
+    assert hass.states.get("sensor.living_room_kind_living_trv") is None
 
 
 async def test_unknown_device_uses_setpoint_kind(
@@ -252,12 +312,7 @@ async def test_roles_may_come_from_another_device(
     )
     z2m_device(hass, "Roy TRV", "Bosch", "TRV", {"valve_tappet": ("sensor", "24", "%")})
 
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"room": room_id, "device": climate_device}
-    )
+    result = await start_thermostat(hass, entry.entry_id, room_id, climate_device)
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -267,7 +322,7 @@ async def test_roles_may_come_from_another_device(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["reason"] == "reconfigure_successful"
     assert hass.states.get("sensor.living_room_valve_position_room_climate_roy").state == "24.0"
     assert hass.states.get("sensor.living_room_kind_room_climate_roy").state == "setpoint"
 
@@ -279,17 +334,20 @@ async def test_reconfigure_thermostat(
     entry, room_id = await house_with_room(hass)
     device_id = sonoff(hass)
     await assign(hass, entry.entry_id, room_id, device_id, 2000.0)
-    thermostat_id = next(
-        sid for sid, s in entry.subentries.items() if s.subentry_type == "thermostat"
-    )
+    (thermostat_id,) = thermostat_ids(entry)
 
     result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "thermostat"),
-        context={"source": SOURCE_RECONFIGURE, "subentry_id": thermostat_id},
+        (entry.entry_id, "room"), context={"source": SOURCE_RECONFIGURE, "subentry_id": room_id}
     )
-    assert result["step_id"] == "reconfigure"
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"room": room_id, "device": device_id, "rated_output": 1500.0}
+        result["flow_id"], {"next_step_id": "edit_thermostat"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"thermostat": thermostat_id}
+    )
+    assert result["step_id"] == "thermostat"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"device": device_id, "rated_output": 1500.0}
     )
     assert result["step_id"] == "roles"
     assert suggested(result)["valve_write"] == "number.living_trv_valve_opening_degree"
@@ -316,12 +374,7 @@ async def test_implausible_role_is_rejected(
         "TRV",
         {"climate": ("climate", "heat"), "temperature": ("sensor", "24.4", "°C")},
     )
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"room": room_id, "device": device_id}
-    )
+    result = await start_thermostat(hass, entry.entry_id, room_id, device_id)
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -338,12 +391,7 @@ async def test_valve_strategy_needs_a_writable_valve(
     """Scenario: SCN-THERMO-012"""
     entry, room_id = await house_with_room(hass)
     device_id = z2m_device(hass, "Old TRV", "Acme", "X1", {"climate": ("climate", "heat")})
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "thermostat"), context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"room": room_id, "device": device_id}
-    )
+    result = await start_thermostat(hass, entry.entry_id, room_id, device_id)
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {**suggested(result), "strategy": "valve"}

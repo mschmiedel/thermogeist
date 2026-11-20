@@ -16,7 +16,14 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, setup_house
-from .test_thermostats import FLOW_SENSOR, assign, suggested, z2m_device
+from .test_thermostats import (
+    FLOW_SENSOR,
+    assign,
+    start_thermostat,
+    suggested,
+    thermostat_ids,
+    z2m_device,
+)
 
 SWITCH = "switch.living_room_control"
 REASON = "sensor.living_room_active_reason"
@@ -140,7 +147,7 @@ async def test_gives_up_when_device_keeps_regulating(
     assert len(written) >= 4
     assert written[:4] == [written[0]] * 4  # first write + three rewrites of the same value
     assert hass.states.get(SWITCH).state == "off"
-    thermostat_id = next(s for s, e in entry.subentries.items() if e.subentry_type == "thermostat")
+    (thermostat_id,) = thermostat_ids(entry)
     issue = ir.async_get(hass).async_get_issue(
         "thermogeist", f"device_overrides_valve_{thermostat_id}"
     )
@@ -348,12 +355,7 @@ async def test_confirmation_interval_is_configurable(
         {"climate": ("climate", "heat"), "pi_heating_demand": ("number", "39", "%")},
     )
     hass.states.async_set(DEVICE_CLIMATE, "heat", {"temperature": 20.0})
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "thermostat"), context={"source": "user"}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"room": room_id, "device": device_id}
-    )
+    result = await start_thermostat(hass, entry.entry_id, room_id, device_id)
     roles = suggested(result)
     assert roles.pop("valve_refresh_minutes") == 10.0  # from the Bosch profile
     await hass.config_entries.subentries.async_configure(result["flow_id"], roles)  # cleared = off

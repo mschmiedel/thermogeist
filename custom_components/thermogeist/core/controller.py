@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 """Room controller: feed-forward + slow PI + output shaping (spec CTL-001 to CTL-005,
-CTL-030 to CTL-035).
+CTL-030 to CTL-035, CTL-040).
 
 The controller turns a target temperature into a heat demand of 0-100 %. It never reads the
 clock; the caller passes the current time. Every result carries its parts so the UI can explain
@@ -9,9 +9,11 @@ why the valve would move.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
+from typing import Any
 
 from .radiator import available_output_w
 
@@ -35,6 +37,8 @@ MIN_OPENING_RELAX_K = 0.5
 # CTL-034: a room with a silent sensor never goes below this, whatever the profile says.
 SAFETY_MIN_OPENING_PCT = 20.0
 MINUTES_PER_RATE_WINDOW = 30.0
+# CTL-040: after a longer outage the stored correction no longer fits the house.
+STATE_MAX_AGE = timedelta(hours=24)
 # CTL-036: heat output rises steeply right after the valve starts to open (a radiator with half
 # the flow still gives most of its heat). The feed-forward inverts this typical characteristic:
 # valve = opening point + (100 % - opening point) x heat fraction ^ 2. Learned later (LRN-003).
@@ -148,6 +152,24 @@ class RoomController:
         if self.state.last_output_pct is None:
             self.state.last_output_pct = output_pct
             self.state.last_reported_pct = float(round(output_pct))
+
+    def snapshot(self) -> dict[str, float | bool | None]:
+        """CTL-040: what survives a restart."""
+        return {
+            "integral_pct": self.state.integral_pct,
+            "integral_has_start_bias": self.state.integral_has_start_bias,
+            "min_opening_relaxed": self.state.min_opening_relaxed,
+        }
+
+    def restore(self, snapshot: Mapping[str, Any], saved_at: datetime, now: datetime) -> bool:
+        """CTL-040: restore a snapshot unless it is too old. Returns whether it was used."""
+        if now - saved_at > STATE_MAX_AGE:
+            return False
+        integral = snapshot.get("integral_pct")
+        self.state.integral_pct = float(integral) if integral is not None else None
+        self.state.integral_has_start_bias = bool(snapshot.get("integral_has_start_bias"))
+        self.state.min_opening_relaxed = bool(snapshot.get("min_opening_relaxed"))
+        return True
 
     def step(self, inputs: ControllerInputs, now: datetime) -> ControllerResult:
         elapsed_h = self._elapsed_h(now)

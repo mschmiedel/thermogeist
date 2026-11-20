@@ -146,3 +146,22 @@ def test_seeded_controller_is_rate_limited_from_the_first_step() -> None:
 
     assert result.output_pct == 30.0
     assert Limit.RATE_LIMIT in result.limits
+
+
+def test_state_survives_a_restart_but_not_a_long_outage() -> None:
+    """Scenario: SCN-CTL-016"""
+    before = RoomController()
+    before.state.integral_pct = -7.5
+    before.state.min_opening_relaxed = True
+    snapshot = before.snapshot()
+    saved = datetime(2026, 1, 15, 6, 0, tzinfo=UTC)
+
+    after = RoomController()
+    assert after.restore(snapshot, saved, saved + timedelta(minutes=5))
+    assert after.state.integral_pct == -7.5
+    assert after.state.min_opening_relaxed is True
+    assert after.state.last_output_pct is None  # seeded from the valve instead (CTL-044)
+
+    stale = RoomController()
+    assert not stale.restore(snapshot, saved, saved + timedelta(hours=25))
+    assert stale.state.integral_pct is None

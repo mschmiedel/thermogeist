@@ -14,7 +14,7 @@ Der Temperatursensor des Raums hat seit 60 Minuten keinen gültigen Wert geschic
 
 1. Batterie des Sensors leer oder schwach?
 2. Ist der Sensor noch verbunden (Zigbee2MQTT / ZHA zeigen ihn als verfügbar)?
-3. Wurde für den Raum der richtige Sensor gewählt? Öffne den Thermogeist-Eintrag und klick auf das Zahnrad (⚙) neben dem Raum.
+3. Wurde für den Raum der richtige Sensor gewählt? Öffne den Thermogeist-Eintrag und klick auf das Zahnrad (⚙) neben dem Raum → **Raum bearbeiten**.
 4. Manche Sensoren melden nur bei Änderung. Schweigt deiner absichtlich länger als eine Stunde, sag uns Bescheid – die Grenze wird einstellbar.
 
 ## Was du tun kannst

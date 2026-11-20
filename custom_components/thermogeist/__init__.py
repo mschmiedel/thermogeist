@@ -13,9 +13,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN, MANUFACTURER
+from .const import CONF_THERMOSTATS, DOMAIN, MANUFACTURER, SUBENTRY_ROOM, SUBENTRY_THERMOSTAT
 from .device_profiles import async_get_profiles
-from .house_config import house_from_entry, rooms_from_entry, thermostats_from_entry
+from .house_config import (
+    house_from_entry,
+    migrate_thermostat_subentries,
+    rooms_from_entry,
+    thermostats_from_entry,
+)
 from .runtime import HouseRuntime
 
 PLATFORMS: list[Platform] = [
@@ -29,6 +34,27 @@ PLATFORMS: list[Platform] = [
 ]
 
 type ThermogeistConfigEntry = ConfigEntry[HouseRuntime]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> bool:
+    """1.1 → 1.2: thermostats move from their own sub-entries into their room (HAI-007)."""
+    if entry.version > 1:
+        return False
+    if entry.minor_version < 2:
+        rooms = {
+            sid: s.data for sid, s in entry.subentries.items() if s.subentry_type == SUBENTRY_ROOM
+        }
+        thermostats = {
+            sid: (s.title, s.data)
+            for sid, s in entry.subentries.items()
+            if s.subentry_type == SUBENTRY_THERMOSTAT
+        }
+        for room_id, data in migrate_thermostat_subentries(rooms, thermostats).items():
+            hass.config_entries.async_update_subentry(entry, entry.subentries[room_id], data=data)
+        for thermostat_id in thermostats:
+            hass.config_entries.async_remove_subentry(entry, thermostat_id)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> bool:
@@ -76,6 +102,12 @@ def _house_device(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> dr.Devi
 def _remove_orphaned_entities(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:
     """Drop entities of rooms or thermostats that were removed."""
     owners = {entry.entry_id, *entry.subentries}
+    owners |= {
+        thermostat_id
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_ROOM
+        for thermostat_id in subentry.data.get(CONF_THERMOSTATS) or {}
+    }
     registry = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         # Unique ids are "<owner id>_<key>"; owner ids (entry and sub-entry ids) have no "_".

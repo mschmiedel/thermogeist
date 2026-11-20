@@ -39,11 +39,12 @@ from .const import (
     CONF_SOURCE_FACTOR,
     CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
+    CONF_THERMOSTAT_NAME,
+    CONF_THERMOSTATS,
     CONF_VALVE_MIN_INVERTED,
     CONF_VALVE_REFRESH,
     CONF_WINDOWS,
     SUBENTRY_ROOM,
-    SUBENTRY_THERMOSTAT,
 )
 from .core.actuator import Role, Strategy, Thermostat
 from .core.house import HeatingType, House
@@ -149,14 +150,37 @@ def _strategy(value: Any) -> Strategy:
 
 
 def thermostats_from_entry(entry: ConfigEntry) -> dict[str, Thermostat]:
-    """All thermostats of a house whose room still exists, keyed by sub-entry id."""
-    rooms = {sid for sid, s in entry.subentries.items() if s.subentry_type == SUBENTRY_ROOM}
-    thermostats = {
-        subentry_id: thermostat_from_config(subentry.data, subentry.title)
-        for subentry_id, subentry in entry.subentries.items()
-        if subentry.subentry_type == SUBENTRY_THERMOSTAT
+    """All thermostats of a house, keyed by thermostat id; they live in their room (HAI-007)."""
+    return {
+        thermostat_id: thermostat_from_config(
+            {**data, CONF_ROOM: room_id}, str(data.get(CONF_THERMOSTAT_NAME, thermostat_id))
+        )
+        for room_id, subentry in entry.subentries.items()
+        if subentry.subentry_type == SUBENTRY_ROOM
+        for thermostat_id, data in (subentry.data.get(CONF_THERMOSTATS) or {}).items()
     }
-    return {sid: t for sid, t in thermostats.items() if t.room_id in rooms}
+
+
+def migrate_thermostat_subentries(
+    rooms: Mapping[str, Mapping[str, Any]], thermostats: Mapping[str, tuple[str, Mapping[str, Any]]]
+) -> dict[str, dict[str, Any]]:
+    """HAI-007: move thermostat sub-entries (id → title, data) into their rooms' data.
+
+    Returns the new data of every room that changed. Thermostats of missing rooms are dropped.
+    The thermostat keeps its sub-entry id as thermostat id, so entity ids and history stay.
+    """
+    changed: dict[str, dict[str, Any]] = {}
+    for thermostat_id, (title, data) in thermostats.items():
+        room_id = data.get(CONF_ROOM)
+        if room_id not in rooms:
+            continue
+        room = changed.setdefault(room_id, dict(rooms[room_id]))
+        moved = {k: v for k, v in data.items() if k != CONF_ROOM}
+        room[CONF_THERMOSTATS] = {
+            **(room.get(CONF_THERMOSTATS) or {}),
+            thermostat_id: {**moved, CONF_THERMOSTAT_NAME: title},
+        }
+    return changed
 
 
 def room_area_id(entry: ConfigEntry, subentry_id: str) -> str | None:

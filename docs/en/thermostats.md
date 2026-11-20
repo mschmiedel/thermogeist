@@ -7,14 +7,17 @@
 
 ## Add a thermostat
 
-Open the Thermogeist entry of your house and choose **Add thermostat**. You need at least one
-room first.
+Thermostats belong to their room. Open the Thermogeist entry of your house, click the gear
+icon (⚙) next to the room and choose **Add thermostat**. A room can have several thermostats.
 
-### Step 1: room and device
+The same menu offers **Edit room**, **Edit thermostat** and **Remove thermostat**. To move a
+thermostat to another room, remove it here and add it there; on removal it gets its own device
+settings back.
+
+### Step 1: device
 
 | Field | What to enter |
 |---|---|
-| Room | The room this thermostat heats. A room can have several thermostats. |
 | Thermostat | The thermostat device in Home Assistant (it must have a climate entity). |
 | Radiator rated output | Optional. The radiator's output in W at 75/65/20 °C, from its data sheet or type plate. |
 
@@ -25,8 +28,7 @@ change anything that looks wrong; empty fields are simply not used. You can pick
 other devices too – some integrations (e.g. Bosch Smart Home) split climate and valve
 position across separate devices.
 
-To change a thermostat later, open the Thermogeist entry, find the thermostat below the house
-and click its gear icon (⚙).
+To change a thermostat later: gear icon (⚙) next to its room → **Edit thermostat**.
 
 | Role | Meaning |
 |---|---|

@@ -188,6 +188,18 @@
       },
       "heat_from_devices": {
         "name": "Heat from devices"
+      },
+      "room_coverage": {
+        "name": "Room coverage"
+      },
+      "flow_temperature_used": {
+        "name": "Flow temperature"
+      },
+      "return_temperature_used": {
+        "name": "Return temperature"
+      },
+      "spread_used": {
+        "name": "Spread"
       }
     },
     "number": {
@@ -258,28 +270,6 @@
             "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
           }
         },
-        "reconfigure": {
-          "title": "Change room",
-          "description": "Which room, which temperature sensor, and how should Thermogeist get its share of the heat load?",
-          "data": {
-            "name": "Name",
-            "area": "Area",
-            "temperature_entity": "Room temperature sensor",
-            "share_mode": "Share of the heat load",
-            "design_indoor_temperature": "Design indoor temperature",
-            "window_sensors": "Window and door contacts",
-            "heat_sources": "Devices that heat the room"
-          },
-          "data_description": {
-            "name": "Shown as the device name, e.g. \"Living room\".",
-            "area": "Optional. The room device is placed in this Home Assistant area.",
-            "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
-            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
-            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
-            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
-            "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
-          }
-        },
         "geometry": {
           "title": "Size and position",
           "description": "Rough values are fine. Learning will correct the estimate later.",
@@ -313,56 +303,47 @@
         "heat_source_factors": {
           "title": "How much heat stays in the room?",
           "description": "Per device: the share of its power that stays in the room as heat ({devices}). 100 % for electronics, lights, fridges and heat pump dryers. Less for devices whose heat leaves with exhaust air or waste water, e.g. vented dryer 10–20 %, washing machine 10–20 %, dishwasher 20–40 %. See the docs: Rooms → Devices that heat the room."
-        }
-      },
-      "error": {
-        "name_empty": "Please enter a name.",
-        "floor_area_required": "Please enter the floor area.",
-        "floor_area_out_of_range": "Floor area must be between 1 and 500 m².",
-        "ceiling_height_required": "Please enter the ceiling height.",
-        "ceiling_height_out_of_range": "Ceiling height must be between 1 and 12 m.",
-        "ceiling_low_out_of_range": "The lowest point must be between 1 and 12 m.",
-        "ceiling_low_above_height": "The lowest point cannot be higher than the ceiling height.",
-        "exterior_walls_out_of_range": "Exterior walls must be between 0 and 4.",
-        "known_share_required": "Please enter the share.",
-        "known_share_out_of_range": "The share must be between 0 and 100 %.",
-        "known_shares_exceed_total": "Together with the other rooms and the share outside Thermogeist this is more than 100 %.",
-        "design_indoor_temperature_out_of_range": "Design indoor temperature must be between 10 and 30 °C."
-      },
-      "abort": {
-        "reconfigure_successful": "The room was updated."
-      }
-    },
-    "thermostat": {
-      "initiate_flow": {
-        "user": "Add thermostat"
-      },
-      "entry_type": "Thermostat",
-      "step": {
-        "user": {
-          "title": "Add a thermostat",
-          "description": "Choose the room and the thermostat device. Thermogeist recognises known models and fills in the rest.",
+        },
+        "edit_room": {
+          "title": "Change room",
+          "description": "Which room, which temperature sensor, and how should Thermogeist get its share of the heat load?",
           "data": {
-            "room": "Room",
-            "device": "Thermostat",
-            "rated_output": "Radiator rated output"
+            "name": "Name",
+            "area": "Area",
+            "temperature_entity": "Room temperature sensor",
+            "share_mode": "Share of the heat load",
+            "design_indoor_temperature": "Design indoor temperature",
+            "window_sensors": "Window and door contacts",
+            "heat_sources": "Devices that heat the room"
           },
           "data_description": {
-            "room": "The room this thermostat heats.",
-            "device": "The thermostat device in Home Assistant (it must have a climate entity).",
-            "rated_output": "Optional. The radiator's output in W at 75/65/20 °C from its data sheet or type plate. Enables the feed-forward and, later, sizing diagnostics."
+            "name": "Shown as the device name, e.g. \"Living room\".",
+            "area": "Optional. The room device is placed in this Home Assistant area.",
+            "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
+            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
+            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
+            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
+            "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
           }
         },
         "reconfigure": {
-          "title": "Change thermostat",
-          "description": "Choose the room and the thermostat device. Thermogeist recognises known models and fills in the rest.",
+          "title": "Change room",
+          "description": "What would you like to change?",
+          "menu_options": {
+            "edit_room": "Edit room",
+            "add_thermostat": "Add thermostat",
+            "edit_thermostat": "Edit thermostat",
+            "remove_thermostat": "Remove thermostat"
+          }
+        },
+        "thermostat": {
+          "title": "Thermostat",
+          "description": "Choose the thermostat device. Thermogeist recognises known models and fills in the rest.",
           "data": {
-            "room": "Room",
             "device": "Thermostat",
             "rated_output": "Radiator rated output"
           },
           "data_description": {
-            "room": "The room this thermostat heats.",
             "device": "The thermostat device in Home Assistant (it must have a climate entity).",
             "rated_output": "Optional. The radiator's output in W at 75/65/20 °C from its data sheet or type plate. Enables the feed-forward and, later, sizing diagnostics."
           }
@@ -393,9 +374,34 @@
             "valve_refresh_minutes": "Some thermostats drop a valve position set from outside after a while (Bosch: after 15 minutes). Thermogeist then resends the unchanged value at this interval – a radio message, no motor movement. Empty = off.",
             "strategy": "Automatic: by valve position if the thermostat allows it, otherwise by setpoint. Valve: Thermogeist sets the valve itself (calm, with minimum opening). Setpoint: Thermogeist tells the thermostat which temperature to aim for, and the thermostat moves its valve itself."
           }
+        },
+        "edit_thermostat": {
+          "title": "Edit thermostat",
+          "data": {
+            "thermostat": "Thermostat"
+          }
+        },
+        "remove_thermostat": {
+          "title": "Remove thermostat",
+          "description": "The thermostat gets its own device settings back and regulates on its own again.",
+          "data": {
+            "thermostat": "Thermostat"
+          }
         }
       },
       "error": {
+        "name_empty": "Please enter a name.",
+        "floor_area_required": "Please enter the floor area.",
+        "floor_area_out_of_range": "Floor area must be between 1 and 500 m².",
+        "ceiling_height_required": "Please enter the ceiling height.",
+        "ceiling_height_out_of_range": "Ceiling height must be between 1 and 12 m.",
+        "ceiling_low_out_of_range": "The lowest point must be between 1 and 12 m.",
+        "ceiling_low_above_height": "The lowest point cannot be higher than the ceiling height.",
+        "exterior_walls_out_of_range": "Exterior walls must be between 0 and 4.",
+        "known_share_required": "Please enter the share.",
+        "known_share_out_of_range": "The share must be between 0 and 100 %.",
+        "known_shares_exceed_total": "Together with the other rooms and the share outside Thermogeist this is more than 100 %.",
+        "design_indoor_temperature_out_of_range": "Design indoor temperature must be between 10 and 30 °C.",
         "climate_required": "The climate entity is required.",
         "role_needs_percent": "This entity does not report a percentage. Choose the valve position entity (unit %).",
         "role_needs_temperature": "This entity is not a temperature input.",
@@ -403,8 +409,7 @@
         "valve_strategy_needs_valve_write": "The strategy “by valve position” needs the entity “Valve position (set)”. Choose it or pick another strategy."
       },
       "abort": {
-        "no_rooms": "Add a room first, then assign thermostats to it.",
-        "reconfigure_successful": "The thermostat was updated."
+        "reconfigure_successful": "Done."
       }
     }
   },

@@ -34,6 +34,9 @@ WATT_PER_KELVIN = "W/K"
 @dataclass(frozen=True, kw_only=True)
 class HouseSensorDescription(SensorEntityDescription):
     value: Callable[[HouseRuntime], str | float | None]
+    attributes: Callable[[HouseRuntime], dict[str, Any]] | None = None
+    exists: Callable[[HouseRuntime], bool] = lambda _runtime: True
+    """Only created when this returns True (e.g. a source sensor is configured)."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -76,6 +79,52 @@ HOUSE_SENSORS: tuple[HouseSensorDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda r: r.shares.unassigned_pct,
+    ),
+    HouseSensorDescription(
+        key="room_coverage",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=1,
+        value=lambda r: 100.0 - r.shares.unassigned_pct,
+        attributes=lambda r: {
+            "missing_pct": round(r.shares.unassigned_pct, 1),
+            "floor_area_not_in_rooms_m2": r.floor_area_not_in_rooms_m2,
+            "rooms": len(r.rooms),
+        },
+    ),
+    HouseSensorDescription(
+        key="flow_temperature_used",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value=lambda r: r.flow_used_c,
+        attributes=lambda r: {"source": r.house.flow_temperature_entity},
+        exists=lambda r: r.house.flow_temperature_entity is not None,
+    ),
+    HouseSensorDescription(
+        key="return_temperature_used",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value=lambda r: r.return_used_c,
+        attributes=lambda r: {"source": r.house.return_temperature_entity},
+        exists=lambda r: r.house.return_temperature_entity is not None,
+    ),
+    HouseSensorDescription(
+        key="spread_used",
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value=lambda r: r.spread_used_k,
+        attributes=lambda r: {
+            "flow": r.house.flow_temperature_entity,
+            "return": r.house.return_temperature_entity,
+        },
+        exists=lambda r: bool(
+            r.house.flow_temperature_entity and r.house.return_temperature_entity
+        ),
     ),
 )
 
@@ -158,7 +207,11 @@ async def async_setup_entry(
     entry: ThermogeistConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    async_add_entities(HouseSensor(entry, description) for description in HOUSE_SENSORS)
+    async_add_entities(
+        HouseSensor(entry, description)
+        for description in HOUSE_SENSORS
+        if description.exists(entry.runtime_data)
+    )
     for room_id, state in entry.runtime_data.rooms.items():
         sensors: list[SensorEntity] = [
             RoomSensor(entry, room_id, description) for description in ROOM_SENSORS
@@ -187,6 +240,12 @@ class HouseSensor(HouseEntity, SensorEntity):
     @property
     def native_value(self) -> str | float | None:
         return self.entity_description.value(self.runtime)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        if self.entity_description.attributes is None:
+            return None
+        return self.entity_description.attributes(self.runtime)
 
 
 class RoomSensor(RoomEntity, SensorEntity):

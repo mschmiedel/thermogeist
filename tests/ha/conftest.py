@@ -77,6 +77,7 @@ async def setup_house(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
+        minor_version=2,
         data=data or REQUIRED,
         subentries_data=[
             ConfigSubentryData(data=room, subentry_type="room", title=room["name"], unique_id=None)

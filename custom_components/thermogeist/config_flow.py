@@ -36,6 +36,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
 )
+from homeassistant.util.ulid import ulid_now
 
 from .const import (
     CONF_ABOVE,
@@ -60,13 +61,14 @@ from .const import (
     CONF_RATED_OUTPUT,
     CONF_RETURN_TEMPERATURE_ENTITY,
     CONF_ROLES,
-    CONF_ROOM,
     CONF_SHARE_MODE,
     CONF_SHARE_OUTSIDE,
     CONF_SOURCE_ENTITY,
     CONF_SOURCE_FACTOR,
     CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
+    CONF_THERMOSTAT_NAME,
+    CONF_THERMOSTATS,
     CONF_VALVE_MIN_INVERTED,
     CONF_VALVE_REFRESH,
     CONF_WINDOWS,
@@ -74,7 +76,6 @@ from .const import (
     RATED_OUTPUT_W_MAX,
     RATED_OUTPUT_W_MIN,
     SUBENTRY_ROOM,
-    SUBENTRY_THERMOSTAT,
 )
 from .core.actuator import (
     DeviceEntity,
@@ -124,6 +125,9 @@ from .core.room import (
 )
 from .device_profiles import async_get_profiles
 from .house_config import house_from_config, house_from_entry, room_from_config, rooms_from_entry
+
+CONF_THERMOSTAT = "thermostat"
+"""Field of the pick step (edit or remove a thermostat)."""
 
 DETAIL_KEYS = (
     CONF_HEAT_LOAD,
@@ -211,6 +215,7 @@ class ThermogeistConfigFlow(ConfigFlow, domain=DOMAIN):
     """Two steps: required answers, then optional details."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
@@ -255,7 +260,7 @@ class ThermogeistConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
-        return {SUBENTRY_ROOM: RoomSubentryFlow, SUBENTRY_THERMOSTAT: ThermostatSubentryFlow}
+        return {SUBENTRY_ROOM: RoomSubentryFlow}
 
 
 class ThermogeistOptionsFlow(OptionsFlow):
@@ -298,16 +303,167 @@ def _suggested(defaults: Mapping[str, Any], key: str) -> dict[str, Any] | None:
     return {"suggested_value": value} if value is not None else None
 
 
-class RoomSubentryFlow(ConfigSubentryFlow):
+class ThermostatSteps(ConfigSubentryFlow):
+    """Thermostat steps inside the room dialog (HAI-006, HAI-007): device, then roles."""
+
+    def _init_thermostat(self) -> None:
+        self._tdata: dict[str, Any] = {}
+        self._thermostat_defaults: dict[str, Any] = {}
+        self._thermostat_id: str | None = None
+        self._detected: dict[str, str] = {}
+        self._profile_name: str | None = None
+        self._refresh: float | None = None
+        self._strategy: str = Strategy.AUTOMATIC
+        self._notes: str = ""
+
+    def _save_thermostat(self, thermostat: dict[str, Any]) -> SubentryFlowResult:
+        raise NotImplementedError
+
+    async def async_step_thermostat(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Device and radiator of a thermostat in this room (HAI-007)."""
+        defaults = self._thermostat_defaults
+        if user_input is not None:
+            self._tdata = {**defaults, **user_input}
+            if user_input.get(CONF_RATED_OUTPUT) is None:
+                self._tdata.pop(CONF_RATED_OUTPUT, None)
+            await self._detect(user_input[CONF_DEVICE], defaults)
+            return await self.async_step_roles()
+        schema = {
+            vol.Required(
+                CONF_DEVICE, default=defaults.get(CONF_DEVICE, vol.UNDEFINED)
+            ): DeviceSelector(
+                DeviceSelectorConfig(entity=[EntityFilterSelectorConfig(domain="climate")])
+            ),
+            vol.Optional(
+                CONF_RATED_OUTPUT, description=_suggested(defaults, CONF_RATED_OUTPUT)
+            ): _number(RATED_OUTPUT_W_MIN, RATED_OUTPUT_W_MAX, 10, "W"),
+        }
+        return self.async_show_form(
+            step_id="thermostat", data_schema=vol.Schema(schema), last_step=False
+        )
+
+    async def _detect(self, device_id: str, defaults: Mapping[str, Any]) -> None:
+        """Find profile and roles for the device (ACT-031, ACT-032)."""
+        device = dr.async_get(self.hass).async_get(device_id)
+        entries = er.async_entries_for_device(er.async_get(self.hass), device_id)
+        profiles = await async_get_profiles(self.hass)
+        profile = find_profile(profiles, device.manufacturer, device.model_id) if device else None
+        detected = resolve_roles(
+            [DeviceEntity(e.entity_id, e.unique_id, e.domain) for e in entries], profile
+        )
+        same_device = defaults.get(CONF_DEVICE) == device_id and defaults.get(CONF_ROLES)
+        self._detected = (
+            dict(defaults[CONF_ROLES]) if same_device else {r.value: e for r, e in detected.items()}
+        )
+        self._profile_name = profile.name if profile else None
+        self._notes = " ".join(profile.notes) if profile else ""
+        self._tdata[CONF_PROFILE] = profile.profile_id if profile else None
+        inverted = False
+        if profile and Role.VALVE_MIN in profile.roles.get(Source.Z2M, {}):
+            inverted = profile.roles[Source.Z2M][Role.VALVE_MIN].inverted
+        self._tdata[CONF_VALVE_MIN_INVERTED] = inverted
+        if same_device and CONF_VALVE_REFRESH in defaults:
+            self._refresh = defaults.get(CONF_VALVE_REFRESH)
+        else:
+            self._refresh = (
+                profile.valve_refresh.total_seconds() / 60
+                if profile and profile.valve_refresh
+                else None
+            )
+        self._strategy = str(
+            defaults.get(CONF_STRATEGY, Strategy.AUTOMATIC) if same_device else Strategy.AUTOMATIC
+        )
+        self._tdata["_device_name"] = (device.name_by_user or device.name) if device else device_id
+
+    async def async_step_roles(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            user_input = dict(user_input)
+            self._refresh = user_input.pop(CONF_VALVE_REFRESH, None)
+            self._strategy = user_input.pop(CONF_STRATEGY, Strategy.AUTOMATIC)
+            roles = {role: entity for role, entity in user_input.items() if entity}
+            if Role.CLIMATE.value not in roles:
+                errors[Role.CLIMATE.value] = "climate_required"
+            if self._strategy == Strategy.VALVE and Role.VALVE_WRITE.value not in roles:
+                errors[CONF_STRATEGY] = "valve_strategy_needs_valve_write"
+            errors |= self._implausible_roles(roles)
+            if not errors:
+                return self._finish_thermostat(roles)
+        schema: dict[vol.Marker, Any] = {}
+        for role, domains in ROLE_DOMAINS.items():
+            marker = vol.Required if role is Role.CLIMATE else vol.Optional
+            # Any entity of a fitting domain may be chosen: some integrations (e.g. Bosch SHC)
+            # put the climate entity on a different device than the valve sensor (ACT-033).
+            schema[marker(role.value, description=_suggested(self._detected, role.value))] = (
+                EntitySelector(EntitySelectorConfig(domain=domains))
+            )
+        schema[vol.Required(CONF_STRATEGY, default=self._strategy)] = _select(
+            [s.value for s in Strategy], "strategy"
+        )
+        schema[
+            vol.Optional(
+                CONF_VALVE_REFRESH,
+                description={"suggested_value": self._refresh} if self._refresh else None,
+            )
+        ] = _number(1, 60, 1, "min")
+        return self.async_show_form(
+            step_id="roles",
+            last_step=True,
+            data_schema=vol.Schema(schema),
+            errors=errors,
+            description_placeholders={
+                "profile": self._profile_name or "-",
+                "notes": self._notes,
+            },
+        )
+
+    def _implausible_roles(self, roles: dict[str, str]) -> dict[str, str]:
+        """ACT-035: e.g. a temperature sensor chosen as valve position is rejected."""
+        errors: dict[str, str] = {}
+        for role_key, entity_id in roles.items():
+            state = self.hass.states.get(entity_id)
+            attributes = state.attributes if state else {}
+            facts = EntityFacts(
+                state=state.state if state else None,
+                unit=attributes.get("unit_of_measurement"),
+                device_class=attributes.get("device_class"),
+                options=tuple(attributes.get("options") or ()),
+            )
+            if (code := check_role(Role(role_key), facts)) is not None:
+                errors[role_key] = code
+        return errors
+
+    def _finish_thermostat(self, roles: dict[str, str]) -> SubentryFlowResult:
+        data = {
+            CONF_THERMOSTAT_NAME: str(self._tdata.pop("_device_name")),
+            CONF_DEVICE: self._tdata[CONF_DEVICE],
+            CONF_PROFILE: self._tdata.get(CONF_PROFILE),
+            CONF_VALVE_MIN_INVERTED: self._tdata.get(CONF_VALVE_MIN_INVERTED, False),
+            CONF_ROLES: roles,
+            CONF_VALVE_REFRESH: self._refresh or None,
+            CONF_STRATEGY: self._strategy,
+        }
+        if self._tdata.get(CONF_RATED_OUTPUT) is not None:
+            data[CONF_RATED_OUTPUT] = self._tdata[CONF_RATED_OUTPUT]
+        return self._save_thermostat(data)
+
+
+class RoomSubentryFlow(ThermostatSteps):
     """Add or change a room (HAI-005).
 
     Step 1: basics; step 2: geometry or known share; step 3 only with heat sources: factors.
+    The gear icon opens a menu: edit the room, add, edit or remove its thermostats (HAI-007).
     """
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
         self._source_ids: list[str] = []
         self._factors: dict[str, float] = {}
+        self._init_thermostat()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
         return await self._basics("user", user_input, {})
@@ -315,7 +471,74 @@ class RoomSubentryFlow(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        return await self._basics("reconfigure", user_input, self._get_reconfigure_subentry().data)
+        options = ["edit_room", "add_thermostat"]
+        if self._room_thermostats():
+            options += ["edit_thermostat", "remove_thermostat"]
+        return self.async_show_menu(step_id="reconfigure", menu_options=options)
+
+    async def async_step_edit_room(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        return await self._basics("edit_room", user_input, self._get_reconfigure_subentry().data)
+
+    async def async_step_add_thermostat(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        self._thermostat_id = ulid_now()
+        self._thermostat_defaults = {}
+        return await self.async_step_thermostat()
+
+    async def async_step_edit_thermostat(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        if user_input is not None:
+            self._thermostat_id = user_input[CONF_THERMOSTAT]
+            self._thermostat_defaults = dict(self._room_thermostats()[self._thermostat_id])
+            return await self.async_step_thermostat()
+        return self.async_show_form(
+            step_id="edit_thermostat", data_schema=self._pick_schema(), last_step=False
+        )
+
+    async def async_step_remove_thermostat(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """The device gets its settings back on the next start (ACT-008)."""
+        if user_input is not None:
+            thermostats = self._room_thermostats()
+            thermostats.pop(user_input[CONF_THERMOSTAT], None)
+            return self._update_room({CONF_THERMOSTATS: thermostats})
+        return self.async_show_form(
+            step_id="remove_thermostat", data_schema=self._pick_schema(), last_step=True
+        )
+
+    def _pick_schema(self) -> vol.Schema:
+        options = [
+            {"value": tid, "label": str(data.get(CONF_THERMOSTAT_NAME, tid))}
+            for tid, data in self._room_thermostats().items()
+        ]
+        return vol.Schema(
+            {
+                vol.Required(CONF_THERMOSTAT): SelectSelector(
+                    SelectSelectorConfig(options=options, mode=SelectSelectorMode.LIST)
+                )
+            }
+        )
+
+    def _room_thermostats(self) -> dict[str, dict[str, Any]]:
+        stored = self._get_reconfigure_subentry().data.get(CONF_THERMOSTATS) or {}
+        return {tid: dict(data) for tid, data in stored.items()}
+
+    def _save_thermostat(self, thermostat: dict[str, Any]) -> SubentryFlowResult:
+        assert self._thermostat_id is not None
+        thermostats = self._room_thermostats()
+        thermostats[self._thermostat_id] = thermostat
+        return self._update_room({CONF_THERMOSTATS: thermostats})
+
+    def _update_room(self, changes: Mapping[str, Any]) -> SubentryFlowResult:
+        subentry = self._get_reconfigure_subentry()
+        return self.async_update_and_abort(
+            self._get_entry(), subentry, data={**subentry.data, **changes}
+        )
 
     async def _basics(
         self, step_id: str, user_input: dict[str, Any] | None, defaults: Mapping[str, Any]
@@ -532,174 +755,3 @@ ROLE_DOMAINS: dict[Role, list[str]] = {
     Role.CALIBRATION_STATUS: ["sensor", "select"],
     Role.SETPOINT_SOURCE: ["sensor", "select"],
 }
-
-
-class ThermostatSubentryFlow(ConfigSubentryFlow):
-    """Assign a thermostat to a room (HAI-006): pick device, then confirm the detected roles."""
-
-    def __init__(self) -> None:
-        self._data: dict[str, Any] = {}
-        self._detected: dict[str, str] = {}
-        self._profile_name: str | None = None
-        self._refresh: float | None = None
-        self._strategy: str = Strategy.AUTOMATIC
-        self._notes: str = ""
-
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
-        return await self._device_step("user", user_input, {})
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        return await self._device_step(
-            "reconfigure", user_input, self._get_reconfigure_subentry().data
-        )
-
-    async def _device_step(
-        self, step_id: str, user_input: dict[str, Any] | None, defaults: Mapping[str, Any]
-    ) -> SubentryFlowResult:
-        rooms = {
-            sid: s.title
-            for sid, s in self._get_entry().subentries.items()
-            if s.subentry_type == SUBENTRY_ROOM
-        }
-        if not rooms:
-            return self.async_abort(reason="no_rooms")
-        if user_input is not None:
-            self._data = {**defaults, **user_input}
-            if user_input.get(CONF_RATED_OUTPUT) is None:
-                self._data.pop(CONF_RATED_OUTPUT, None)
-            await self._detect(user_input[CONF_DEVICE], defaults)
-            return await self.async_step_roles()
-        values = defaults
-        schema = {
-            vol.Required(CONF_ROOM, default=values.get(CONF_ROOM, vol.UNDEFINED)): SelectSelector(
-                SelectSelectorConfig(
-                    options=[{"value": sid, "label": title} for sid, title in rooms.items()],
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
-            vol.Required(
-                CONF_DEVICE, default=values.get(CONF_DEVICE, vol.UNDEFINED)
-            ): DeviceSelector(
-                DeviceSelectorConfig(entity=[EntityFilterSelectorConfig(domain="climate")])
-            ),
-            vol.Optional(
-                CONF_RATED_OUTPUT, description=_suggested(values, CONF_RATED_OUTPUT)
-            ): _number(RATED_OUTPUT_W_MIN, RATED_OUTPUT_W_MAX, 10, "W"),
-        }
-        return self.async_show_form(
-            step_id=step_id, data_schema=vol.Schema(schema), last_step=False
-        )
-
-    async def _detect(self, device_id: str, defaults: Mapping[str, Any]) -> None:
-        """Find profile and roles for the device (ACT-031, ACT-032)."""
-        device = dr.async_get(self.hass).async_get(device_id)
-        entries = er.async_entries_for_device(er.async_get(self.hass), device_id)
-        profiles = await async_get_profiles(self.hass)
-        profile = find_profile(profiles, device.manufacturer, device.model_id) if device else None
-        detected = resolve_roles(
-            [DeviceEntity(e.entity_id, e.unique_id, e.domain) for e in entries], profile
-        )
-        same_device = defaults.get(CONF_DEVICE) == device_id and defaults.get(CONF_ROLES)
-        self._detected = (
-            dict(defaults[CONF_ROLES]) if same_device else {r.value: e for r, e in detected.items()}
-        )
-        self._profile_name = profile.name if profile else None
-        self._notes = " ".join(profile.notes) if profile else ""
-        self._data[CONF_PROFILE] = profile.profile_id if profile else None
-        inverted = False
-        if profile and Role.VALVE_MIN in profile.roles.get(Source.Z2M, {}):
-            inverted = profile.roles[Source.Z2M][Role.VALVE_MIN].inverted
-        self._data[CONF_VALVE_MIN_INVERTED] = inverted
-        if same_device and CONF_VALVE_REFRESH in defaults:
-            self._refresh = defaults.get(CONF_VALVE_REFRESH)
-        else:
-            self._refresh = (
-                profile.valve_refresh.total_seconds() / 60
-                if profile and profile.valve_refresh
-                else None
-            )
-        self._strategy = str(
-            defaults.get(CONF_STRATEGY, Strategy.AUTOMATIC) if same_device else Strategy.AUTOMATIC
-        )
-        self._data["_device_name"] = (device.name_by_user or device.name) if device else device_id
-
-    async def async_step_roles(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            user_input = dict(user_input)
-            self._refresh = user_input.pop(CONF_VALVE_REFRESH, None)
-            self._strategy = user_input.pop(CONF_STRATEGY, Strategy.AUTOMATIC)
-            roles = {role: entity for role, entity in user_input.items() if entity}
-            if Role.CLIMATE.value not in roles:
-                errors[Role.CLIMATE.value] = "climate_required"
-            if self._strategy == Strategy.VALVE and Role.VALVE_WRITE.value not in roles:
-                errors[CONF_STRATEGY] = "valve_strategy_needs_valve_write"
-            errors |= self._implausible_roles(roles)
-            if not errors:
-                return self._finish(roles)
-        schema: dict[vol.Marker, Any] = {}
-        for role, domains in ROLE_DOMAINS.items():
-            marker = vol.Required if role is Role.CLIMATE else vol.Optional
-            # Any entity of a fitting domain may be chosen: some integrations (e.g. Bosch SHC)
-            # put the climate entity on a different device than the valve sensor (ACT-033).
-            schema[marker(role.value, description=_suggested(self._detected, role.value))] = (
-                EntitySelector(EntitySelectorConfig(domain=domains))
-            )
-        schema[vol.Required(CONF_STRATEGY, default=self._strategy)] = _select(
-            [s.value for s in Strategy], "strategy"
-        )
-        schema[
-            vol.Optional(
-                CONF_VALVE_REFRESH,
-                description={"suggested_value": self._refresh} if self._refresh else None,
-            )
-        ] = _number(1, 60, 1, "min")
-        return self.async_show_form(
-            step_id="roles",
-            last_step=True,
-            data_schema=vol.Schema(schema),
-            errors=errors,
-            description_placeholders={
-                "profile": self._profile_name or "-",
-                "notes": self._notes,
-            },
-        )
-
-    def _implausible_roles(self, roles: dict[str, str]) -> dict[str, str]:
-        """ACT-035: e.g. a temperature sensor chosen as valve position is rejected."""
-        errors: dict[str, str] = {}
-        for role_key, entity_id in roles.items():
-            state = self.hass.states.get(entity_id)
-            attributes = state.attributes if state else {}
-            facts = EntityFacts(
-                state=state.state if state else None,
-                unit=attributes.get("unit_of_measurement"),
-                device_class=attributes.get("device_class"),
-                options=tuple(attributes.get("options") or ()),
-            )
-            if (code := check_role(Role(role_key), facts)) is not None:
-                errors[role_key] = code
-        return errors
-
-    def _finish(self, roles: dict[str, str]) -> SubentryFlowResult:
-        title = str(self._data.pop("_device_name"))
-        data = {
-            CONF_ROOM: self._data[CONF_ROOM],
-            CONF_DEVICE: self._data[CONF_DEVICE],
-            CONF_PROFILE: self._data.get(CONF_PROFILE),
-            CONF_VALVE_MIN_INVERTED: self._data.get(CONF_VALVE_MIN_INVERTED, False),
-            CONF_ROLES: roles,
-            CONF_VALVE_REFRESH: self._refresh or None,
-            CONF_STRATEGY: self._strategy,
-        }
-        if self._data.get(CONF_RATED_OUTPUT) is not None:
-            data[CONF_RATED_OUTPUT] = self._data[CONF_RATED_OUTPUT]
-        if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_and_abort(
-                self._get_entry(), self._get_reconfigure_subentry(), title=title, data=data
-            )
-        return self.async_create_entry(title=title, data=data)

@@ -98,6 +98,18 @@
       },
       "heat_from_devices": {
         "default": "mdi:desktop-tower-monitor"
+      },
+      "room_coverage": {
+        "default": "mdi:floor-plan"
+      },
+      "flow_temperature_used": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "return_temperature_used": {
+        "default": "mdi:thermometer-chevron-down"
+      },
+      "spread_used": {
+        "default": "mdi:arrow-expand-vertical"
       }
     },
     "switch": {

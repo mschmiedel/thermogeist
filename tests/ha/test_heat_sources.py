@@ -54,6 +54,9 @@ async def test_room_dialog_asks_for_factors(
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, "room"), context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id}
     )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "edit_room"}
+    )
     marker = next(m for m in result["data_schema"].schema if str(m) == "heat_sources")
     assert marker.description == {"suggested_value": [PC]}
 

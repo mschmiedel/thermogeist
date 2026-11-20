@@ -161,6 +161,10 @@ async def test_reconfigure_room(hass: HomeAssistant, outdoor_sensor: str, room_s
         context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
     )
     assert result["step_id"] == "reconfigure"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "edit_room"}
+    )
+    assert result["step_id"] == "edit_room"
     basics = {k: LIVING_ROOM[k] for k in ("name", "temperature_entity", "share_mode")}
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], basics)
     assert result["step_id"] == "geometry"

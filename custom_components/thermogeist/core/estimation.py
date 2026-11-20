@@ -112,3 +112,11 @@ def known_shares_exceed_total(house: House, rooms: Mapping[str, Room]) -> bool:
     """MDL-021: known shares plus the share outside Thermogeist must not exceed 100 %."""
     known = sum(r.known_share_pct or 0.0 for r in rooms.values() if r.share_mode is ShareMode.KNOWN)
     return known + house.share_outside_pct > FULL_SHARE_PCT
+
+
+def floor_area_not_in_rooms_m2(house: House, rooms: Mapping[str, Room]) -> float | None:
+    """MDL-046: living area not yet covered by a room; None without a living area."""
+    if house.living_area_m2 is None:
+        return None
+    in_rooms = sum(room.floor_area_m2 or 0.0 for room in rooms.values())
+    return max(0.0, house.living_area_m2 - in_rooms)

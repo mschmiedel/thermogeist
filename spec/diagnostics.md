@@ -29,7 +29,7 @@ Two sources that check each other:
 |---|---|---|
 | DIA-040 | Compare measured house heat output (MDL-017) with the sum of learned room losses plus the share outside Thermogeist. Show how much of the heat the room models explain, and hint when MDL-009 looks wrong. | planned |
 | DIA-041 | Heat output clearly above room demand while rooms stay cold points to losses outside the rooms (e.g. pipes in an unheated basement). | planned |
-| DIA-042 | The heating water is visible on the house device: flow, return and spread as sensors, showing the averaged values the controller actually uses (not the raw sensors), with the source entity as attribute. | planned |
+| DIA-042 | The heating water is visible on the house device: flow, return and spread as sensors (only those whose source sensors are configured; spread needs both), showing the averaged values the controller actually uses (not the raw sensors), with the source entity as attribute. | implemented |
 
 ## Distinguishing causes
 

@@ -39,7 +39,7 @@ from .core.decisions import (
     decide_room,
     is_closed_for_window,
 )
-from .core.estimation import ShareResult, room_shares
+from .core.estimation import ShareResult, floor_area_not_in_rooms_m2, room_shares
 from .core.heat import (
     current_demand_w,
     heat_from_sources_w,
@@ -64,6 +64,7 @@ PLAN_EVERY = timedelta(seconds=55)
 # ACT-045: devices need a moment after a restart before Thermogeist writes to them.
 STARTUP_HOLD = timedelta(seconds=90)
 WINDOW_RECHECK_MARGIN_S = 1
+CONTROLLER_SAVE_DELAY_S = 60
 
 
 def update_signal(entry_id: str) -> str:
@@ -127,6 +128,7 @@ class HouseRuntime:
         self.room_overrides: dict[str, dict[ControlSetting, float]] = {}
         """RUL-014: window delays set on a room."""
         self.shares: ShareResult = room_shares(house, rooms)
+        self.floor_area_not_in_rooms_m2 = floor_area_not_in_rooms_m2(house, rooms)
         self.rooms: dict[str, RoomState] = {
             room_id: RoomState(
                 room=room,
@@ -173,6 +175,11 @@ class HouseRuntime:
             for room_id, values in stored.get("room_overrides", {}).items()
             if room_id in self.rooms
         }
+        if saved_at := stored.get("saved_at"):
+            saved = datetime.fromisoformat(saved_at)
+            for room_id, snapshot in stored.get("controller", {}).items():
+                if room_id in self.rooms:
+                    self.rooms[room_id].controller.restore(snapshot, saved, self._clock.now())
         for room_id, setpoint in stored.get("setpoints", {}).items():
             if room_id in self.rooms:
                 self.rooms[room_id].user_setpoint_c = float(setpoint)
@@ -425,6 +432,7 @@ class HouseRuntime:
             )
             if state.thermostat_ids:
                 self._plan(state, flow, spread, settings)
+                self._save_later()
             self._update_sensor_issue(room_id, state)
         self._notify()
         if not self.startup_hold():
@@ -536,17 +544,24 @@ class HouseRuntime:
         async_dispatcher_send(self._hass, update_signal(self._entry_id))
 
     async def _save(self) -> None:
-        await self._store.async_save(
-            {
-                "overrides": {key.value: value for key, value in self.overrides.items()},
-                "room_overrides": {
-                    rid: {key.value: value for key, value in values.items()}
-                    for rid, values in self.room_overrides.items()
-                },
-                "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
-                **self.control.dump(),
-            }
-        )
+        await self._store.async_save(self._data())
+
+    @callback
+    def _save_later(self) -> None:
+        """CTL-040: the controller state changes every minute; write it at most that often."""
+        self._store.async_delay_save(self._data, CONTROLLER_SAVE_DELAY_S)
+
+    def _data(self) -> dict[str, Any]:
+        return {
+            "controller": {rid: s.controller.snapshot() for rid, s in self.rooms.items() if s.plan},
+            "saved_at": self._clock.now().isoformat(),
+            "overrides": {key.value: value for key, value in self.overrides.items()},
+            "room_overrides": {
+                rid: {key.value: value for key, value in values.items()}
+                for rid, values in self.room_overrides.items()
+            },
+            "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
+        } | self.control.dump()
 
 
 def numeric_state(hass: HomeAssistant, entity_id: str) -> float | None:
