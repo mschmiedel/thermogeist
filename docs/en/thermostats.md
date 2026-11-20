@@ -101,6 +101,28 @@ times per hour, then switches the room back to observe and shows a repair issue
 Before you switch control on, retarget your own automations, dashboards and voice assistants
 from the thermostat to the room's climate entity – otherwise two regulators fight.
 
+### When the room is too warm
+
+Two settings on the house decide what happens when a room gets warmer than its target: the
+**dead band** (heat pump: 0.5 K) and the **minimum valve opening** (heat pump: 40 %, you may have
+changed it). Example: target 19.5 °C, dead band 0.5 K, minimum opening 30 %.
+
+| Room | What Thermogeist does | Limits you may see |
+|---|---|---|
+| below 19.5 °C | Regulates normally: feed-forward plus reaction to the difference. The valve may open, slowly. | – |
+| 19.5–20.0 °C (inside the dead band) | A little too warm, still fine. The quick reaction ignores it; the valve is not opened further and may close, but not below 30 %. | `hold_when_warm`, `min_opening` |
+| 20.0–20.5 °C | As before, but now the quick reaction also pulls down. Still not below 30 %. | `hold_when_warm`, `min_opening` |
+| above 20.5 °C (dead band + 0.5 K) | **Comfort comes first:** the minimum opening no longer applies. The valve may close below 30 %, slowly, towards what the calculation says. | `min_opening_relaxed` |
+| back below 20.0 °C | Only now does the minimum opening apply again. In between the previous state stays, so it does not switch on and off with every tenth of a degree. | `min_opening` |
+
+**Why:** a heat pump works most efficiently when water flows through every radiator. Thermogeist
+therefore accepts half a degree too much rather than closing a valve. Only when it gets
+noticeably too warm does comfort win. A room that often shows `min_opening_relaxed` has a
+radiator that is too big for it at the minimum opening.
+
+With a boiler the dead band is 0.2 K and the minimum opening 0 %, so this stage practically never
+applies.
+
 ## Flow temperature (optional)
 
 On the house (**Configure**) you can choose a **flow temperature sensor** – the temperature of
@@ -166,7 +188,7 @@ On each room:
 | Limit | Meaning |
 |---|---|
 | `min_opening` | The valve stays at the minimum opening of your heating type (heat pump: 40 %). |
-| `min_opening_relaxed` | The room is clearly too warm, so the valve may close below the minimum opening. Typical for radiators that are too big for the room. |
+| `min_opening_relaxed` | The room is more than the dead band + 0.5 K above its target, so the valve may close below the minimum opening ([when the room is too warm](#when-the-room-is-too-warm)). Typical for radiators that are too big for the room. |
 | `hold_when_warm` | The room is above its target, so the valve is not opened further, whatever the calculation says. |
 | `rate_limit` | The valve moves slowly on purpose (heat pump: max. 10 % per 30 minutes). |
 | `saturated` | The valve is fully open or at its lowest allowed position. |

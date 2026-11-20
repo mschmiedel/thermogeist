@@ -103,6 +103,28 @@ pro Stunde neu, schaltet den Raum dann zurück auf Beobachten und zeigt einen Re
 Bevor du Regeln einschaltest: Stell eigene Automationen, Dashboards und Sprachassistenten vom
 Thermostat auf die Klima-Entität des Raums um – sonst arbeiten zwei Regler gegeneinander.
 
+### Wenn der Raum zu warm ist
+
+Zwei Einstellungen am Haus bestimmen, was passiert, wenn ein Raum wärmer als sein Ziel wird: das
+**Totband** (Wärmepumpe: 0,5 K) und die **Mindestöffnung Ventil** (Wärmepumpe: 40 %, vielleicht
+hast du sie geändert). Beispiel: Ziel 19,5 °C, Totband 0,5 K, Mindestöffnung 30 %.
+
+| Raum | Was Thermogeist tut | Mögliche Grenzen |
+|---|---|---|
+| unter 19,5 °C | Regelt normal: Vorsteuerung plus Reaktion auf die Abweichung. Das Ventil darf öffnen, langsam. | – |
+| 19,5–20,0 °C (im Totband) | Etwas zu warm, aber noch im Rahmen. Die schnelle Reaktion ignoriert das; das Ventil wird nicht weiter geöffnet und darf schließen, aber nicht unter 30 %. | `hold_when_warm`, `min_opening` |
+| 20,0–20,5 °C | Wie eben, aber jetzt zieht auch die schnelle Reaktion nach unten. Trotzdem nicht unter 30 %. | `hold_when_warm`, `min_opening` |
+| über 20,5 °C (Totband + 0,5 K) | **Behaglichkeit geht vor:** Die Mindestöffnung gilt nicht mehr. Das Ventil darf unter 30 % schließen, langsam, Richtung dessen, was die Rechnung sagt. | `min_opening_relaxed` |
+| zurück unter 20,0 °C | Erst jetzt gilt die Mindestöffnung wieder. Dazwischen bleibt der vorherige Zustand, damit sie nicht bei jedem Zehntelgrad an- und ausgeht. | `min_opening` |
+
+**Warum:** Eine Wärmepumpe arbeitet am effizientesten, wenn durch jeden Heizkörper Wasser fließt.
+Deshalb nimmt Thermogeist lieber ein halbes Grad zu viel in Kauf, als ein Ventil zu schließen.
+Erst wenn es spürbar zu warm wird, hat die Behaglichkeit Vorrang. Zeigt ein Raum oft
+`min_opening_relaxed`, ist sein Heizkörper bei der Mindestöffnung zu groß für ihn.
+
+Beim Kessel ist das Totband 0,2 K und die Mindestöffnung 0 %; diese Stufe greift dort praktisch
+nie.
+
 ## Vorlauftemperatur (optional)
 
 Beim Haus (**Konfigurieren**) kannst du einen **Vorlauftemperatursensor** wählen – die
@@ -170,7 +192,7 @@ Pro Raum:
 | Grenze | Bedeutung |
 |---|---|
 | `min_opening` | Das Ventil bleibt auf der Mindestöffnung deiner Heizungsart (Wärmepumpe: 40 %). |
-| `min_opening_relaxed` | Der Raum ist deutlich zu warm, das Ventil darf unter die Mindestöffnung. Typisch für Heizkörper, die für den Raum zu groß sind. |
+| `min_opening_relaxed` | Der Raum liegt mehr als Totband + 0,5 K über seinem Ziel, das Ventil darf unter die Mindestöffnung ([Wenn der Raum zu warm ist](#wenn-der-raum-zu-warm-ist)). Typisch für Heizkörper, die für den Raum zu groß sind. |
 | `hold_when_warm` | Der Raum ist über seinem Ziel, deshalb wird das Ventil nicht weiter geöffnet, egal was die Rechnung sagt. |
 | `rate_limit` | Das Ventil bewegt sich absichtlich langsam (Wärmepumpe: max. 10 % pro 30 Minuten). |
 | `saturated` | Das Ventil ist ganz offen oder an seiner untersten erlaubten Stellung. |
