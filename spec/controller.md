@@ -56,6 +56,7 @@ Runs every minute per room, deterministic via `TimeProvider`.
 | CTL-034 | Without a target (central stop) the output is 0 %. With a silent sensor (safety) the output is the minimum opening, at least 20 %. | implemented |
 | CTL-035 | Every result carries its parts (feed-forward, proportional, integral), the limits applied and the reason, so users can see why the valve would move. Without a feed-forward the attribute is empty and `feed_forward_missing` names the missing inputs (heat load, radiator output, flow temperature, room temperature). | implemented |
 | CTL-036 | The feed-forward inverts a typical valve characteristic: `valve = 10 % + 90 % × heat fraction²` (heat output rises steeply right after the opening point). Learned per thermostat later (LRN-003). | implemented |
+| CTL-038 | The feed-forward uses the flow temperature as a 30-minute moving average, not the momentary value. Field finding: at 6–9 K between water and room, the flow dropping from 31.5 to 28 °C moved the feed-forward from 26 % to 69 % within 25 minutes; heat-pump cycling and defrosting would make the plan jump. | planned |
 | CTL-037 | Comfort beats the minimum opening: more than 0.5 K above the dead band, the valve may close below the minimum opening (limit `min_opening_relaxed`); the minimum applies again once the room is back inside the dead band. Oversized radiators then cycle slowly, the honest consequence until the sizing diagnosis exists (DIA-001). | implemented |
 
 Room heat capacity for τ (MDL-014): 46 Wh/(m²·K) of floor area – the "medium" construction class
