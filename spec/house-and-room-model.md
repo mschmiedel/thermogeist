@@ -37,7 +37,7 @@ gets to it.
 | MDL-034 | The weighting is simple and explainable: its factors are named constants documented in this spec. The UI shows the result ("Living room: estimated 31 % ≈ 2.5 kW"), and the user can accept or override it. | implemented |
 | MDL-035 | The part of the heat load not covered by any room is shown on the house ("18 % not assigned to a room"). If MDL-009 is entered, the difference to it is shown as a plausibility hint. Without a living area, estimated rooms share 100 % minus MDL-009 by weight (fallback). | implemented |
 | MDL-036 | Without a house heat load, weights still give relative shares; absolute watts are missing and the controller starts cautiously (MDL-020). | implemented |
-| MDL-037 | Halls, corridors and stairwells: without a thermostat they may be left out (their part stays "not assigned") or entered as rooms without a thermostat to complete the house balance (DIA-040). With a thermostat they are normal rooms; few exterior walls give them a small weight. | implemented |
+| MDL-037 | Halls, corridors and stairwells: without a thermostat they may be left out (their part stays "not assigned") or entered as rooms without a thermostat to complete the house balance (DIA-040) and to act as neighbouring zone for doors (OPN-002). With a thermostat they are normal rooms; few exterior walls give them a small weight. | implemented |
 | MDL-038 | The heated living area excludes balconies and terraces, even though residential floor area rules count them partly. | implemented |
 
 ### Weighting factors (MDL-034)

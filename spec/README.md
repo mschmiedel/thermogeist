@@ -34,6 +34,7 @@ refer to these IDs.
 | [decisions-and-reasons.md](decisions-and-reasons.md) | RSN | Reason codes, logbook, repairs |
 | [operation-and-overrides.md](operation-and-overrides.md) | OVR | On-device, HA and voice operation |
 | [rules-groups-schedules.md](rules-groups-schedules.md) | RUL | House level, groups, windows, schedules |
+| [openings-and-zones.md](openings-and-zones.md) | OPN | Doors and windows as openings, neighbouring zones |
 | [test-strategy.md](test-strategy.md) | TST | TimeProvider, simulator, scenarios |
 | [distribution.md](distribution.md) | DST | Zip release, HACS, download counting |
 | [documentation.md](documentation.md) | DOC | Multilingual user documentation |

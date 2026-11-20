@@ -80,4 +80,5 @@ Thermogeist controls Sonoff TRVZB thermostats.
 - Generic `climate` adapter (ACT-011, ACT-012, ACT-130)
 - Fossil and electric profiles beyond defaults (CTL-011, CTL-012)
 - Hydraulic balancing (DIA-030 to DIA-033)
+- Openings and neighbouring zones: doors to unheated halls, door sensors, separate learning (OPN-*)
 - Heat output of the heat generator: energy signature, measured heat load, house balance (MDL-017, LRN-006, DIA-040, DIA-041)

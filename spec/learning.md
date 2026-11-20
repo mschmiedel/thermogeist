@@ -26,6 +26,6 @@ The user can always see whether a room is still learning, has settled, or is dri
 
 | ID | Requirement | Status |
 |---|---|---|
-| LRN-020 | Learning only happens in steady phases (no open window, no ramp, no override). | planned |
+| LRN-020 | Learning only happens in steady phases (no open window, no ramp, no override). Phases with an open door are learned separately or left out (OPN-010). | planned |
 | LRN-021 | Learning can be paused and reset per room. Both produce a reason code. | planned |
 | LRN-022 | All learning steps are deterministically testable via `TimeProvider` and the simulator. | planned |
