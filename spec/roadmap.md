@@ -81,7 +81,8 @@ Thermogeist controls Sonoff TRVZB thermostats.
 - Generic `climate` adapter (ACT-011, ACT-012, ACT-130)
 - Fossil and electric profiles beyond defaults (CTL-011, CTL-012)
 - Hydraulic balancing (DIA-030 to DIA-033)
-- Smoothed flow temperature for the feed-forward (CTL-038) – small, next
+- Flow temperature robustness: smoothing, hold during hot water and defrost, plausibility, return sensor, heating curve fallback (CTL-038, CTL-039, MDL-019) – next
+- Controller state survives restarts, diagnostic sensors for the parts (CTL-040, CTL-041) – next
 - **Internal heat sources** (gaming PC, server, aquarium …) from power sensors, pre-filled from the room's area (MDL-040 to MDL-045) – high value, next candidate
 - Openings and neighbouring zones: doors to unheated halls, door sensors, separate learning (OPN-*)
 - Heat output of the heat generator: energy signature, measured heat load, house balance (MDL-017, LRN-006, DIA-040, DIA-041)
