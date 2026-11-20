@@ -14,7 +14,7 @@ The room's temperature sensor has not sent a valid value for 60 minutes. Thermog
 
 1. Battery of the sensor empty or low?
 2. Is the sensor still connected (Zigbee2MQTT / ZHA shows it as available)?
-3. Was the right sensor selected for the room? Open the room and choose **Reconfigure**.
+3. Was the right sensor selected for the room? Open the Thermogeist entry and click the gear icon (⚙) next to the room.
 4. Some sensors only report when the temperature changes. If yours stays silent for more than an hour on purpose, tell us – the limit will become configurable.
 
 ## What to do
