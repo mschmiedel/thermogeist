@@ -9,7 +9,7 @@ mechanism towards the outside.
 
 | ID | Requirement | Status |
 |---|---|---|
-| OPN-001 | An **opening** connects a room to another zone: the outside (window) or a neighbouring room. Window rules (RUL-010) and doors use the same logic: contact sensor, open/close delays, reason code. | planned |
+| OPN-001 | An **opening** connects a room to another zone: the outside (window) or a neighbouring room. Window rules (RUL-010, RUL-014, RUL-015) and doors use the same logic: contact sensor, open/close delays, reason code. | planned |
 | OPN-002 | Neighbouring zones can be rooms without a thermostat (MDL-037), optionally with their own temperature sensor; without one, their temperature is estimated between room and outdoor temperature. | planned |
 | OPN-003 | Per door, the user chooses what happens while it is open: **couple** (keep heating; the model knows the higher loss), **limit** (milder than a window, e.g. setback by a few kelvin) or **ignore**. Default: couple. | planned |
 | OPN-004 | Reason codes `door_open_coupled` and `door_open_limited`, with FAQ pages in both languages. | planned |

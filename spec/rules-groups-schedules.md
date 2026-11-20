@@ -14,7 +14,9 @@
 
 | ID | Rule | Status |
 |---|---|---|
-| RUL-010 | Window: rooms may have window contacts (binary sensors, optional). Any contact open for 30 s → reason `window_open`, target frost protection, valve 0 % at once (no rate limit). Closed again → back to the previous valve position without slow ramp-up. | implemented |
+| RUL-010 | Window: rooms may have window contacts (binary sensors, optional). Any contact open for 30 s → reason `window_open`, target frost protection, valve 0 % at once (no rate limit). Closed again → back to the previous valve position without slow ramp-up. Delays configurable with RUL-014, frost guard with RUL-015. | implemented |
+| RUL-014 | Window delays: *close after* (window open this long → valve closes, default 30 s) and *resume after* (all contacts closed this long → back to normal, default 10 s). The resume delay bridges switching from fully open to tilted, which passes through "closed" for a moment. Defaults defined on the house (options), each room may override them; an empty room field means the house value. Range 0–600 s each. Replaces the fixed 30 s / 0 s of RUL-010. | planned |
+| RUL-015 | Frost guard while a window is open: if the room falls below the frost protection setpoint (RUL-004, 7 °C), the room is heated towards it although the window is open; above 8 °C (1 K hysteresis, named constant) the valve closes again. Setpoint thermostats get 7 °C instead of 5 °C while the guard is active. Visible as reason parameter `frost_guard` on `window_open` and in the logbook. | planned |
 | RUL-011 | Away: setback, limited to max. 2 K in the heat-pump profile. | planned |
 | RUL-012 | Start-up delay after an HA restart until devices are available (`startup_hold`). | implemented |
 | RUL-013 | Sensor failure: if the room temperature sensor has not reported a valid value for 60 min (named constant; configurable later), the room's reason is `safety_sensor_stale`. A sensor that is unavailable at start-up gets the full 60 min grace period. From M4 the safe state is the minimum opening. | implemented |
