@@ -59,6 +59,22 @@ available (100 % minus share outside minus known shares), they are scaled down t
 the room sensor shows `scaled_down: true`. Values are provisional; learning (MDL-032) corrects
 them.
 
+## Internal heat sources
+
+Electrical devices turn almost all their power into heat in the room. A gaming PC with 300 W can
+cover a whole room's demand (observed in a basement room: demand 270 W, valve at 24 %, room
+above setpoint). Without knowing this, the feed-forward plans far too much and the integral
+corrects only after hours – and again in the other direction when the device is switched off.
+
+| ID | Requirement | Status |
+|---|---|---|
+| MDL-040 | Rooms may list heat sources: power sensors (W) of devices in the room, optional, changeable later via the room's gear icon. | planned |
+| MDL-041 | If the room has an HA area, power sensors in that area are pre-filled as suggestions; the user keeps only what really heats the room. Later: hint when a new power sensor appears in the area. | planned |
+| MDL-042 | Per heat source a factor 0–100 % (default 100 %) for devices that release only part of their power into the room (e.g. a vented dryer). | planned |
+| MDL-043 | The feed-forward uses `demand − heat from sources`, never below 0. When a source switches off, the feed-forward rises at once without waiting for the integral. | planned |
+| MDL-044 | Per room a sensor "Heat from devices" (W); the planned valve position shows how much of the demand the sources cover. | planned |
+| MDL-045 | Learning (LRN-001) accounts for known heat sources so they do not distort the learned heat loss. | planned |
+
 ## Derived quantities
 
 | ID | Quantity | Formula / derivation | Status |
