@@ -81,5 +81,5 @@ of EN ISO 13790 (165 kJ/(m²·K)).
 
 | ID | Approach | Status | Reason |
 |---|---|---|---|
-| CTL-090 | Pure on/off control | rejected | too aggressive, root of the original problem |
-| CTL-091 | Full model predictive control (MPC) | rejected (for now) | hard to explain, too much for the start; possible later as an option |
+| CTL-090 | Pure on/off control | rejected | Thermogeist aims for calm rooms and quiet valves: graded valve positions keep the temperature steady, on/off makes it swing |
+| CTL-091 | Full model predictive control (MPC) | rejected (for now) | Thermogeist aims for decisions users can follow; MPC is hard to explain. Possible later as an option |
