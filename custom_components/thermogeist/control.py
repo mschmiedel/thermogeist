@@ -220,6 +220,8 @@ class ControlManager:
             external_input=external,
         )
         self._resync_device_setpoint(thermostat, control, desired)
+        if target is not None and await self._async_ensure_heating(thermostat):
+            control.last_setpoint_c = None  # ACT-055: write the setpoint again after "off"
         if should_write_setpoint(
             desired,
             control.last_setpoint_c,
@@ -232,6 +234,17 @@ class ControlManager:
             control.setpoint_offset_k = 0.0 if target is None else desired - target
             control.last_write_urgent = code in URGENT_CODES
             await self._async_call("climate", "set_temperature", entity, temperature=desired)
+
+    async def _async_ensure_heating(self, thermostat: Thermostat) -> bool:
+        """ACT-055: a device switched off (Bosch Smart Home at 5 °C) is set back to heat."""
+        entity = thermostat.roles[Role.CLIMATE]
+        state = self._hass.states.get(entity)
+        if state is None or state.state != "off":
+            return False
+        if "heat" not in (state.attributes.get("hvac_modes") or []):
+            return False
+        await self._async_call("climate", "set_hvac_mode", entity, hvac_mode="heat")
+        return True
 
     def _resync_device_setpoint(
         self, thermostat: Thermostat, control: ThermostatControl, desired: float
@@ -340,6 +353,8 @@ class ControlManager:
         """OVR-004: the device display shows the real room target."""
         entity = thermostat.roles[Role.CLIMATE]
         desired = STOP_SETPOINT_C if target is None else target
+        if target is not None:
+            await self._async_ensure_heating(thermostat)
         if control.resync and not self._runtime.window_may_move_device(thermostat.room_id):
             control.resync = False  # the comparison below puts the value back
         current = self._climate_setpoint(entity)

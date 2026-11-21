@@ -58,6 +58,7 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 | ACT-052 | Setpoint strategy without external input: the device setpoint is the room target plus the measured difference between the device's own temperature and the room sensor (30-minute average), so the device aims at the right room temperature. Limited to 5–30 °C, rounded to 0.5 K. The device display then shows the corrected value. | implemented |
 | ACT-053 | Setpoint writes are bundled like valve writes: only changes of at least 0.5 K, at most every 10 minutes; window, stop and safety at once (window/stop: 5 °C). | implemented |
 | ACT-054 | Limits of the setpoint strategy are explicit: no minimum opening and no calm valve movement – the device's own controller decides. Shown on the thermostat (`strategy: setpoint`). | implemented |
+| ACT-055 | While the room should heat, a thermostat whose climate entity is in mode `off` is switched back to `heat` before its setpoint is written, and the setpoint is written again. Bosch Smart Home switches its room climate to `off` when it gets 5 °C (window, stop); a later setpoint alone does not switch it back. | implemented |
 
 ## On/off heaters
 

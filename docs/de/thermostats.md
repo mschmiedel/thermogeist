@@ -125,6 +125,12 @@ wieder hin. Wer in dieser Zeit am Rad dreht,
 wird ebenfalls ignoriert – später noch einmal drehen oder den Raum in Home Assistant einstellen.
 Das klappt nur, wenn der Fensterkontakt auch im Thermogeist-Raum ausgewählt ist.
 
+**Nach dem Fenster:** Sind alle Kontakte zu (standardmäßig 10 Sekunden), geht das Ventil sofort
+auf die Stellung, die jetzt nötig ist – ohne langsames Hochfahren, auch bei der Wärmepumpe.
+Thermostate, die über den Sollwert geregelt werden, bekommen bei offenem Fenster 5 °C; manche
+(Bosch Smart Home) schalten sich bei 5 °C selbst *aus*. Thermogeist schaltet sie wieder auf
+*Heizen* und schickt den Sollwert erneut.
+
 **Verstellt ein Thermostat sein Ventil immer wieder selbst**, schreibt Thermogeist bis zu dreimal
 pro Stunde neu, schaltet den Raum dann zurück auf Beobachten und zeigt einen Reparaturhinweis
 ([Häufige Fragen](faq/device_overrides_valve.md)).

@@ -1,4 +1,4 @@
-# SCN-CTL-010: Window: valve closes at once and resumes where it was
+# SCN-CTL-010: Window: valve closes at once and returns at once
 
 **Spec:** RUL-010
 **Test:** `tests/core/test_controller.py::test_window_closes_at_once_and_resumes_where_it_was`
@@ -12,7 +12,7 @@ Heat-pump profile, controller at 60 %.
 
 ## Expected result
 - 1: 0 % immediately (no rate limit), limit `window`.
-- 2: back to 60 % immediately, no slow ramp.
+- 2: back to the position computed now (60 %) immediately, no slow ramp.
 
 ## Why it matters
 Airing costs no comfort afterwards: the room does not wait hours for the valve to reopen.

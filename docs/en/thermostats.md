@@ -119,6 +119,12 @@ afterwards writes its own value again. A knob turned in that time is ignored too
 later or set the room in Home Assistant. This works only if the window contact is also chosen in
 the Thermogeist room.
 
+**After the window:** once all contacts are closed (10 seconds by default), the valve goes
+straight to the position needed now – no slow ramp-up, also with a heat pump. Thermostats
+controlled by setpoint get 5 °C while the window is open; some (Bosch Smart Home) switch
+themselves *off* at 5 °C. Thermogeist switches them back to *heat* and sends the setpoint
+again.
+
 **If a thermostat keeps changing its valve on its own**, Thermogeist writes again up to three
 times per hour, then switches the room back to observe and shows a repair issue
 ([FAQ](faq/device_overrides_valve.md)).

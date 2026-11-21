@@ -457,3 +457,29 @@ async def test_sonoff_rest_position_follows_relaxed_minimum(
     await minutes(4 * 60, 19.8)
     assert float(hass.states.get(PLANNED_VALVE).state) >= 40.0
     assert Calls.values(calls.number, closing, "value")[-1] == 60.0
+
+
+async def test_switched_off_thermostat_is_switched_back_to_heat(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-016"""
+    calls = await controlled_old_trv(hass, windows=True)
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    attributes = {"temperature": 22.5, "current_temperature": 22.0, "hvac_modes": ["heat", "off"]}
+    hass.states.async_set(OLD_CLIMATE, "heat", attributes)
+    await switch(hass, True)
+    await tick(hass, freezer, 91)
+
+    hass.states.async_set(WINDOW, "on", {"device_class": "window"})
+    await tick(hass, freezer, 31)
+    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 5.0
+    hass.states.async_set(OLD_CLIMATE, "off", {**attributes, "temperature": 5.0})
+    await tick(hass, freezer, 60)
+    assert modes == []  # no heating wanted while the window is open
+
+    written = len(calls.climate)
+    hass.states.async_set(WINDOW, "off", {"device_class": "window"})
+    await tick(hass, freezer, 11)
+
+    assert [c.data["hvac_mode"] for c in modes] == ["heat"]
+    assert Calls.values(calls.climate[written:], OLD_CLIMATE, "temperature")[-1] == 22.5

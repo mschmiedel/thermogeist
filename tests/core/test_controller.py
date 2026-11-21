@@ -181,3 +181,25 @@ def test_lasting_overshoot_lowers_the_correction() -> None:
         controller.step(inputs(target_c=21.5, room_c=19.5, feed_forward_pct=100.0), clock.now())
         clock.advance(timedelta(minutes=1))
     assert controller.state.integral_pct == pytest.approx(lowered)
+
+
+def test_window_open_from_the_start_returns_at_once() -> None:
+    """Scenario: SCN-CTL-020"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    # After a restart the controller starts from the reported valve: closed by the window.
+    controller.seed(0.0)
+    for _ in range(30):
+        window = controller.step(inputs(window_open=True), clock.now())
+        clock.advance(timedelta(minutes=1))
+    assert window.output_pct == 0.0
+    assert window.limits == (Limit.WINDOW,)
+
+    closed = controller.step(inputs(room_c=19.4, feed_forward_pct=60.0), clock.now())
+    assert closed.output_pct == 69.0
+    assert Limit.RATE_LIMIT not in closed.limits
+
+    clock.advance(timedelta(minutes=1))
+    later = controller.step(inputs(room_c=19.4, feed_forward_pct=90.0), clock.now())
+    assert later.output_pct == pytest.approx(69.0, abs=1)
+    assert Limit.RATE_LIMIT in later.limits
