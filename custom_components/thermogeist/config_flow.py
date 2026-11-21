@@ -436,6 +436,12 @@ class ThermostatSteps(ConfigSubentryFlow):
             )
             if (code := check_role(Role(role_key), facts)) is not None:
                 errors[role_key] = code
+        read = roles.get(Role.VALVE_READ.value)
+        profile_read = self._detected.get(Role.VALVE_READ.value)
+        if read is not None and read == roles.get(Role.VALVE_WRITE.value) and read != profile_read:
+            # ACT-036: the written value only echoes Thermogeist, it is no position - unless the
+            # profile knows the device keeps regulating it itself (Bosch pi_heating_demand).
+            errors[Role.VALVE_READ.value] = "valve_read_is_write"
         return errors
 
     def _finish_thermostat(self, roles: dict[str, str]) -> SubentryFlowResult:

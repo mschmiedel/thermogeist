@@ -243,3 +243,23 @@ def derived_valve_pct(
     if hvac_action in RESTING_ACTIONS and closing_value is not None:
         return 100.0 - closing_value if closing_inverted else closing_value
     return None
+
+
+def hardware_key(thermostats: Iterable[Thermostat]) -> str:
+    """CTL-045: identifies a room's valves; a change makes the learned correction meaningless.
+
+    Covers which devices are assigned and how they are wired (roles, strategy), not values
+    like the rated output that the controller handles itself.
+    """
+    parts = sorted(
+        "|".join(
+            [
+                t.device_id or "",
+                t.strategy.value,
+                str(t.valve_min_inverted),
+                *(f"{role.value}={entity}" for role, entity in sorted(t.roles.items())),
+            ]
+        )
+        for t in thermostats
+    )
+    return ";".join(parts)

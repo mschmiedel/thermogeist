@@ -31,6 +31,7 @@ from .core.actuator import (
     Thermostat,
     derived_valve_pct,
     derives_valve,
+    hardware_key,
 )
 from .core.controller import (
     ControllerInputs,
@@ -215,9 +216,14 @@ class HouseRuntime:
         }
         if saved_at := stored.get("saved_at"):
             saved = datetime.fromisoformat(saved_at)
+            hardware = stored.get("controller_hardware", {})
             for room_id, snapshot in stored.get("controller", {}).items():
-                if room_id in self.rooms:
-                    self.rooms[room_id].controller.restore(snapshot, saved, self._clock.now())
+                if room_id not in self.rooms:
+                    continue
+                if room_id in hardware and hardware[room_id] != self._hardware_key(room_id):
+                    # CTL-045: other valves; start fresh from the heat demand.
+                    continue
+                self.rooms[room_id].controller.restore(snapshot, saved, self._clock.now())
         for room_id, setpoint in stored.get("setpoints", {}).items():
             if room_id in self.rooms:
                 self.rooms[room_id].user_setpoint_c = float(setpoint)
@@ -777,6 +783,9 @@ class HouseRuntime:
     async def _save(self) -> None:
         await self._store.async_save(self._data())
 
+    def _hardware_key(self, room_id: str) -> str:
+        return hardware_key(self.thermostats[t] for t in self.rooms[room_id].thermostat_ids)
+
     @callback
     def _save_later(self) -> None:
         """CTL-040: the controller state changes every minute; write it at most that often."""
@@ -785,6 +794,9 @@ class HouseRuntime:
     def _data(self) -> dict[str, Any]:
         return {
             "controller": {rid: s.controller.snapshot() for rid, s in self.rooms.items() if s.plan},
+            "controller_hardware": {
+                rid: self._hardware_key(rid) for rid, s in self.rooms.items() if s.plan
+            },
             "saved_at": self._clock.now().isoformat(),
             "overrides": {key.value: value for key, value in self.overrides.items()},
             "room_overrides": {

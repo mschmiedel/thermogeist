@@ -45,6 +45,37 @@ async def test_integral_is_restored_after_restart(
     assert hass.states.get(PLANNED).attributes["integral"] == -4.0
 
 
+async def test_changed_valves_start_fresh(
+    hass: HomeAssistant, hass_storage: dict[str, Any], outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-CTL-017"""
+    hass.states.async_set(FLOW_SENSOR, "40.0", {"device_class": "temperature"})
+    entry = await setup_house(
+        hass, {**HOUSE_WITH_LOAD, "flow_temperature_entity": FLOW_SENSOR}, [LIVING_ROOM]
+    )
+    room_id = next(iter(entry.subentries))
+    device_id = z2m_device(hass, "Old TRV", "Acme", "X1", {"climate": ("climate", "heat")})
+    hass_storage[f"{DOMAIN}.{entry.entry_id}"] = {
+        "version": 1,
+        "key": f"{DOMAIN}.{entry.entry_id}",
+        "data": {
+            "saved_at": dt_util.utcnow().isoformat(),
+            "controller": {
+                room_id: {
+                    "integral_pct": -4.0,
+                    "integral_has_start_bias": False,
+                    "min_opening_relaxed": False,
+                }
+            },
+            "controller_hardware": {room_id: "another-device|automatic|False|climate=x"},
+        },
+    }
+
+    await assign(hass, entry.entry_id, room_id, device_id, 1500.0)  # reloads the house
+
+    assert hass.states.get(PLANNED).attributes["integral"] != -4.0
+
+
 async def test_thermostat_subentries_move_into_their_room(
     hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
 ) -> None:

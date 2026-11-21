@@ -422,7 +422,8 @@
         "climate_required": "The climate entity is required.",
         "role_needs_percent": "This entity does not report a percentage. Choose the valve position entity (unit %).",
         "role_needs_temperature": "This entity is not a temperature input.",
-        "valve_strategy_needs_valve_write": "The strategy “by valve position” needs the entity “Valve position (set)”. Choose it or pick another strategy."
+        "valve_strategy_needs_valve_write": "The strategy “by valve position” needs the entity “Valve position (set)”. Choose it or pick another strategy.",
+        "valve_read_is_write": "This is the entity Thermogeist writes to; it only shows what Thermogeist set, not where the valve is. Leave the field empty if the thermostat does not report its valve position."
       },
       "abort": {
         "reconfigure_successful": "Done."

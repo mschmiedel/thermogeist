@@ -33,7 +33,7 @@ To change a thermostat later: gear icon (⚙) next to its room → **Edit thermo
 | Role | Meaning |
 |---|---|
 | Climate entity | Required. The thermostat's own climate entity. |
-| Valve position (read) | Only if the thermostat reports how far its valve really is open. Leave it empty for the Sonoff thermostats – Thermogeist works their position out itself (see below). Never choose the entity from *Valve position (set)*: it only echoes what Thermogeist wrote. |
+| Valve position (read) | Only if the thermostat reports how far its valve really is open. Leave it empty for the Sonoff thermostats – Thermogeist works their position out itself (see below). Never choose the entity from *Valve position (set)*: it only echoes what Thermogeist wrote (the dialog refuses it; the Bosch BTH-RA is the exception the profile fills in itself). |
 | Valve position (set) | Lets Thermogeist set the valve directly. Without it, the thermostat is controlled by its setpoint. |
 | Minimum opening on the device | A fallback stored on the thermostat; it still works if Home Assistant is down. |
 | External temperature input | Lets the thermostat use your room sensor instead of its own. |
@@ -104,6 +104,8 @@ What happens when you switch it on:
 What happens when you switch it off: all remembered device settings and the valve position are
 put back; setpoint thermostats get the plain room setpoint. The thermostat regulates on its own
 again.
+
+**New or replaced thermostat:** when the thermostats of a room change – added, replaced, removed or edited – the room's control starts fresh from the heat demand. What it learned belongs to the old valves. This happens on its own.
 
 **Turning the knob** on a thermostat controlled **by valve** sets the room setpoint (after
 20 seconds without further turning). You see it in the logbook. On a thermostat controlled **by

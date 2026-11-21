@@ -469,3 +469,18 @@ async def test_stale_entities_are_removed(
 
     after = {e.entity_id for e in er.async_entries_for_config_entry(registry, entry.entry_id)}
     assert after == before - {stale.entity_id}
+
+
+async def test_written_valve_is_no_read_position(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-019"""
+    entry, room_id = await house_with_room(hass)
+    result = await start_thermostat(hass, entry.entry_id, room_id, sonoff(hass), 2000.0)
+    answers = suggested(result)
+    answers["valve_read"] = answers["valve_write"]
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], answers)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"valve_read": "valve_read_is_write"}

@@ -34,7 +34,7 @@ Um ein Thermostat später zu ändern: Zahnrad (⚙) neben seinem Raum → **Ther
 | Rolle | Bedeutung |
 |---|---|
 | Klima-Entität | Pflicht. Die Klima-Entität des Thermostats. |
-| Ventilstellung (lesen) | Nur, wenn das Thermostat meldet, wie weit sein Ventil wirklich offen ist. Bei den Sonoff-Thermostaten leer lassen – Thermogeist ermittelt die Stellung selbst (siehe unten). Nie die Entität aus *Ventilstellung (setzen)* wählen: Sie zeigt nur, was Thermogeist geschrieben hat. |
+| Ventilstellung (lesen) | Nur, wenn das Thermostat meldet, wie weit sein Ventil wirklich offen ist. Bei den Sonoff-Thermostaten leer lassen – Thermogeist ermittelt die Stellung selbst (siehe unten). Nie die Entität aus *Ventilstellung (setzen)* wählen: Sie zeigt nur, was Thermogeist geschrieben hat (der Dialog lehnt sie ab; das Bosch BTH-RA ist die Ausnahme, die das Profil selbst einträgt). |
 | Ventilstellung (setzen) | Damit kann Thermogeist das Ventil direkt stellen. Ohne sie wird über den Sollwert geregelt. |
 | Mindestöffnung im Gerät | Eine im Thermostat gespeicherte Rückfallebene; sie wirkt auch, wenn Home Assistant ausfällt. |
 | Eingang externe Temperatur | Damit nutzt das Thermostat deinen Raumsensor statt seines eigenen. |
@@ -108,6 +108,8 @@ Was beim Einschalten passiert:
 Was beim Ausschalten passiert: Alle gemerkten Geräteeinstellungen und die Ventilstellung werden
 zurückgesetzt; Sollwert-Thermostate bekommen den einfachen Raum-Sollwert. Das Thermostat regelt
 wieder selbst.
+
+**Neues oder ersetztes Thermostat:** Ändern sich die Thermostate eines Raums – hinzugefügt, ersetzt, entfernt oder bearbeitet –, startet die Regelung des Raums neu aus dem Wärmebedarf. Was sie gelernt hat, gehört zu den alten Ventilen. Das passiert von selbst.
 
 **Am Rad drehen** an einem Thermostat, das **über das Ventil** geregelt wird, setzt den
 Raum-Sollwert (nach 20 Sekunden ohne weiteres Drehen). Du siehst das im Logbuch. An einem

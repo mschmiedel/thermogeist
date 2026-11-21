@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MIT
 import json
+from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
 
@@ -8,10 +9,12 @@ from custom_components.thermogeist.core.actuator import (
     EntityFacts,
     Kind,
     Role,
+    Thermostat,
     check_role,
     derived_valve_pct,
     derives_valve,
     find_profile,
+    hardware_key,
     kind_for,
     parse_profile,
     resolve_roles,
@@ -120,3 +123,17 @@ def test_valve_position_is_derived_from_the_device_decision() -> None:
     assert derives_valve(sonoff)
     assert not derives_valve({**sonoff, Role.VALVE_READ: "r"})
     assert not derives_valve({Role.CLIMATE: "c", Role.VALVE_WRITE: "w"})
+
+
+def test_hardware_key_follows_devices_and_roles() -> None:
+    """Scenario: SCN-ACT-008"""
+    roles = {Role.CLIMATE: "climate.a", Role.VALVE_WRITE: "number.a"}
+    first = Thermostat("room", "A", roles, device_id="dev-a", rated_output_w=1000.0)
+    second = Thermostat("room", "B", {Role.CLIMATE: "climate.b"}, device_id="dev-b")
+    key = hardware_key([first, second])
+
+    assert hardware_key([second, first]) == key
+    assert hardware_key([replace(first, rated_output_w=2000.0), second]) == key
+    with_read = replace(first, roles={**roles, Role.VALVE_READ: "number.a"})
+    assert hardware_key([with_read, second]) != key
+    assert hardware_key([replace(first, device_id="dev-c"), second]) != key

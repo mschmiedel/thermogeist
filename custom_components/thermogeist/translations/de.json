@@ -422,7 +422,8 @@
         "climate_required": "Die Klima-Entität wird benötigt.",
         "role_needs_percent": "Diese Entität meldet keinen Prozentwert. Wähle die Ventilstellung (Einheit %).",
         "role_needs_temperature": "Diese Entität ist kein Temperatureingang.",
-        "valve_strategy_needs_valve_write": "Die Strategie „Über Ventilstellung“ braucht die Entität „Ventilstellung (setzen)“. Wähle sie oder eine andere Strategie."
+        "valve_strategy_needs_valve_write": "Die Strategie „Über Ventilstellung“ braucht die Entität „Ventilstellung (setzen)“. Wähle sie oder eine andere Strategie.",
+        "valve_read_is_write": "Das ist die Entität, auf die Thermogeist schreibt; sie zeigt nur, was Thermogeist gesetzt hat, nicht, wo das Ventil steht. Lass das Feld leer, wenn das Thermostat seine Ventilstellung nicht meldet."
       },
       "abort": {
         "reconfigure_successful": "Erledigt."

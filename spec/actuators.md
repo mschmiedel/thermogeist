@@ -32,6 +32,7 @@ applied.
 | ACT-032 | Roles are resolved to entities of that device: the `climate` role by domain, the others by the Zigbee2MQTT expose name contained in the entity's unique id (`<ieee>_<expose>_zigbee2mqtt`). | implemented |
 | ACT-033 | Every resolved role is shown pre-filled in the dialog and can be changed or cleared by the user. Any entity of a fitting domain may be chosen, also from another device (some integrations, e.g. Bosch Smart Home, put climate and valve entities on separate devices). The chosen profile is shown on the thermostat. | implemented |
 | ACT-035 | Each role is checked for plausibility when saving: valve roles need a percentage (unit %), the external temperature a temperature. Implausible choices are rejected at the field with an explanation. | implemented |
+| ACT-036 | The entity chosen for `valve_write` cannot also be chosen for `valve_read`: it usually only echoes what Thermogeist wrote and is no valve position. Exception: the device profile maps both roles to the same entity because the device keeps regulating that value itself (Bosch BTH-RA `pi_heating_demand`). The dialog rejects it at the field with an explanation. | implemented |
 | ACT-034 | Later: read the full expose list from Zigbee2MQTT (`zigbee2mqtt/bridge/devices`) to suggest profiles for unknown devices. Requires the MQTT integration. | planned |
 
 Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
