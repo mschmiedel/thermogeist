@@ -10,7 +10,7 @@ As SCN-THERMO-001 after assignment; the central mode `auto` is restored on start
 1. Reload the integration (like a Home Assistant restart).
 
 ## Expected result
-- The planned position is ≈ 68 % again, not stuck at the safe 40 %.
+- The planned position is ≈ 72 % again, not stuck at the safe 40 %.
 - The active reason never shows `safety_sensor_stale` during the restart (no false entry in the logbook).
 
 ## Why it matters

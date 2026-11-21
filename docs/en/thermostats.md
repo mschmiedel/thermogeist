@@ -145,6 +145,11 @@ therefore accepts half a degree too much rather than closing a valve. Only when 
 noticeably too warm does comfort win. A room that often shows `min_opening_relaxed` has a
 radiator that is too big for it at the minimum opening.
 
+Sonoff thermostats rest on their stored minimum opening (*closing degree*) while the room is
+warmer than its setpoint. In this stage Thermogeist lowers that stored value along with the
+planned position, and puts it back to the minimum opening once the room is inside the dead band
+again. Sun or a gaming PC therefore no longer keep the valve at the minimum.
+
 With a boiler the dead band is 0.2 K and the minimum opening 0 %, so this stage practically never
 applies.
 

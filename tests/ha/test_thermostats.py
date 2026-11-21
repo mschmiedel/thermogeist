@@ -16,7 +16,7 @@ from pytest_homeassistant_custom_component.common import (
     mock_restore_cache,
 )
 
-from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, setup_house
+from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, setup_house
 
 FLOW_SENSOR = "sensor.flow_temperature"
 RETURN_SENSOR = "sensor.return_temperature"
@@ -153,9 +153,10 @@ async def test_sonoff_is_recognised_and_planned(
     planned = hass.states.get(PLANNED)
     assert planned.attributes["mode"] == "observe"
     assert planned.attributes["strategies"] == ["valve"]
-    assert planned.attributes["feed_forward"] == pytest.approx(60.6, abs=0.5)
+    # CTL-030: the output is computed at the 20 °C target, not at the 19.5 °C room.
+    assert planned.attributes["feed_forward"] == pytest.approx(64.5, abs=0.5)
     assert planned.attributes["feed_forward_missing"] == []
-    assert float(planned.state) == pytest.approx(68, abs=1)
+    assert float(planned.state) == pytest.approx(72, abs=1)
     assert hass.states.get("sensor.living_room_kind_living_trv").state == "valve"
 
 
@@ -301,7 +302,7 @@ async def test_plan_is_correct_right_after_restart(
 
     planned = hass.states.get(PLANNED)
     assert planned.attributes["limits"] != ["safety"]
-    assert float(planned.state) == pytest.approx(68, abs=1)
+    assert float(planned.state) == pytest.approx(72, abs=1)
 
 
 async def test_roles_may_come_from_another_device(
@@ -484,3 +485,19 @@ async def test_written_valve_is_no_read_position(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"valve_read": "valve_read_is_write"}
+
+
+async def test_feed_forward_ignores_a_warm_room(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CTL-018"""
+    entry, room_id = await house_with_room(hass)
+    await assign(hass, entry.entry_id, room_id, sonoff(hass), 2000.0)
+    before = hass.states.get(PLANNED).attributes["feed_forward"]
+
+    report_room_temperature(hass, 22.0)
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PLANNED).attributes["feed_forward"] == pytest.approx(before, abs=0.1)

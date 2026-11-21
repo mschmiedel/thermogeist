@@ -193,7 +193,7 @@ class ControlManager:
                 continue
             if not await self._async_valve(room_id, tid, thermostat, state.plan):
                 return
-            await self._async_min_opening(tid, thermostat)
+            await self._async_min_opening(tid, thermostat, state.plan)
             await self._async_external_temperature(thermostat, control, state)
             await self._async_setpoint(thermostat, control, target)
         self._runtime.notify()
@@ -296,11 +296,17 @@ class ControlManager:
             return False
         return now - control.last_sent_at >= thermostat.valve_refresh
 
-    async def _async_min_opening(self, tid: str, thermostat: Thermostat) -> None:
+    async def _async_min_opening(
+        self, tid: str, thermostat: Thermostat, plan: ControllerResult
+    ) -> None:
+        """ACT-102: the device's own minimum; it follows a relaxed minimum (CTL-037)."""
         entity = thermostat.roles.get(Role.VALVE_MIN)
         if entity is None:
             return
         minimum = self._runtime.controller_settings().min_opening_pct
+        if Limit.MIN_OPENING_RELAXED in plan.limits:
+            # The device rests on this position while the room is above its setpoint.
+            minimum = min(minimum, float(round(plan.output_pct)))
         desired = 100.0 - minimum if thermostat.valve_min_inverted else minimum
         if self._number(entity) != desired:
             await self._async_write_number(tid, entity, desired)

@@ -19,10 +19,14 @@ from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, set
 from .test_thermostats import (
     FLOW_SENSOR,
     assign,
+    sonoff,
     start_thermostat,
     suggested,
     thermostat_ids,
     z2m_device,
+)
+from .test_thermostats import (
+    PLANNED as PLANNED_VALVE,
 )
 
 SWITCH = "switch.living_room_control"
@@ -416,3 +420,37 @@ async def test_restart_starts_from_the_reported_valve(
 
     planned = hass.states.get("sensor.living_room_planned_valve_position")
     assert float(planned.state) == pytest.approx(39, abs=1)
+
+
+async def test_sonoff_rest_position_follows_relaxed_minimum(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-015"""
+    hass.states.async_set(FLOW_SENSOR, "40.0", {"device_class": "temperature"})
+    entry = await setup_house(
+        hass, {**HOUSE_WITH_LOAD, "flow_temperature_entity": FLOW_SENSOR}, [LIVING_ROOM]
+    )
+    room_id = next(iter(entry.subentries))
+    await assign(hass, entry.entry_id, room_id, sonoff(hass), 2000.0)
+    calls = Calls(hass)
+    opening = "number.living_trv_valve_opening_degree"
+    closing = "number.living_trv_valve_closing_degree"
+
+    async def minutes(count: int, room_c: float) -> None:
+        for _ in range(count):
+            report_room_temperature(hass, room_c)
+            await tick(hass, freezer, 60)
+            for entity in (opening, closing):  # the device keeps what it was told
+                if written := Calls.values(calls.number, entity, "value"):
+                    hass.states.async_set(entity, str(written[-1]), {"unit_of_measurement": "%"})
+
+    await switch(hass, True)
+    await minutes(2, 19.5)
+    assert Calls.values(calls.number, closing, "value")[-1] == 60.0
+
+    await minutes(8 * 60, 23.0)
+    assert "min_opening_relaxed" in hass.states.get(PLANNED_VALVE).attributes["limits"]
+    assert Calls.values(calls.number, closing, "value")[-1] > 60.0
+
+    await minutes(30, 19.8)
+    assert Calls.values(calls.number, closing, "value")[-1] == 60.0

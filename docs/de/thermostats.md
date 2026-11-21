@@ -151,6 +151,12 @@ Deshalb nimmt Thermogeist lieber ein halbes Grad zu viel in Kauf, als ein Ventil
 Erst wenn es spürbar zu warm wird, hat die Behaglichkeit Vorrang. Zeigt ein Raum oft
 `min_opening_relaxed`, ist sein Heizkörper bei der Mindestöffnung zu groß für ihn.
 
+Sonoff-Thermostate ruhen auf ihrer gespeicherten Mindestöffnung (*Schließstellung*), solange
+der Raum wärmer als sein Sollwert ist. In dieser Stufe senkt Thermogeist diesen gespeicherten
+Wert mit der geplanten Stellung ab und setzt ihn auf die Mindestöffnung zurück, sobald der Raum
+wieder im Totband ist. Sonne oder ein Gaming-PC halten das Ventil so nicht mehr auf der
+Mindestöffnung.
+
 Beim Kessel ist das Totband 0,2 K und die Mindestöffnung 0 %; diese Stufe greift dort praktisch
 nie.
 

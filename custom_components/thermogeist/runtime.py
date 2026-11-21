@@ -765,7 +765,9 @@ class HouseRuntime:
                     net_demand_w(state.demand_w, state.heat_from_sources_w or 0.0),
                     state.rated_output_w,
                     flow,
-                    state.current_temperature_c,
+                    # CTL-030: the position that holds the room at its target, so the output
+                    # is computed at the target, not at a room warmed by sun or devices.
+                    state.decision.target_setpoint_c or state.current_temperature_c,
                     spread,
                 ),
                 time_constant_h=time_constant_h(state.room.floor_area_m2, state.heat_loss_w_per_k),

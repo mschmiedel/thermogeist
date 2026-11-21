@@ -96,7 +96,7 @@ residual heat) are built by the user with template entities instead of extra pro
 |---|---|---|
 | ACT-100 | Setpoint on the TRV = room setpoint (display stays honest). | implemented |
 | ACT-101 | `valve_opening_degree` = position while heating (from the controller). | implemented |
-| ACT-102 | `valve_closing_degree` = 100 − minimum opening (fallback, works without HA). | implemented |
+| ACT-102 | `valve_closing_degree` = 100 − minimum opening (fallback, works without HA). While the minimum is relaxed in a room that is too warm (CTL-037), it follows the planned position, because the device rests on it as long as the room is above its setpoint; once the room is back inside the dead band it returns to the minimum opening. | implemented |
 | ACT-103 | `external_temperature_input` + `temperature_sensor_select: remote_temperature`, fallback via `remote_source_offline`. | implemented |
 | ACT-104 | `smart_temperature_control` off, built-in schedule off, built-in window detection off. | implemented |
 | ACT-105 | Firmware ≥ 1.1.4 for valve degrees, ≥ 1.3.0 for `temperature_accuracy`. Older firmware is detected and reported. | planned |

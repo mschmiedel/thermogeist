@@ -12,7 +12,7 @@ House 6.5 kW at −10.5 °C, 160 m², flow sensor 40 °C, outdoor 5 °C. Room "L
 
 ## Expected result
 - Profile "Sonoff TRVZB"; climate, valve opening and closing degree are pre-filled.
-- Planned valve position ≈ 68 % (feed-forward ≈ 60.6 % + proportional 7.5 %), mode observe, strategy valve.
+- Planned valve position ≈ 72 % (feed-forward ≈ 64.5 % at the 20 °C target + proportional 7.5 %), mode observe, strategy valve.
 - Kind sensor shows valve-based.
 
 ## Why it matters
