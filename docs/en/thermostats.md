@@ -146,9 +146,14 @@ noticeably too warm does comfort win. A room that often shows `min_opening_relax
 radiator that is too big for it at the minimum opening.
 
 Sonoff thermostats rest on their stored minimum opening (*closing degree*) while the room is
-warmer than its setpoint. In this stage Thermogeist lowers that stored value along with the
-planned position, and puts it back to the minimum opening once the room is inside the dead band
-again. Sun or a gaming PC therefore no longer keep the valve at the minimum.
+warmer than its setpoint. Whenever the planned position is below the minimum opening,
+Thermogeist lowers that stored value along with it, and puts it back to the minimum opening once
+the plan is there again. Sun or a gaming PC therefore no longer keep the valve at the minimum.
+
+**A room that stays too warm teaches the control.** While a room is above its target, the slow
+correction keeps lowering the planned position, even when the room is far above it. A lasting
+overshoot means the calculation asks for too much – because of sun, devices or a heat demand
+that is set too high – and the room should not have to swing back first before that is learned.
 
 With a boiler the dead band is 0.2 K and the minimum opening 0 %, so this stage practically never
 applies.

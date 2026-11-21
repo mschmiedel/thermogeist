@@ -452,5 +452,8 @@ async def test_sonoff_rest_position_follows_relaxed_minimum(
     assert "min_opening_relaxed" in hass.states.get(PLANNED_VALVE).attributes["limits"]
     assert Calls.values(calls.number, closing, "value")[-1] > 60.0
 
-    await minutes(30, 19.8)
+    # Below the target the plan climbs back, rate-limited; the closing degree follows it and
+    # is at the minimum again once the plan has reached it.
+    await minutes(4 * 60, 19.8)
+    assert float(hass.states.get(PLANNED_VALVE).state) >= 40.0
     assert Calls.values(calls.number, closing, "value")[-1] == 60.0

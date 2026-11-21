@@ -165,3 +165,19 @@ def test_state_survives_a_restart_but_not_a_long_outage() -> None:
     stale = RoomController()
     assert not stale.restore(snapshot, saved, saved + timedelta(hours=25))
     assert stale.state.integral_pct is None
+
+
+def test_lasting_overshoot_lowers_the_correction() -> None:
+    """Scenario: SCN-CTL-019"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    for _ in range(121):
+        controller.step(inputs(target_c=21.5, room_c=22.8, feed_forward_pct=100.0), clock.now())
+        clock.advance(timedelta(minutes=1))
+    lowered = controller.state.integral_pct
+    assert lowered is not None and lowered < -1.0
+
+    for _ in range(120):
+        controller.step(inputs(target_c=21.5, room_c=19.5, feed_forward_pct=100.0), clock.now())
+        clock.advance(timedelta(minutes=1))
+    assert controller.state.integral_pct == pytest.approx(lowered)

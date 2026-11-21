@@ -152,10 +152,16 @@ Erst wenn es spürbar zu warm wird, hat die Behaglichkeit Vorrang. Zeigt ein Rau
 `min_opening_relaxed`, ist sein Heizkörper bei der Mindestöffnung zu groß für ihn.
 
 Sonoff-Thermostate ruhen auf ihrer gespeicherten Mindestöffnung (*Schließstellung*), solange
-der Raum wärmer als sein Sollwert ist. In dieser Stufe senkt Thermogeist diesen gespeicherten
-Wert mit der geplanten Stellung ab und setzt ihn auf die Mindestöffnung zurück, sobald der Raum
-wieder im Totband ist. Sonne oder ein Gaming-PC halten das Ventil so nicht mehr auf der
-Mindestöffnung.
+der Raum wärmer als sein Sollwert ist. Liegt die geplante Stellung unter der Mindestöffnung,
+senkt Thermogeist diesen gespeicherten Wert mit ab und setzt ihn auf die Mindestöffnung zurück,
+sobald die Planung wieder dort ist. Sonne oder ein Gaming-PC halten das Ventil so nicht mehr auf
+der Mindestöffnung.
+
+**Ein Raum, der zu warm bleibt, lernt dazu.** Solange ein Raum über seinem Ziel liegt, senkt die
+langsame Korrektur die geplante Stellung weiter, auch wenn er weit darüber liegt. Bleibt er
+dauerhaft zu warm, verlangt die Rechnung zu viel – wegen Sonne, Geräten oder einem zu hoch
+angesetzten Wärmebedarf –, und der Raum soll nicht erst zurückschwingen müssen, bevor das gelernt
+wird.
 
 Beim Kessel ist das Totband 0,2 K und die Mindestöffnung 0 %; diese Stufe greift dort praktisch
 nie.

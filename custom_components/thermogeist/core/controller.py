@@ -25,8 +25,10 @@ TI_MIN_H = 2.0
 TI_MAX_H = 24.0
 TI_DEFAULT_H = 8.0
 INTEGRAL_START_WITHOUT_FEED_FORWARD_PCT = 30.0
-# CTL-032: with a feed-forward, integrate only near the target; large errors are the
+# CTL-032: with a feed-forward, integrate upwards only near the target; large errors are the
 # proportional part's job. Without a feed-forward the integral has to do the whole work.
+# Downwards (room too warm) it always integrates: a lasting overshoot means the feed-forward
+# asks for too much (sun, devices, a model that overestimates the demand).
 INTEGRAL_BAND_K = 1.0
 # CTL-033: the reported position only changes by at least this much, so rounding never makes
 # the valve twitch back and forth (battery, noise).
@@ -229,7 +231,7 @@ class RoomController:
         saturated_low = raw <= floor and raw_error < 0
         if saturated_high or saturated_low:
             limits.append(Limit.SATURATED)
-        elif inputs.feed_forward_pct is None or abs(raw_error) <= INTEGRAL_BAND_K:
+        elif inputs.feed_forward_pct is None or raw_error <= INTEGRAL_BAND_K:
             # The dead band only calms the proportional part; the integral still sees the true
             # error, so a lasting overshoot is removed slowly while short peaks barely matter.
             step = KP_PCT_PER_K * raw_error * elapsed_h / integral_time_h(inputs.time_constant_h)

@@ -299,14 +299,15 @@ class ControlManager:
     async def _async_min_opening(
         self, tid: str, thermostat: Thermostat, plan: ControllerResult
     ) -> None:
-        """ACT-102: the device's own minimum; it follows a relaxed minimum (CTL-037)."""
+        """ACT-102: the device's own minimum; it follows a plan below the minimum opening."""
         entity = thermostat.roles.get(Role.VALVE_MIN)
         if entity is None:
             return
-        minimum = self._runtime.controller_settings().min_opening_pct
-        if Limit.MIN_OPENING_RELAXED in plan.limits:
-            # The device rests on this position while the room is above its setpoint.
-            minimum = min(minimum, float(round(plan.output_pct)))
+        # The device rests on this position while the room is above its setpoint; a plan below
+        # the minimum (too warm, window, stop) must reach the valve in that state too.
+        minimum = min(
+            self._runtime.controller_settings().min_opening_pct, float(round(plan.output_pct))
+        )
         desired = 100.0 - minimum if thermostat.valve_min_inverted else minimum
         if self._number(entity) != desired:
             await self._async_write_number(tid, entity, desired)
