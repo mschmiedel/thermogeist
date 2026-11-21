@@ -53,6 +53,10 @@ WINDOW_OPEN_AFTER = timedelta(seconds=30)
 # open to tilted passes through "closed" for a moment.
 WINDOW_RESUME_AFTER = timedelta(seconds=10)
 WINDOW_DELAY_MAX = timedelta(seconds=600)
+# OVR-005: a device that has its own window function changes its setpoint when the window opens
+# and puts it back right after closing (Bosch: within a second). Two minutes cover that and the
+# 20 s debounce (OVR-002) with room to spare; a knob turned later counts again.
+WINDOW_DEVICE_GRACE = timedelta(minutes=2)
 # RUL-015: the frost guard ends 1 K above the frost setpoint, so it does not toggle every minute.
 FROST_GUARD_HYSTERESIS_K = 1.0
 
@@ -158,3 +162,16 @@ def frost_guard_active(inputs: RoomInputs) -> bool:
 def is_closed_for_window(decision: Decision) -> bool:
     """The valve stays closed: window open and no frost guard."""
     return decision.code is ReasonCode.WINDOW_OPEN and "frost_guard" not in decision.params
+
+
+def window_may_move_device(
+    window_open_since: datetime | None, window_closed_since: datetime | None, now: datetime
+) -> bool:
+    """OVR-005: a window is open, or was closed only moments ago.
+
+    In this time a changed device setpoint is likely the device's own window function, not a
+    person at the knob.
+    """
+    if window_open_since is not None:
+        return True
+    return window_closed_since is not None and now - window_closed_since < WINDOW_DEVICE_GRACE

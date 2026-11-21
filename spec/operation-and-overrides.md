@@ -8,6 +8,8 @@
 | OVR-002 | Debounce: the final value counts only after 20 s without further change. | implemented |
 | OVR-003 | The value becomes the new room setpoint as an override, with reason code and visible remaining time. | planned |
 | OVR-004 | The device display shows the real room setpoint. Exception: a setpoint thermostat without external temperature input shows the corrected setpoint (ACT-052); turning its knob changes the room setpoint by the same difference. | implemented |
+| OVR-005 | While a window contact of the room is open, and for 2 minutes after all are closed again (`WINDOW_DEVICE_GRACE`), a changed device setpoint is not adopted: it is most likely the device's own window function (e.g. Bosch Room Climate Control lowers to 8 °C and restores its value on closing), which Thermogeist cannot tell apart from a turned knob. Afterwards Thermogeist writes its own value again if the device still shows something else. The ignored change appears only in the debug log. Rooms without window contacts in Thermogeist are not covered. | implemented |
+| OVR-006 | The user docs state the limits of the setpoint strategy: Thermogeist only sees the device setpoint, not who changed it (a person at the knob, the device's schedule, window or frost function), and the display may show a corrected value (ACT-052). Uneven behaviour is therefore always possible; valve control is preferred where the device offers it. | implemented |
 
 ## Override duration
 

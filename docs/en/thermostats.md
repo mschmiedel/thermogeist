@@ -72,6 +72,14 @@ stay within 5–30 °C in 0.5 K steps.
 Limits of *by setpoint*: no minimum opening and no calm valve movement – the thermostat's own
 controller decides how far it opens.
 
+> **Setpoint control is supported, but it can behave unevenly.** Thermogeist only sees the
+> setpoint on the thermostat, not who changed it: a person at the knob, the thermostat's own
+> schedule, its window function or its frost protection all look the same. Without an external
+> temperature input the display also shows a corrected value instead of your room setpoint.
+> Thermogeist handles the known cases (see *Window function of the thermostat* below), but odd
+> moments remain possible. If your thermostat offers a valve position, control by valve is the
+> calmer choice. Switch off the thermostat's own schedule and window detection where you can.
+
 ## Control
 
 Each room has a switch **Control**. Off (default): observe only. On: Thermogeist writes to the
@@ -95,6 +103,14 @@ again.
 **Turning the knob** on a controlled thermostat sets the room setpoint (after 20 seconds without
 further turning). You see it in the logbook. With a corrected setpoint the difference counts:
 turning from 22.5 to 23.5 °C makes the room setpoint one degree higher.
+
+**Window function of the thermostat:** some thermostats lower their setpoint themselves when a
+window opens (Bosch Room Climate Control, for example, to 8 °C) and put it back on closing. That
+must not become your room setpoint. So while a window contact of the room is open, and for
+2 minutes after closing, Thermogeist ignores setpoint changes on the thermostat and afterwards
+writes its own value again. A knob turned in that time is ignored too – turn it again later or
+set the room in Home Assistant. This works only if the window contact is also chosen in the
+Thermogeist room.
 
 **If a thermostat keeps changing its valve on its own**, Thermogeist writes again up to three
 times per hour, then switches the room back to observe and shows a repair issue

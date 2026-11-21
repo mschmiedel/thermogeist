@@ -8,7 +8,7 @@ As SCN-CONTROL-010 with a window contact; the thermostat shows 22.5 °C.
 
 ## Steps
 1. Open the window for 31 s, then close it.
-2. Turn the knob from 22.5 to 23.5 °C and wait 21 s.
+2. More than 2 minutes later (OVR-005), turn the knob from 22.5 to 23.5 °C and wait 21 s.
 
 ## Expected result
 - Window open: 5 °C at once. Closed: 22.5 °C at once.

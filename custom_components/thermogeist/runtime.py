@@ -38,6 +38,7 @@ from .core.decisions import (
     RoomInputs,
     decide_room,
     is_closed_for_window,
+    window_may_move_device,
 )
 from .core.estimation import ShareResult, floor_area_not_in_rooms_m2, room_shares
 from .core.heat import (
@@ -625,6 +626,13 @@ class HouseRuntime:
             if entity and (value := numeric_state(self._hass, entity)) is not None:
                 values.append(value)
         return sum(values) / len(values) if values else None
+
+    def window_may_move_device(self, room_id: str) -> bool:
+        """OVR-005: setpoint changes on the device now are likely its own window function."""
+        state = self.rooms[room_id]
+        return window_may_move_device(
+            self._window_open_since(state), self._window_closed_since(state), self.now()
+        )
 
     def _window_closed_since(self, state: RoomState) -> datetime | None:
         """Since when all contacts are closed; None while one is open or without contacts."""
