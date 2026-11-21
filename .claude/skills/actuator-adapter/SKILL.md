@@ -9,8 +9,7 @@ description: Add or change support for a thermostat/valve device (e.g. Sonoff TR
    notes). Record facts in `spec/actuators.md` under the device, with the source. Mark anything
    unverified as open in `spec/open-questions.md` (device checklist).
 2. **Map capabilities.** Fill the capability model (`valve_write`, `valve_read`,
-   `valve_min_on_device`, `external_temperature`, `calibration_trigger`, `child_lock`,
-   `setpoint_source`). Choose the strategy (direct valve / setpoint modulation /
+   `valve_min_on_device`, `external_temperature`, `calibration_trigger`, `child_lock`). Choose the strategy (direct valve / setpoint modulation /
    time-proportional) from the capabilities, never from the device name.
 3. **Preconditions and restore.** If an action needs another setting changed first (e.g. child
    lock off before calibration), declare it as a precondition and restore the original state

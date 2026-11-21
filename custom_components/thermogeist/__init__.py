@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_THERMOSTATS, DOMAIN, MANUFACTURER, SUBENTRY_ROOM, SUBENTRY_THERMOSTAT
+from .const import DOMAIN, MANUFACTURER, SUBENTRY_ROOM, SUBENTRY_THERMOSTAT
 from .device_profiles import async_get_profiles
 from .house_config import (
     house_from_entry,
@@ -69,9 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) 
     )
     await runtime.async_load()
     runtime.house_device_id = _house_device(hass, entry).id
-    _remove_orphaned_entities(hass, entry)
     entry.runtime_data = runtime
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _remove_stale_entities(hass, entry)
     runtime.async_start()
     entry.async_on_unload(runtime.async_stop)
     entry.async_on_unload(entry.add_update_listener(_async_reload_on_change))
@@ -99,19 +99,16 @@ def _house_device(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> dr.Devi
     )
 
 
-def _remove_orphaned_entities(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:
-    """Drop entities of rooms or thermostats that were removed."""
-    owners = {entry.entry_id, *entry.subentries}
-    owners |= {
-        thermostat_id
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_ROOM
-        for thermostat_id in subentry.data.get(CONF_THERMOSTATS) or {}
-    }
+def _remove_stale_entities(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> None:
+    """HAI-017: drop entities this setup did not create.
+
+    That covers removed rooms and thermostats as well as entities a thermostat no longer has
+    after editing (e.g. its valve position once no position can be read).
+    """
+    created = entry.runtime_data.created_unique_ids
     registry = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        # Unique ids are "<owner id>_<key>"; owner ids (entry and sub-entry ids) have no "_".
-        if entity.unique_id.split("_", 1)[0] not in owners:
+        if entity.unique_id not in created:
             registry.async_remove(entity.entity_id)
 
 

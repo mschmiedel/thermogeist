@@ -27,6 +27,7 @@ class ThermogeistEntity(Entity):
         self._entry = entry
         self._attr_translation_key = key
         self._attr_unique_id = f"{unique_suffix}_{key}"
+        entry.runtime_data.created_unique_ids.add(self._attr_unique_id)
 
     @property
     def runtime(self) -> HouseRuntime:
@@ -92,7 +93,9 @@ class ThermostatEntity(RoomEntity):
         thermostat = entry.runtime_data.thermostats[thermostat_id]
         super().__init__(entry, thermostat.room_id, key)
         self._thermostat_id = thermostat_id
+        entry.runtime_data.created_unique_ids.discard(self._attr_unique_id)
         self._attr_unique_id = f"{thermostat_id}_{key}"
+        entry.runtime_data.created_unique_ids.add(self._attr_unique_id)
         self._attr_translation_placeholders = {"thermostat": thermostat.name}
 
     @property

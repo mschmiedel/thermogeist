@@ -53,7 +53,7 @@ Nach dem Thermostat benannt, am Raum-Gerät.
 | Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
 |---|---|---|---|
 | Art *Thermostat* | Über Ventilstellung oder über Sollwert. Attribute: `strategy`, `profile`, `radiator_output_w`, `roles` und was Thermogeist zuletzt geschrieben hat (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; über Sollwert `setpoint_offset`). Diagnose. | immer | – |
-| Ventilstellung *Thermostat* | Die Ventilstellung, die das Thermostat meldet – zum Vergleich mit der geplanten. | die Rolle *Ventilstellung (lesen)* ist ausgefüllt | das Thermostat meldet nichts |
+| Ventilstellung *Thermostat* | Wo das Ventil wirklich steht – zum Vergleich mit der geplanten. `source: reported`, wenn das Thermostat sie meldet; `source: derived` bei Sonoff-Thermostaten: die gesetzte Stellung, solange das Thermostat heizt, die Mindestöffnung, solange es ruht (`hvac_action`). | die Rolle *Ventilstellung (lesen)* ist ausgefüllt, oder ein Sonoff mit Ventilstellung (setzen) und Mindestöffnung | das Thermostat meldet nichts, oder ein Sonoff meldet weder Heizen noch Ruhen |
 
 ## Geschätzte Heizleistung
 
@@ -81,7 +81,7 @@ Thermogeist schätzt für jedes Thermostat mit Nennleistung in zwei Schritten:
 Beispiel: Nennleistung 700 W, Vorlauf 40 °C, Raum 19,5 °C, kein Rücklauf-Sensor → ganz offen
 etwa 186 W. Bei 39 % Ventil schätzt Thermogeist etwa 106 W.
 
-**Welche Ventilstellung:** die, die das Thermostat meldet (`valve_source: reported`). Meldet es
+**Welche Ventilstellung:** die, die das Thermostat meldet (`valve_source: reported`), bei Sonoff-Thermostaten die ermittelte (`derived`, siehe *Ventilstellung*). Meldet es
 keine und stellt Thermogeist das Ventil selbst, die geplante (`planned`). Ein Thermostat über
 Sollwert ohne gemeldetes Ventil hat keine Stellung, die Thermogeist nutzen könnte: Die Schätzung
 des Raums ist dann unbekannt, `max_output_w` zeigt aber trotzdem, was die Heizkörper könnten.

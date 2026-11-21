@@ -29,9 +29,6 @@
       },
       "calibration_status": {
         "expose": "valve_adapt_status"
-      },
-      "setpoint_source": {
-        "expose": "setpoint_change_source"
       }
     }
   },

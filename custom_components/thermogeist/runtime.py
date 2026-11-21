@@ -24,7 +24,14 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOCS_URL, DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
 from .control import ControlManager
-from .core.actuator import DeviceProfile, Kind, Role, Thermostat
+from .core.actuator import (
+    DeviceProfile,
+    Kind,
+    Role,
+    Thermostat,
+    derived_valve_pct,
+    derives_valve,
+)
 from .core.controller import (
     ControllerInputs,
     ControllerResult,
@@ -146,6 +153,8 @@ class HouseRuntime:
         self._clock = clock or SystemTimeProvider()
         self._unsubscribe: list[CALLBACK_TYPE] = []
         self.house_device_id: str | None = None
+        self.created_unique_ids: set[str] = set()
+        """HAI-017: entities created in this setup; the rest is removed after setup."""
         self._started = False
         self.house = house
         self.central_mode = CentralMode.AUTO
@@ -451,9 +460,7 @@ class HouseRuntime:
         radiators = []
         for tid in state.thermostat_ids:
             thermostat = self.thermostats[tid]
-            entity = thermostat.roles.get(Role.VALVE_READ)
-            valve = numeric_state(self._hass, entity) if entity else None
-            source = ValveSource.REPORTED if valve is not None else None
+            valve, source = self.valve_position(tid)
             if valve is None and controlled and thermostat.kind is Kind.VALVE:
                 assert state.plan is not None
                 valve, source = state.plan.output_pct, ValveSource.PLANNED
@@ -464,11 +471,29 @@ class HouseRuntime:
             radiators, self.flow_used_c, state.current_temperature_c, self.spread_used_k
         )
 
+    def valve_position(self, tid: str) -> tuple[float | None, ValveSource | None]:
+        """Where a thermostat's valve is: reported, or derived (ACT-016); None if unknown."""
+        thermostat = self.thermostats[tid]
+        roles = thermostat.roles
+        if (entity := roles.get(Role.VALVE_READ)) is not None:
+            value = numeric_state(self._hass, entity)
+            return value, ValveSource.REPORTED if value is not None else None
+        if not derives_valve(roles):
+            return None, None
+        climate = self._hass.states.get(roles[Role.CLIMATE])
+        value = derived_valve_pct(
+            numeric_state(self._hass, roles[Role.VALVE_WRITE]),
+            numeric_state(self._hass, roles[Role.VALVE_MIN]),
+            closing_inverted=thermostat.valve_min_inverted,
+            hvac_action=climate.attributes.get("hvac_action") if climate else None,
+        )
+        return value, ValveSource.DERIVED if value is not None else None
+
     def _sizing_valve_pct(self, room_id: str, state: RoomState) -> float | None:
-        """DIA-015: the reported valve, else the plan while Thermogeist controls the room."""
-        actual = self._actual_valve_pct(state)
-        if actual is not None:
-            return actual
+        """DIA-015: the reported or derived valve, else the plan while Thermogeist controls."""
+        values = [v for t in state.thermostat_ids if (v := self.valve_position(t)[0]) is not None]
+        if values:
+            return sum(values) / len(values)
         if self.control.is_enabled(room_id) and state.plan is not None:
             return state.plan.output_pct
         return None
@@ -637,7 +662,7 @@ class HouseRuntime:
         if not self.startup_hold():
             self.control.schedule_apply()
 
-    def _actual_valve_pct(self, state: RoomState) -> float | None:
+    def _reported_valve_pct(self, state: RoomState) -> float | None:
         """Mean reported valve position of the room's thermostats (CTL-044)."""
         values = []
         for tid in state.thermostat_ids:
@@ -713,7 +738,7 @@ class HouseRuntime:
         state.plan_at = now
         state.plan_code = state.decision.code
         if state.controller.state.last_output_pct is None:
-            actual = self._actual_valve_pct(state)
+            actual = self._reported_valve_pct(state)
             if actual is not None:
                 state.controller.seed(actual)
         state.feed_forward_missing = [

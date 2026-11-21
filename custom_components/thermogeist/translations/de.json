@@ -379,17 +379,15 @@
             "child_lock": "Kindersicherung",
             "calibration_trigger": "Kalibrierung starten",
             "calibration_status": "Kalibrierstatus",
-            "setpoint_source": "Quelle des Sollwerts",
             "valve_refresh_minutes": "Ventilstellung bestätigen alle … Minuten",
             "strategy": "Wie regeln"
           },
           "data_description": {
             "climate": "Die Klima-Entität des Thermostats (Sollwert, eigene Temperatur).",
-            "valve_read": "Zeigt, wie weit das Ventil offen ist.",
+            "valve_read": "Nur, wenn das Thermostat meldet, wie weit sein Ventil wirklich offen ist. Bei Sonoff-Thermostaten leer lassen; nie die Entität aus Ventilstellung (setzen).",
             "valve_write": "Damit kann Thermogeist die Ventilstellung direkt setzen. Ohne sie wird über den Sollwert geregelt.",
             "valve_min": "Eine im Gerät gespeicherte Rückfallebene; sie wirkt auch, wenn Home Assistant ausfällt.",
             "external_temperature": "Damit nutzt das Thermostat den Raumsensor statt seines eigenen.",
-            "setpoint_source": "Zeigt, ob ein Sollwert am Gerät geändert wurde.",
             "valve_refresh_minutes": "Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile (Bosch: nach 15 Minuten). Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut – eine Funknachricht, keine Motorbewegung. Leer = aus.",
             "strategy": "Automatisch: über die Ventilstellung, wenn das Thermostat sie erlaubt, sonst über den Sollwert. Ventilstellung: Thermogeist stellt das Ventil selbst (ruhig, mit Mindestöffnung). Sollwert: Thermogeist sagt dem Thermostat, welche Temperatur es anpeilen soll, und das Thermostat bewegt sein Ventil selbst."
           }
@@ -424,7 +422,6 @@
         "climate_required": "Die Klima-Entität wird benötigt.",
         "role_needs_percent": "Diese Entität meldet keinen Prozentwert. Wähle die Ventilstellung (Einheit %).",
         "role_needs_temperature": "Diese Entität ist kein Temperatureingang.",
-        "role_needs_setpoint_source": "Diese Entität meldet nicht, woher ein Sollwert kam (manuell, Zeitplan, extern). Lass das Feld leer, wenn dein Thermostat so etwas nicht hat.",
         "valve_strategy_needs_valve_write": "Die Strategie „Über Ventilstellung“ braucht die Entität „Ventilstellung (setzen)“. Wähle sie oder eine andere Strategie."
       },
       "abort": {

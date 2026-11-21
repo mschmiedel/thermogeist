@@ -7,10 +7,10 @@
 A thermostat device with a temperature sensor.
 
 ## Steps
-1. Choose the temperature sensor as "setpoint source".
+1. Choose the temperature sensor as "valve position (read)".
 
 ## Expected result
 - The dialog stays open with an explanation at that field.
 
 ## Why it matters
-This is exactly the mix-up that happened with the Bosch Smart Home thermostat in the living test.
+A temperature read as a valve position would make every valve comparison wrong.

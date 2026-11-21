@@ -16,7 +16,7 @@ applied.
 | ACT-005 | `external_temperature` | external room temperature can be passed to the device | implemented |
 | ACT-006 | `child_lock` | child lock can be switched | implemented |
 | ACT-007 | `calibration_trigger`, `calibration_status` | stroke calibration can be started and followed | implemented |
-| ACT-009 | `setpoint_source` | device reports where a setpoint came from | implemented |
+| ACT-009 | `setpoint_source` | device reports where a setpoint came from | rejected: Thermogeist detects changes on the device by comparing with the value it last wrote (OVR-001), which works with every thermostat and needs no extra field; with the setpoint strategy the display is ignored anyway (OVR-004) |
 
 | ID | Kind | Requirement | Status |
 |---|---|---|---|
@@ -31,7 +31,7 @@ applied.
 | ACT-031 | When a thermostat is assigned, Thermogeist reads manufacturer and model id from the HA device registry and picks the matching profile; without a match it suggests the setpoint-based kind. | implemented |
 | ACT-032 | Roles are resolved to entities of that device: the `climate` role by domain, the others by the Zigbee2MQTT expose name contained in the entity's unique id (`<ieee>_<expose>_zigbee2mqtt`). | implemented |
 | ACT-033 | Every resolved role is shown pre-filled in the dialog and can be changed or cleared by the user. Any entity of a fitting domain may be chosen, also from another device (some integrations, e.g. Bosch Smart Home, put climate and valve entities on separate devices). The chosen profile is shown on the thermostat. | implemented |
-| ACT-035 | Each role is checked for plausibility when saving: valve roles need a percentage (unit %), the external temperature a temperature, the setpoint source an entity reporting `manual` / `schedule` / `externally`. Implausible choices are rejected at the field with an explanation. | implemented |
+| ACT-035 | Each role is checked for plausibility when saving: valve roles need a percentage (unit %), the external temperature a temperature. Implausible choices are rejected at the field with an explanation. | implemented |
 | ACT-034 | Later: read the full expose list from Zigbee2MQTT (`zigbee2mqtt/bridge/devices`) to suggest profiles for unknown devices. Requires the MQTT integration. | planned |
 
 Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
@@ -46,6 +46,7 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 | ACT-013 | The active strategy and its resolution are visible per room (e.g. "setpoint modulation, ±15 %") | always | planned |
 | ACT-014 | Observe mode (default for new rooms): the controller runs and shows the planned position and reason, but nothing is written to the device. Control is switched on per room (M4). | always | implemented |
 | ACT-015 | In observe mode each thermostat with `valve_read` shows its actual valve position next to the planned one, so users can compare Thermogeist with their current regulation. | always | implemented |
+| ACT-016 | A thermostat without `valve_read` but with `valve_write` and `valve_min` (Sonoff TRVZB, TRV-ZBT) has its valve position derived: the opening position while its climate entity reports `hvac_action: heating`, the closing position (inverted if the profile says so) while it reports `idle` or `off`, unknown otherwise. Such devices move between the two positions with their own controller and report no valve position. The *Valve position* entity shows it with `source: derived` and the `hvac_action`; the estimated output (MDL-013) and the sizing operation check (DIA-015) use it. The controller start after a restart (CTL-044) still uses reported positions only. | always | implemented |
 
 ## Setpoint strategy (first version)
 
@@ -113,7 +114,7 @@ residual heat) are built by the user with template entities instead of extra pro
 | ACT-121 | Send `remote_temperature` at least every 30 min, otherwise the device falls back to its own sensor. | implemented |
 | ACT-122 | Calibration via `valve_adapt_process`, status via `valve_adapt_status`. | planned |
 | ACT-123 | No minimum opening on the device: when HA is down, the device regulates on its own. Shown as a limitation in the UI. | planned |
-| ACT-124 | Detect manual operation via `setpoint_change_source`. | planned |
+| ACT-124 | Detect manual operation via `setpoint_change_source`. | rejected (see ACT-009) |
 
 ### Generic `climate` entity
 

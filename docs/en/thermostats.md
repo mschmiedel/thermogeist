@@ -33,7 +33,7 @@ To change a thermostat later: gear icon (⚙) next to its room → **Edit thermo
 | Role | Meaning |
 |---|---|
 | Climate entity | Required. The thermostat's own climate entity. |
-| Valve position (read) | Shows how far the valve is open – needed for the comparison. |
+| Valve position (read) | Only if the thermostat reports how far its valve really is open. Leave it empty for the Sonoff thermostats – Thermogeist works their position out itself (see below). Never choose the entity from *Valve position (set)*: it only echoes what Thermogeist wrote. |
 | Valve position (set) | Lets Thermogeist set the valve directly. Without it, the thermostat is controlled by its setpoint. |
 | Minimum opening on the device | A fallback stored on the thermostat; it still works if Home Assistant is down. |
 | External temperature input | Lets the thermostat use your room sensor instead of its own. |
@@ -203,7 +203,7 @@ On each room:
 | Entity | Meaning |
 |---|---|
 | Planned valve position | What Thermogeist would set right now. Attributes show the parts: *feed_forward* (from the heat demand), *proportional* (reaction to the temperature difference), *integral* (slow correction), and *limits* that applied. If *feed_forward* is empty, *feed_forward_missing* tells you what is missing – usually the flow temperature sensor on the house or the radiator output. |
-| Valve position *thermostat* | The actual valve position, if the thermostat reports it. Put it next to the planned one in a history graph. |
+| Valve position *thermostat* | The actual valve position. Put it next to the planned one in a history graph. Attribute `source`: `reported` (the thermostat reports it) or `derived` (Sonoff: the thermostat moves between two positions with its own controller – the position Thermogeist set while it heats, the minimum opening while it rests; `hvac_action` shows which). |
 | Kind *thermostat* | Valve-based or setpoint-based, with *strategy* (your choice), profile and roles as attributes. |
 
 ### Limits you may see

@@ -9,6 +9,8 @@ from custom_components.thermogeist.core.actuator import (
     Kind,
     Role,
     check_role,
+    derived_valve_pct,
+    derives_valve,
     find_profile,
     kind_for,
     parse_profile,
@@ -86,10 +88,6 @@ def test_role_assignments_are_checked_for_plausibility() -> None:
     """Scenario: SCN-ACT-005"""
     temperature = EntityFacts(state="24.4", unit="°C", device_class="temperature")
     percent = EntityFacts(state="24", unit="%")
-    source = EntityFacts(state="manual", options=("manual", "schedule", "externally"))
-
-    assert check_role(Role.SETPOINT_SOURCE, temperature) == "role_needs_setpoint_source"
-    assert check_role(Role.SETPOINT_SOURCE, source) is None
     assert check_role(Role.VALVE_READ, temperature) == "role_needs_percent"
     assert check_role(Role.VALVE_READ, percent) is None
     assert check_role(Role.EXTERNAL_TEMPERATURE, percent) == "role_needs_temperature"
@@ -104,3 +102,21 @@ def test_bosch_profile_asks_for_valve_confirmation() -> None:
 
     assert bosch.valve_refresh == timedelta(minutes=10)
     assert sonoff.valve_refresh is None
+
+
+def test_valve_position_is_derived_from_the_device_decision() -> None:
+    """Scenario: SCN-ACT-007"""
+
+    def derived(action: str | None) -> float | None:
+        return derived_valve_pct(43.0, 70.0, closing_inverted=True, hvac_action=action)
+
+    assert derived("heating") == 43.0
+    assert derived("idle") == 30.0
+    assert derived("off") == 30.0
+    assert derived(None) is None
+    assert derived_valve_pct(43.0, 30.0, closing_inverted=False, hvac_action="idle") == 30.0
+
+    sonoff = {Role.CLIMATE: "c", Role.VALVE_WRITE: "w", Role.VALVE_MIN: "m"}
+    assert derives_valve(sonoff)
+    assert not derives_valve({**sonoff, Role.VALVE_READ: "r"})
+    assert not derives_valve({Role.CLIMATE: "c", Role.VALVE_WRITE: "w"})

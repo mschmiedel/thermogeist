@@ -380,11 +380,11 @@ async def test_implausible_role_is_rejected(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"climate": "climate.roy_trv_climate", "setpoint_source": "sensor.roy_trv_temperature"},
+        {"climate": "climate.roy_trv_climate", "valve_read": "sensor.roy_trv_temperature"},
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"setpoint_source": "role_needs_setpoint_source"}
+    assert result["errors"] == {"valve_read": "role_needs_percent"}
 
 
 async def test_valve_strategy_needs_a_writable_valve(
@@ -424,3 +424,48 @@ async def test_return_sensor_sets_the_spread(
     planned = hass.states.get(PLANNED).attributes
     assert planned["return_temperature_used"] == 33.0
     assert planned["spread_used"] == 7.0
+
+
+async def test_sonoff_shows_derived_valve_position(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-017"""
+    entry, room_id = await house_with_room(hass)
+    await assign(hass, entry.entry_id, room_id, sonoff(hass), 2000.0)
+    hass.states.async_set(
+        "number.living_trv_valve_opening_degree", "43", {"unit_of_measurement": "%"}
+    )
+    hass.states.async_set(
+        "number.living_trv_valve_closing_degree", "70", {"unit_of_measurement": "%"}
+    )
+
+    hass.states.async_set("climate.living_trv_climate", "heat", {"hvac_action": "heating"})
+    await hass.async_block_till_done()
+    valve = hass.states.get("sensor.living_room_valve_position_living_trv")
+    assert float(valve.state) == 43.0
+    assert valve.attributes["source"] == "derived"
+    assert valve.attributes["hvac_action"] == "heating"
+
+    hass.states.async_set("climate.living_trv_climate", "heat", {"hvac_action": "idle"})
+    await hass.async_block_till_done()
+    assert float(hass.states.get("sensor.living_room_valve_position_living_trv").state) == 30.0
+
+
+async def test_stale_entities_are_removed(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-018"""
+    entry, room_id = await house_with_room(hass)
+    await assign(hass, entry.entry_id, room_id, sonoff(hass), 2000.0)
+    registry = er.async_get(hass)
+    (thermostat_id,) = thermostat_ids(entry)
+    stale = registry.async_get_or_create(
+        "sensor", "thermogeist", f"{thermostat_id}_gone", config_entry=entry
+    )
+    before = {e.entity_id for e in er.async_entries_for_config_entry(registry, entry.entry_id)}
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = {e.entity_id for e in er.async_entries_for_config_entry(registry, entry.entry_id)}
+    assert after == before - {stale.entity_id}

@@ -53,7 +53,7 @@ Named after the thermostat, on the room device.
 | Entity | Meaning | When it exists | Unknown when |
 |---|---|---|---|
 | Kind *thermostat* | Valve-based or setpoint-based. Attributes: `strategy`, `profile`, `radiator_output_w`, `roles`, and what Thermogeist last wrote (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; by setpoint `setpoint_offset`). Diagnostic. | always | – |
-| Valve position *thermostat* | The valve position the thermostat reports – compare it with the planned one. | the role *Valve position (read)* is filled in | the thermostat reports nothing |
+| Valve position *thermostat* | Where the valve really is – compare it with the planned one. `source: reported` when the thermostat reports it; `source: derived` for Sonoff thermostats: the set position while the thermostat heats, the minimum opening while it rests (`hvac_action`). | the role *Valve position (read)* is filled in, or a Sonoff with valve position (set) and minimum opening | the thermostat reports nothing, or a Sonoff reports neither heating nor resting |
 
 ## Estimated radiator output
 
@@ -81,7 +81,7 @@ Thermogeist estimates in two steps for each thermostat with a rated output:
 Example: rated output 700 W, flow 40 °C, room 19.5 °C, no return sensor → fully open about
 186 W. With the valve at 39 % the estimate is about 106 W.
 
-**Which valve position:** the one the thermostat reports (`valve_source: reported`). If it
+**Which valve position:** the one the thermostat reports (`valve_source: reported`), for Sonoff thermostats the derived one (`derived`, see *Valve position*). If it
 reports none and Thermogeist sets the valve itself, the planned position (`planned`). A
 setpoint-based thermostat that reports no valve has no position Thermogeist could use: the
 room's estimate is then unknown, but `max_output_w` still shows what the radiators could give.

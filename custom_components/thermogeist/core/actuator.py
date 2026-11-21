@@ -21,7 +21,6 @@ class Role(StrEnum):
     CHILD_LOCK = "child_lock"
     CALIBRATION_TRIGGER = "calibration_trigger"
     CALIBRATION_STATUS = "calibration_status"
-    SETPOINT_SOURCE = "setpoint_source"
 
 
 class Kind(StrEnum):
@@ -204,7 +203,6 @@ class EntityFacts:
 
 PERCENT_ROLES = frozenset({Role.VALVE_READ, Role.VALVE_WRITE, Role.VALVE_MIN})
 TEMPERATURE_UNITS = frozenset({"°C", "°F", "K"})
-SETPOINT_SOURCE_VALUES = frozenset({"manual", "schedule", "externally"})
 
 
 def check_role(role: Role, facts: EntityFacts) -> str | None:
@@ -215,8 +213,33 @@ def check_role(role: Role, facts: EntityFacts) -> str | None:
         facts.unit in TEMPERATURE_UNITS or facts.device_class == "temperature"
     ):
         return "role_needs_temperature"
-    if role is Role.SETPOINT_SOURCE:
-        values = set(facts.options) | ({facts.state} if facts.state else set())
-        if not values & SETPOINT_SOURCE_VALUES:
-            return "role_needs_setpoint_source"
+    return None
+
+
+HEATING_ACTION = "heating"
+"""HA ``hvac_action`` while the device's own controller has the valve open."""
+RESTING_ACTIONS = frozenset({"idle", "off"})
+
+
+def derives_valve(roles: Mapping[Role, str]) -> bool:
+    """ACT-016: no reported position, but open and closed positions are known."""
+    return Role.VALVE_READ not in roles and {Role.VALVE_WRITE, Role.VALVE_MIN} <= roles.keys()
+
+
+def derived_valve_pct(
+    opening_pct: float | None,
+    closing_value: float | None,
+    *,
+    closing_inverted: bool,
+    hvac_action: str | None,
+) -> float | None:
+    """ACT-016: where the valve is, from the device's two positions and its own decision.
+
+    Devices like the Sonoff TRVZB move between the opening position (while their own
+    controller heats) and the closing position (otherwise); they do not report the valve.
+    """
+    if hvac_action == HEATING_ACTION:
+        return opening_pct
+    if hvac_action in RESTING_ACTIONS and closing_value is not None:
+        return 100.0 - closing_value if closing_inverted else closing_value
     return None

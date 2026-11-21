@@ -34,7 +34,7 @@ Um ein Thermostat später zu ändern: Zahnrad (⚙) neben seinem Raum → **Ther
 | Rolle | Bedeutung |
 |---|---|
 | Klima-Entität | Pflicht. Die Klima-Entität des Thermostats. |
-| Ventilstellung (lesen) | Zeigt, wie weit das Ventil offen ist – nötig für den Vergleich. |
+| Ventilstellung (lesen) | Nur, wenn das Thermostat meldet, wie weit sein Ventil wirklich offen ist. Bei den Sonoff-Thermostaten leer lassen – Thermogeist ermittelt die Stellung selbst (siehe unten). Nie die Entität aus *Ventilstellung (setzen)* wählen: Sie zeigt nur, was Thermogeist geschrieben hat. |
 | Ventilstellung (setzen) | Damit kann Thermogeist das Ventil direkt stellen. Ohne sie wird über den Sollwert geregelt. |
 | Mindestöffnung im Gerät | Eine im Thermostat gespeicherte Rückfallebene; sie wirkt auch, wenn Home Assistant ausfällt. |
 | Eingang externe Temperatur | Damit nutzt das Thermostat deinen Raumsensor statt seines eigenen. |
@@ -211,7 +211,7 @@ Pro Raum:
 | Entität | Bedeutung |
 |---|---|
 | Geplante Ventilstellung | Was Thermogeist gerade einstellen würde. Die Attribute zeigen die Anteile: *feed_forward* (aus dem Wärmebedarf), *proportional* (Reaktion auf den Temperaturunterschied), *integral* (langsame Korrektur) und *limits*, die gegriffen haben. Ist *feed_forward* leer, steht in *feed_forward_missing*, was fehlt – meist der Vorlauf-Sensor am Haus oder die Heizkörperleistung. |
-| Ventilstellung *Thermostat* | Die tatsächliche Ventilstellung, wenn das Thermostat sie meldet. Leg sie in einem Verlaufsdiagramm neben die geplante. |
+| Ventilstellung *Thermostat* | Die tatsächliche Ventilstellung. Leg sie in einem Verlaufsdiagramm neben die geplante. Attribut `source`: `reported` (das Thermostat meldet sie) oder `derived` (Sonoff: Das Thermostat wechselt mit seinem eigenen Regler zwischen zwei Stellungen – der von Thermogeist gesetzten, solange es heizt, und der Mindestöffnung, solange es ruht; `hvac_action` zeigt, welche). |
 | Art *Thermostat* | Über Ventilstellung oder über Sollwert, mit *strategy* (deine Auswahl), Profil und Rollen als Attribute. |
 
 ### Grenzen, die du sehen kannst

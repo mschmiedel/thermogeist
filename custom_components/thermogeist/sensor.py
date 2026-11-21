@@ -21,13 +21,13 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from . import ThermogeistConfigEntry
 from .const import DOCS_URL
-from .core.actuator import Kind, Role
+from .core.actuator import Kind, Role, derives_valve
 from .core.decisions import ReasonCode
 from .core.house import HeatingType
 from .core.room import ShareMode
 from .core.sizing import Sizing, SizingResult
 from .entity import HouseEntity, RoomEntity, ThermostatEntity
-from .runtime import HouseRuntime, RoomState, numeric_state
+from .runtime import HouseRuntime, RoomState
 
 WATT_PER_KELVIN = "W/K"
 
@@ -339,7 +339,7 @@ async def async_setup_entry(
         async_add_entities(sensors, config_subentry_id=room_id)
     for thermostat_id, thermostat in entry.runtime_data.thermostats.items():
         thermostat_sensors: list[SensorEntity] = [ThermostatKindSensor(entry, thermostat_id)]
-        if Role.VALVE_READ in thermostat.roles:
+        if Role.VALVE_READ in thermostat.roles or derives_valve(thermostat.roles):
             thermostat_sensors.append(ThermostatValveSensor(entry, thermostat_id))
         # A device belongs to one sub-entry: thermostat sensors live on the room device, so they
         # are registered under the room's sub-entry. Removed thermostats are cleaned up on setup.
@@ -467,7 +467,7 @@ class ThermostatKindSensor(ThermostatEntity, SensorEntity):
 
 
 class ThermostatValveSensor(ThermostatEntity, SensorEntity):
-    """The thermostat's actual valve position, next to the planned one (ACT-015)."""
+    """The thermostat's actual valve position, next to the planned one (ACT-015, ACT-016)."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -476,17 +476,31 @@ class ThermostatValveSensor(ThermostatEntity, SensorEntity):
         super().__init__(entry, thermostat_id, "thermostat_valve_position")
 
     @property
-    def _source(self) -> str:
-        return self.thermostat.roles[Role.VALVE_READ]
+    def _sources(self) -> list[str]:
+        roles = self.thermostat.roles
+        if Role.VALVE_READ in roles:
+            return [roles[Role.VALVE_READ]]
+        return [roles[Role.VALVE_WRITE], roles[Role.VALVE_MIN], roles[Role.CLIMATE]]
 
     @property
     def native_value(self) -> float | None:
-        return numeric_state(self.hass, self._source)
+        return self.runtime.valve_position(self._thermostat_id)[0]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        roles = self.thermostat.roles
+        if Role.VALVE_READ in roles:
+            return {"source": "reported"}
+        climate = self.hass.states.get(roles[Role.CLIMATE])
+        return {
+            "source": "derived",
+            "hvac_action": climate.attributes.get("hvac_action") if climate else None,
+        }
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         self.async_on_remove(
-            async_track_state_change_event(self.hass, [self._source], self._source_changed)
+            async_track_state_change_event(self.hass, self._sources, self._source_changed)
         )
 
     @callback

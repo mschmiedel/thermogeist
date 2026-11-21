@@ -764,7 +764,6 @@ ROLE_DOMAINS: dict[Role, list[str]] = {
     Role.CHILD_LOCK: ["switch", "lock", "select"],
     Role.CALIBRATION_TRIGGER: ["button", "select", "switch"],
     Role.CALIBRATION_STATUS: ["sensor", "select"],
-    Role.SETPOINT_SOURCE: ["sensor", "select"],
 }
 
 

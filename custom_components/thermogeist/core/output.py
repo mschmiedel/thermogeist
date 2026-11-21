@@ -13,6 +13,8 @@ from .radiator import available_output_w
 class ValveSource(StrEnum):
     REPORTED = "reported"
     """The thermostat reports its valve position."""
+    DERIVED = "derived"
+    """From the device's opening and closing positions and whether it heats (ACT-016)."""
     PLANNED = "planned"
     """Thermogeist sets the valve itself; the planned position is what the valve does."""
 
