@@ -123,6 +123,12 @@
       },
       "estimated_output": {
         "default": "mdi:radiator"
+      },
+      "rooms_heat_demand": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "rooms_heat_supply": {
+        "default": "mdi:home-lightning-bolt-outline"
       }
     },
     "switch": {

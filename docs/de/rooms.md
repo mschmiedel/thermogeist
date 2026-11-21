@@ -64,7 +64,9 @@ ergeben einen kleinen Anteil.
 
 Beim Haus siehst du zusätzlich **Heizlast ohne Raum** und **Abdeckung durch Räume**: wie viel
 der Heizlast deine Räume (und der Anteil außerhalb von Thermogeist) abdecken, mit dem fehlenden
-Anteil und der Wohnfläche, die noch in keinem Raum steckt, als Attribute. Mit Vor- und
+Anteil und der Wohnfläche, die noch in keinem Raum steckt, als Attribute. **Wärmebedarf der
+Räume** und **Wärmezufuhr der Räume** zeigen, was deine Räume gerade brauchen und bekommen, in
+Watt – anders als die **Heizlast**, der feste Planungswert für den kältesten Tag. Mit Vor- und
 Rücklaufsensor zeigt das Haus außerdem **Vorlauftemperatur**, **Rücklauftemperatur** und
 **Spreizung** – die gemittelten Werte, mit denen die Regelung rechnet – und **Vorlauf am
 Auslegungstag** aus der Heizkurve, die Thermogeist lernt ([FAQ](faq/radiator_sizing.md)).

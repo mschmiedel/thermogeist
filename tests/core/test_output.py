@@ -6,8 +6,10 @@ import pytest
 from custom_components.thermogeist.core.controller import feed_forward_pct
 from custom_components.thermogeist.core.output import (
     RadiatorInput,
+    RoomBalanceInput,
     ValveSource,
     estimate_room_output,
+    house_balance,
     output_at_valve_w,
 )
 from custom_components.thermogeist.core.radiator import available_output_w
@@ -48,3 +50,20 @@ def test_room_estimate_needs_every_radiator() -> None:
     assert no_flow.output_w is None
     assert no_flow.max_output_w is None
     assert no_flow.missing == ("flow_temperature",)
+
+
+def test_house_balance_covers_the_same_rooms() -> None:
+    """Scenario: SCN-HEAT-009"""
+    balance = house_balance(
+        [
+            RoomBalanceInput("A", 300.0, 250.0, 100.0),
+            RoomBalanceInput("B", 200.0, 150.0, None),
+            RoomBalanceInput("C", 400.0, None, None),
+        ]
+    )
+
+    assert balance.demand_w == 500.0
+    assert balance.supply_w == 500.0
+    assert (balance.radiators_w, balance.devices_w) == (400.0, 100.0)
+    assert balance.rooms == 2
+    assert balance.rooms_without_estimate == ("C",)

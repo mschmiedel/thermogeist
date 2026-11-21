@@ -198,6 +198,12 @@
       "room_coverage": {
         "name": "Room coverage"
       },
+      "rooms_heat_demand": {
+        "name": "Heat demand of rooms"
+      },
+      "rooms_heat_supply": {
+        "name": "Heat supply of rooms"
+      },
       "flow_temperature_used": {
         "name": "Flow temperature"
       },

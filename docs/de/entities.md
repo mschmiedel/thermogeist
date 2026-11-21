@@ -14,11 +14,13 @@ keinen Wert zeigt. Diagnose- und Konfigurations-Entitäten findest du auf der Ge
 |---|---|---|---|
 | Zentralmodus | *Automatisch*, *Aus* oder *Frostschutz* für das ganze Haus. Bleibt über Neustarts erhalten. | immer | – |
 | Heizungsart | Wärmepumpe, Kessel oder Elektro-Direktheizung – bestimmt, wie ruhig Thermogeist regelt. Diagnose. | immer | – |
-| Heizlast | Die eingetragene Heizlast in kW. Diagnose. | immer | keine Heizlast eingetragen |
+| Heizlast | Die eingetragene Heizlast in kW: was das Haus am kältesten Auslegungstag braucht. Ein fester Planungswert, nicht der Bedarf von jetzt (siehe *Wärmebedarf der Räume*). Diagnose. | immer | keine Heizlast eingetragen |
 | Normaußentemperatur | Die Außentemperatur, für die die Heizlast berechnet wurde. Diagnose. | immer | nicht eingetragen |
 | Anteil außerhalb von Thermogeist | Teil der Heizlast in Räumen, die Thermogeist nicht regelt, wie eingetragen. Diagnose. | immer | – |
 | Heizlast ohne Raum | Teil der Heizlast, den noch kein Raum (und kein Anteil außerhalb) abdeckt. Diagnose. | immer | – |
 | Abdeckung durch Räume | 100 % minus der Teil ohne Raum. Attribute: `missing_pct`, `floor_area_not_in_rooms_m2`, `rooms`. | immer | – |
+| Wärmebedarf der Räume | Watt, die deine Räume gerade brauchen, um ihr Ziel zu halten – die Summe ihres *Wärmebedarfs*, über dieselben Räume wie *Wärmezufuhr der Räume*. Attribute: `rooms`, `rooms_without_estimate`. | immer | keine Heizlast am Haus |
+| Wärmezufuhr der Räume | Watt, die deine Räume gerade bekommen: die *Geschätzte Heizleistung* plus die *Wärme aus Geräten* aller Räume. Ein Raum, dessen Heizkörper sich nicht schätzen lassen, fehlt in beiden Summen und steht in `rooms_without_estimate`. Attribute: `radiators_w`, `devices_w`, `rooms`, `rooms_without_estimate`. Es zählen nur Räume in Thermogeist (siehe *Abdeckung durch Räume*); das ist nicht die Leistung deiner Wärmepumpe oder deines Kessels. | immer | kein Raum hat eine Schätzung |
 | Vorlauftemperatur | Der gemittelte Vorlauf, mit dem die Regelung rechnet (`source`: dein Sensor). | Vorlauf-Sensor gewählt | der Sensor liefert keinen plausiblen Wert |
 | Rücklauftemperatur | Der gemittelte Rücklauf. | Rücklauf-Sensor gewählt | der Sensor liefert keinen Wert |
 | Spreizung | Vorlauf minus Rücklauf, begrenzt auf 1–10 K; ersetzt die angenommenen 5 K. | Vorlauf- und Rücklauf-Sensor gewählt | einer davon liefert keinen Wert |

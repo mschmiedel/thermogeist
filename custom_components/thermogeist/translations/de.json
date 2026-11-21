@@ -198,6 +198,12 @@
       "room_coverage": {
         "name": "Abdeckung durch Räume"
       },
+      "rooms_heat_demand": {
+        "name": "Wärmebedarf der Räume"
+      },
+      "rooms_heat_supply": {
+        "name": "Wärmezufuhr der Räume"
+      },
       "flow_temperature_used": {
         "name": "Vorlauftemperatur"
       },

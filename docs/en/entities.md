@@ -14,11 +14,13 @@ shows no value. Diagnostic and configuration entities are on the device page und
 |---|---|---|---|
 | Central mode | *Auto*, *Stop* or *Frost protection* for the whole house. Survives restarts. | always | – |
 | Heating type | Heat pump, boiler or direct electric – decides how calmly Thermogeist regulates. Diagnostic. | always | – |
-| Heat load | The heat load you entered, in kW. Diagnostic. | always | no heat load entered |
+| Heat load | The heat load you entered, in kW: what the house needs on the coldest design day. A fixed planning value, not what is needed right now (see *Heat demand of rooms*). Diagnostic. | always | no heat load entered |
 | Design outdoor temperature | The outdoor temperature the heat load was calculated for. Diagnostic. | always | not entered |
 | Share outside Thermogeist | Part of the heat load in rooms Thermogeist does not control, as entered. Diagnostic. | always | – |
 | Heat load not assigned to a room | Part of the heat load no room (and no share outside) covers yet. Diagnostic. | always | – |
 | Room coverage | 100 % minus the part not assigned. Attributes: `missing_pct`, `floor_area_not_in_rooms_m2`, `rooms`. | always | – |
+| Heat demand of rooms | Watts your rooms need right now to hold their targets – the sum of their *Heat demand*, over the same rooms as *Heat supply of rooms*. Attributes: `rooms`, `rooms_without_estimate`. | always | no heat load on the house |
+| Heat supply of rooms | Watts your rooms get right now: the *Estimated radiator output* plus the *Heat from devices* of all rooms. A room whose radiators cannot be estimated is left out of both sums and named in `rooms_without_estimate`. Attributes: `radiators_w`, `devices_w`, `rooms`, `rooms_without_estimate`. Only rooms in Thermogeist count (see *Room coverage*); this is not the output of your heat pump or boiler. | always | no room has an estimate |
 | Flow temperature | The averaged flow temperature the controller uses (`source`: your sensor). | flow sensor chosen | the sensor gives no plausible value |
 | Return temperature | The averaged return temperature. | return sensor chosen | the sensor gives no value |
 | Spread | Flow minus return, limited to 1–10 K; replaces the assumed 5 K. | flow and return sensor chosen | one of them has no value |

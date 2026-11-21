@@ -57,7 +57,15 @@ from .core.heat import (
     room_heat_loss_w_per_k,
 )
 from .core.house import FROST_PROTECTION_SETPOINT_C, CentralMode, HeatingType, House
-from .core.output import OutputEstimate, RadiatorInput, ValveSource, estimate_room_output
+from .core.output import (
+    HouseBalance,
+    OutputEstimate,
+    RadiatorInput,
+    RoomBalanceInput,
+    ValveSource,
+    estimate_room_output,
+    house_balance,
+)
 from .core.profiles import (
     WINDOW_SETTINGS,
     ControlSetting,
@@ -475,6 +483,20 @@ class HouseRuntime:
             )
         return estimate_room_output(
             radiators, self.flow_used_c, state.current_temperature_c, self.spread_used_k
+        )
+
+    def house_balance(self) -> HouseBalance:
+        """MDL-052, MDL-053: demand and supply summed over the rooms with an estimate."""
+        return house_balance(
+            [
+                RoomBalanceInput(
+                    state.room.name,
+                    state.demand_w,
+                    self.estimated_output(room_id).output_w if state.thermostat_ids else None,
+                    state.heat_from_sources_w,
+                )
+                for room_id, state in self.rooms.items()
+            ]
         )
 
     def valve_position(self, tid: str) -> tuple[float | None, ValveSource | None]:

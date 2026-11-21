@@ -30,3 +30,22 @@ async def test_estimated_output_from_reported_valve(
     state = hass.states.get(OUTPUT)
     assert state.state == "unknown"
     assert state.attributes["missing"] == ["valve_position"]
+
+
+async def test_house_shows_demand_and_supply_of_rooms(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-HOUSE-009"""
+    await controlled_bosch(hass)
+    hass.states.async_set(VALVE, "39", {"unit_of_measurement": "%"})
+    await tick(hass, freezer, 61)
+
+    demand = hass.states.get("sensor.home_heat_demand_of_rooms")
+    supply = hass.states.get("sensor.home_heat_supply_of_rooms")
+    assert float(demand.state) == pytest.approx(
+        float(hass.states.get("sensor.living_room_heat_demand").state), abs=1
+    )
+    assert float(supply.state) == pytest.approx(float(hass.states.get(OUTPUT).state), abs=1)
+    assert supply.attributes["devices_w"] == 0
+    assert supply.attributes["rooms"] == 1
+    assert supply.attributes["rooms_without_estimate"] == []

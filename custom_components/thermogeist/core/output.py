@@ -101,3 +101,38 @@ def estimate_room_output(
         radiators=tuple(results),
         missing=tuple(missing),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class RoomBalanceInput:
+    name: str
+    demand_w: float | None
+    radiators_w: float | None
+    """None when the radiators cannot be estimated (or the room has none)."""
+    devices_w: float | None
+
+
+@dataclass(frozen=True, slots=True)
+class HouseBalance:
+    demand_w: float | None
+    supply_w: float | None
+    radiators_w: float
+    devices_w: float
+    rooms: int
+    rooms_without_estimate: tuple[str, ...]
+
+
+def house_balance(rooms: list[RoomBalanceInput]) -> HouseBalance:
+    """MDL-052, MDL-053: what the rooms need and get right now, over the same rooms."""
+    counted = [r for r in rooms if r.radiators_w is not None]
+    radiators = sum(r.radiators_w or 0.0 for r in counted)
+    devices = sum(r.devices_w or 0.0 for r in counted)
+    demands = [r.demand_w for r in counted if r.demand_w is not None]
+    return HouseBalance(
+        demand_w=sum(demands) if demands else None,
+        supply_w=radiators + devices if counted else None,
+        radiators_w=radiators,
+        devices_w=devices,
+        rooms=len(counted),
+        rooms_without_estimate=tuple(r.name for r in rooms if r.radiators_w is None),
+    )
