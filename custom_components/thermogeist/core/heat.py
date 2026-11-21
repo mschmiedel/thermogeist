@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: MIT
-"""Heat loss and current demand of a room (spec MDL-010, MDL-011, MDL-036, MDL-039, MDL-043)."""
+"""Heat loss and demand of a room (spec MDL-010, MDL-011, MDL-036, MDL-039, MDL-043, MDL-049)."""
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 
 from .house import House
-from .room import Room
+from .room import HEAT_SOURCE_FACTOR_MAX_PCT, HEAT_SOURCE_FACTOR_MIN_PCT, Room
 
 WATTS_PER_KILOWATT = 1000.0
 
@@ -29,6 +29,13 @@ def current_demand_w(
     if heat_loss_w_per_k is None or setpoint_c is None or outdoor_c is None:
         return None
     return max(0.0, heat_loss_w_per_k * (setpoint_c - outdoor_c))
+
+
+def effective_factor_pct(entity_value_pct: float | None, fixed_pct: float) -> float:
+    """MDL-049: the factor entity wins, limited to 0-500 %; unavailable uses the fixed factor."""
+    if entity_value_pct is None:
+        return fixed_pct
+    return min(HEAT_SOURCE_FACTOR_MAX_PCT, max(HEAT_SOURCE_FACTOR_MIN_PCT, entity_value_pct))
 
 
 def heat_from_sources_w(sources: Iterable[tuple[float | None, float]]) -> float:

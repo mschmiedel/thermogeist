@@ -58,7 +58,7 @@ normal room; few exterior walls give them a small share.
 | Share of heat load | The room's share, estimated or entered. |
 | Heat loss coefficient | Watts per kelvin of temperature difference to outside. |
 | Windows | Only with window contacts: on while one is open. Attributes: the contacts, `heating_paused`, `frost_guard`, and the times in use. In **Configuration**: *Window: close after*, *Window: resume heating after* (house value until you change it, attribute `source`) and *Window: reset times to house*. |
-| Heat from devices | Only with heat sources: watts the devices release into the room (after factors, 10-minute average). |
+| Heat from devices | Only with heat sources: watts the devices release into the room (after factors, 10-minute average). Attributes: the factor in use per device and the factor sensors. |
 
 On the house you additionally see **Heat load not assigned to a room** and **Room coverage**:
 how much of the heat load your rooms (and the share outside Thermogeist) cover, with the missing
@@ -109,5 +109,36 @@ as heat.
 **More than 100 %:** a compressor dehumidifier releases its power plus the heat of the
 condensed moisture – roughly 150 %. Choose 100 % anyway: assuming too little heat is harmless,
 the slow correction makes up for it.
+
+**Air conditioner that heats (air-to-air heat pump):** it takes heat from outside and releases
+its power times its **COP** into the room, typically 3 to 4 times. The factor is then
+COP × 100 %, up to 500 % is allowed. You rarely know the COP, but the EU energy label shows the
+**SCOP** for heating (average heating season). Choose a little less, e.g. 400 % for a SCOP of 4.6
+– on cold days the COP is lower. When the unit cools it is no heater: a template as power sensor
+that reports 0 W in cooling mode keeps it from counting.
+
+**Factor from a sensor:** optionally choose per device, next to the number, a *factor sensor* in
+%. While it is available it wins; if it fails, the number applies again. Thermogeist limits it to
+0–500 %. This lets a template make the COP follow the outdoor temperature. A rough estimate for
+split air conditioners: `COP = 0.45 · T_hot / (T_hot − T_cold)` in kelvin, with `T_hot` = room +
+15 K and `T_cold` = outside − 6 K. That gives about 4.2 at 9 °C outside and 2.6 at −10 °C. The
+entity ids in the example are placeholders:
+
+```yaml
+template:
+  - sensor:
+      - name: "Living room air conditioner factor"
+        unit_of_measurement: "%"
+        state: >
+          {% set room = states('sensor.living_room_temperature') | float(21) %}
+          {% set outside = states('sensor.outdoor_temperature') | float(5) %}
+          {% set hot = room + 15 + 273.15 %}
+          {% set cold = outside - 6 + 273.15 %}
+          {% set cop = 0.45 * hot / (hot - cold) %}
+          {{ (([1, cop, 5] | sort)[1] * 100) | round(0) }}
+```
+
+The **Heat from devices** sensor shows the factor in use in its `sources` attribute and the
+chosen factor sensors in `factor_entities`.
 
 Next: [assign thermostats](thermostats.md).

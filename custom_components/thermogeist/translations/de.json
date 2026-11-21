@@ -305,7 +305,7 @@
         },
         "heat_source_factors": {
           "title": "Wie viel Wärme bleibt im Raum?",
-          "description": "Pro Gerät: der Anteil seiner Leistung, der als Wärme im Raum bleibt ({devices}). 100 % für Elektronik, Licht, Kühlschränke und Wärmepumpentrockner. Weniger für Geräte, deren Wärme mit Abluft oder Abwasser hinausgeht, z. B. Ablufttrockner 10–20 %, Waschmaschine 10–20 %, Spülmaschine 20–40 %. Mehr in der Doku: Räume → Geräte, die den Raum heizen."
+          "description": "Pro Gerät: der Anteil seiner Leistung, der als Wärme im Raum bleibt ({devices}). 100 % für Elektronik, Licht, Kühlschränke und Wärmepumpentrockner. Weniger für Geräte, deren Wärme mit Abluft oder Abwasser hinausgeht, z. B. Ablufttrockner 10–20 %, Waschmaschine 10–20 %, Spülmaschine 20–40 %. Mehr für eine Klimaanlage, die den Raum heizt: ihr COP × 100 %, z. B. 400 % (etwas unter dem SCOP vom Energielabel). Optional pro Gerät: ein Faktor-Sensor in % (z. B. ein Template), der Vorrang vor der Zahl hat, solange er verfügbar ist. Mehr in der Doku: Räume → Geräte, die den Raum heizen."
         },
         "edit_room": {
           "title": "Raum ändern",

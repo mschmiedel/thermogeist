@@ -42,6 +42,7 @@ from .core.decisions import (
 from .core.estimation import ShareResult, floor_area_not_in_rooms_m2, room_shares
 from .core.heat import (
     current_demand_w,
+    effective_factor_pct,
     heat_from_sources_w,
     net_demand_w,
     room_heat_loss_w_per_k,
@@ -97,6 +98,8 @@ class RoomState:
     plan_at: datetime | None = None
     plan_code: ReasonCode | None = None
     source_averages: dict[str, MovingAverage] = field(default_factory=dict)
+    source_factors: dict[str, float] = field(default_factory=dict)
+    """MDL-049: factor in use per heat source (from its factor entity or the fixed value)."""
     """MDL-040: power of each heat source, averaged over 10 minutes."""
     heat_from_sources_w: float | None = None
     """MDL-044: heat the devices release into the room (after factors), None without sources."""
@@ -368,8 +371,14 @@ class HouseRuntime:
                 source.entity_id, MovingAverage(HEAT_SOURCE_WINDOW)
             )
             average.add(now, max(0.0, numeric_state(self._hass, source.entity_id) or 0.0))
+            entity_value = (
+                numeric_state(self._hass, source.factor_entity) if source.factor_entity else None
+            )
+            state.source_factors[source.entity_id] = effective_factor_pct(
+                entity_value, source.factor_pct
+            )
         state.heat_from_sources_w = heat_from_sources_w(
-            (state.source_averages[s.entity_id].value(now), s.factor_pct)
+            (state.source_averages[s.entity_id].value(now), state.source_factors[s.entity_id])
             for s in state.room.heat_sources
         )
 

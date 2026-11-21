@@ -65,6 +65,7 @@ from .const import (
     CONF_SHARE_OUTSIDE,
     CONF_SOURCE_ENTITY,
     CONF_SOURCE_FACTOR,
+    CONF_SOURCE_FACTOR_ENTITY,
     CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
     CONF_THERMOSTAT_NAME,
@@ -463,6 +464,7 @@ class RoomSubentryFlow(ThermostatSteps):
         self._data: dict[str, Any] = {}
         self._source_ids: list[str] = []
         self._factors: dict[str, float] = {}
+        self._factor_entities: dict[str, str] = {}
         self._init_thermostat()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
@@ -558,6 +560,11 @@ class RoomSubentryFlow(ThermostatSteps):
                 self._factors = {
                     s[CONF_SOURCE_ENTITY]: s[CONF_SOURCE_FACTOR]
                     for s in defaults.get(CONF_HEAT_SOURCES) or ()
+                }
+                self._factor_entities = {
+                    s[CONF_SOURCE_ENTITY]: s[CONF_SOURCE_FACTOR_ENTITY]
+                    for s in defaults.get(CONF_HEAT_SOURCES) or ()
+                    if s.get(CONF_SOURCE_FACTOR_ENTITY)
                 }
                 self._data = {**defaults, **user_input}
                 self._data.pop(CONF_HEAT_SOURCES, None)
@@ -689,25 +696,29 @@ class RoomSubentryFlow(ThermostatSteps):
     async def async_step_heat_source_factors(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """MDL-042: how much of each device's power stays in the room."""
+        """MDL-042, MDL-049: how much of each device's power stays in the room."""
         if user_input is not None:
             self._data[CONF_HEAT_SOURCES] = [
-                {
-                    CONF_SOURCE_ENTITY: entity_id,
-                    CONF_SOURCE_FACTOR: float(
-                        user_input.get(entity_id, HEAT_SOURCE_FACTOR_DEFAULT_PCT)
-                    ),
-                }
-                for entity_id in self._source_ids
+                _heat_source(entity_id, user_input) for entity_id in self._source_ids
             ]
             return self._finish()
-        schema = {
-            vol.Required(
-                entity_id,
-                default=self._factors.get(entity_id, HEAT_SOURCE_FACTOR_DEFAULT_PCT),
-            ): _number(HEAT_SOURCE_FACTOR_MIN_PCT, HEAT_SOURCE_FACTOR_MAX_PCT, 5, PERCENTAGE)
-            for entity_id in self._source_ids
-        }
+        schema: dict[Any, Any] = {}
+        for entity_id in self._source_ids:
+            schema[
+                vol.Required(
+                    entity_id,
+                    default=self._factors.get(entity_id, HEAT_SOURCE_FACTOR_DEFAULT_PCT),
+                )
+            ] = _number(HEAT_SOURCE_FACTOR_MIN_PCT, HEAT_SOURCE_FACTOR_MAX_PCT, 5, PERCENTAGE)
+            factor_key = factor_entity_key(entity_id)
+            schema[
+                vol.Optional(
+                    factor_key,
+                    description=_suggested(
+                        {factor_key: self._factor_entities.get(entity_id)}, factor_key
+                    ),
+                )
+            ] = EntitySelector(EntitySelectorConfig(domain=["sensor", "input_number", "number"]))
         names = ", ".join(self._source_name(e) for e in self._source_ids)
         return self.async_show_form(
             step_id="heat_source_factors",
@@ -755,3 +766,18 @@ ROLE_DOMAINS: dict[Role, list[str]] = {
     Role.CALIBRATION_STATUS: ["sensor", "select"],
     Role.SETPOINT_SOURCE: ["sensor", "select"],
 }
+
+
+def factor_entity_key(entity_id: str) -> str:
+    """MDL-049: form field for the optional factor sensor of one heat source."""
+    return f"{entity_id} (factor sensor)"
+
+
+def _heat_source(entity_id: str, user_input: Mapping[str, Any]) -> dict[str, Any]:
+    source: dict[str, Any] = {
+        CONF_SOURCE_ENTITY: entity_id,
+        CONF_SOURCE_FACTOR: float(user_input.get(entity_id, HEAT_SOURCE_FACTOR_DEFAULT_PCT)),
+    }
+    if factor_entity := user_input.get(factor_entity_key(entity_id)):
+        source[CONF_SOURCE_FACTOR_ENTITY] = factor_entity
+    return source

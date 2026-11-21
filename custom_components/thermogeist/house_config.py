@@ -37,6 +37,7 @@ from .const import (
     CONF_SHARE_OUTSIDE,
     CONF_SOURCE_ENTITY,
     CONF_SOURCE_FACTOR,
+    CONF_SOURCE_FACTOR_ENTITY,
     CONF_STRATEGY,
     CONF_TEMPERATURE_ENTITY,
     CONF_THERMOSTAT_NAME,
@@ -103,6 +104,7 @@ def room_from_config(config: Mapping[str, Any]) -> Room:
             HeatSource(
                 entity_id=str(source[CONF_SOURCE_ENTITY]),
                 factor_pct=float(source.get(CONF_SOURCE_FACTOR, HEAT_SOURCE_FACTOR_DEFAULT_PCT)),
+                factor_entity=source.get(CONF_SOURCE_FACTOR_ENTITY) or None,
             )
             for source in config.get(CONF_HEAT_SOURCES) or ()
             if source.get(CONF_SOURCE_ENTITY)

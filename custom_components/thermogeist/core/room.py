@@ -47,9 +47,11 @@ EXTERIOR_WALLS_MAX = 4
 KNOWN_SHARE_PCT_MIN = 0.0
 KNOWN_SHARE_PCT_MAX = 100.0
 
-# MDL-042: share of a device's power that stays in the room as heat.
+# MDL-042, MDL-048: share of a device's power that stays in the room as heat. Up to 500 % because
+# an air-to-air heat pump releases its power times its COP; 5 is above any split unit at mild
+# weather, so higher values are typing or template errors.
 HEAT_SOURCE_FACTOR_MIN_PCT = 0.0
-HEAT_SOURCE_FACTOR_MAX_PCT = 100.0
+HEAT_SOURCE_FACTOR_MAX_PCT = 500.0
 HEAT_SOURCE_FACTOR_DEFAULT_PCT = 100.0
 
 FIELD_ROOM_NAME = "name"
@@ -63,10 +65,12 @@ FIELD_DESIGN_INDOOR = "design_indoor_temperature"
 
 @dataclass(frozen=True, slots=True)
 class HeatSource:
-    """MDL-040, MDL-042: a device whose power heats the room."""
+    """MDL-040, MDL-042, MDL-049: a device whose power heats the room."""
 
     entity_id: str
     factor_pct: float = HEAT_SOURCE_FACTOR_DEFAULT_PCT
+    factor_entity: str | None = None
+    """MDL-049: optional sensor in % that sets the factor; `factor_pct` is the fallback."""
 
 
 @dataclass(frozen=True, slots=True)

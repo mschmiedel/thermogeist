@@ -305,7 +305,7 @@
         },
         "heat_source_factors": {
           "title": "How much heat stays in the room?",
-          "description": "Per device: the share of its power that stays in the room as heat ({devices}). 100 % for electronics, lights, fridges and heat pump dryers. Less for devices whose heat leaves with exhaust air or waste water, e.g. vented dryer 10–20 %, washing machine 10–20 %, dishwasher 20–40 %. See the docs: Rooms → Devices that heat the room."
+          "description": "Per device: the share of its power that stays in the room as heat ({devices}). 100 % for electronics, lights, fridges and heat pump dryers. Less for devices whose heat leaves with exhaust air or waste water, e.g. vented dryer 10–20 %, washing machine 10–20 %, dishwasher 20–40 %. More for an air conditioner heating the room: its COP × 100 %, e.g. 400 % (choose a little below the SCOP on the energy label). Optional per device: a factor sensor in % (e.g. a template) that wins over the number while it is available. See the docs: Rooms → Devices that heat the room."
         },
         "edit_room": {
           "title": "Change room",

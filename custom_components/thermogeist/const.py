@@ -51,6 +51,7 @@ CONF_WINDOWS: Final = "window_sensors"
 CONF_HEAT_SOURCES: Final = "heat_sources"
 CONF_SOURCE_ENTITY: Final = "entity"
 CONF_SOURCE_FACTOR: Final = "factor"
+CONF_SOURCE_FACTOR_ENTITY: Final = "factor_entity"
 
 # Thermostat keys.
 SUBENTRY_THERMOSTAT: Final = "thermostat"

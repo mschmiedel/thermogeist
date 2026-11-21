@@ -58,7 +58,7 @@ ergeben einen kleinen Anteil.
 | Anteil an der Heizlast | Der Anteil des Raums, geschätzt oder eingetragen. |
 | Wärmeverlustkoeffizient | Watt pro Kelvin Temperaturunterschied nach draußen. |
 | Fenster | Nur mit Fensterkontakten: an, solange einer offen ist. Attribute: die Kontakte, `heating_paused`, `frost_guard` und die geltenden Zeiten. Unter **Konfiguration**: *Fenster: schließen nach*, *Fenster: wieder heizen nach* (Wert vom Haus, bis du ihn änderst, Attribut `source`) und *Fenster: Zeiten auf Haus zurücksetzen*. |
-| Wärme aus Geräten | Nur mit Wärmequellen: Watt, die die Geräte an den Raum abgeben (nach Faktor, Mittel über 10 Minuten). |
+| Wärme aus Geräten | Nur mit Wärmequellen: Watt, die die Geräte an den Raum abgeben (nach Faktor, Mittel über 10 Minuten). Attribute: der geltende Faktor pro Gerät und die Faktor-Sensoren. |
 
 Beim Haus siehst du zusätzlich **Heizlast ohne Raum** und **Abdeckung durch Räume**: wie viel
 der Heizlast deine Räume (und der Anteil außerhalb von Thermogeist) abdecken, mit dem fehlenden
@@ -111,5 +111,36 @@ Wärme im Raum bleibt.
 **Mehr als 100 %:** Ein Luftentfeuchter mit Kompressor gibt seinen Strom plus die Wärme der
 kondensierten Feuchte ab – etwa 150 %. Wähle trotzdem 100 %: Zu wenig Wärme anzunehmen ist
 harmlos, die langsame Korrektur gleicht es aus.
+
+**Klimaanlage, die heizt (Luft-Luft-Wärmepumpe):** Sie holt Wärme von draußen und gibt ihren
+Strom mal ihren **COP** in den Raum ab, typisch das 3- bis 4-Fache. Der Faktor ist dann
+COP × 100 %, erlaubt sind bis 500 %. Den COP kennst du meist nicht, aber auf dem EU-Energielabel
+steht der **SCOP** für den Heizbetrieb (mittlere Heizperiode). Nimm etwas weniger, z. B. 400 % bei
+einem SCOP von 4,6 – an kalten Tagen ist der COP niedriger. Kühlt die Anlage, ist sie keine Heizung:
+Ein Template als Leistungssensor, das im Kühlbetrieb 0 W meldet, verhindert, dass sie mitzählt.
+
+**Faktor aus einem Sensor:** Optional wählst du pro Gerät neben der Zahl einen *Faktor-Sensor*
+in %. Solange er verfügbar ist, hat er Vorrang; fällt er aus, gilt wieder die Zahl. Thermogeist
+begrenzt ihn auf 0–500 %. Damit kann ein Template den COP mit der Außentemperatur mitgehen lassen.
+Eine grobe Schätzung für Split-Klimaanlagen: `COP = 0,45 · T_warm / (T_warm − T_kalt)` in Kelvin,
+mit `T_warm` = Raum + 15 K und `T_kalt` = außen − 6 K. Das ergibt etwa 4,2 bei 9 °C draußen und
+2,6 bei −10 °C. Die Entity-IDs im Beispiel sind Platzhalter:
+
+```yaml
+template:
+  - sensor:
+      - name: "Klimaanlage Wohnzimmer Faktor"
+        unit_of_measurement: "%"
+        state: >
+          {% set innen = states('sensor.wohnzimmer_temperatur') | float(21) %}
+          {% set aussen = states('sensor.aussentemperatur') | float(5) %}
+          {% set warm = innen + 15 + 273.15 %}
+          {% set kalt = aussen - 6 + 273.15 %}
+          {% set cop = 0.45 * warm / (warm - kalt) %}
+          {{ (([1, cop, 5] | sort)[1] * 100) | round(0) }}
+```
+
+Der Sensor **Wärme aus Geräten** zeigt im Attribut `sources` den Faktor, der gerade gilt, und in
+`factor_entities` die gewählten Faktor-Sensoren.
 
 Weiter: [Thermostate zuordnen](thermostats.md).

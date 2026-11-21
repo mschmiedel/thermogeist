@@ -196,7 +196,13 @@ HEAT_FROM_DEVICES = RoomSensorDescription(
     suggested_display_precision=0,
     value=lambda state: state.heat_from_sources_w,
     attributes=lambda state, _runtime: {
-        "sources": {s.entity_id: s.factor_pct for s in state.room.heat_sources}
+        "sources": {
+            s.entity_id: state.source_factors.get(s.entity_id, s.factor_pct)
+            for s in state.room.heat_sources
+        },
+        "factor_entities": {
+            s.entity_id: s.factor_entity for s in state.room.heat_sources if s.factor_entity
+        },
     },
 )
 """MDL-044: only for rooms with heat sources."""

@@ -88,3 +88,47 @@ async def test_feed_forward_subtracts_device_heat(
     without_pc = hass.states.get(PLANNED).attributes
     assert without_pc["heat_from_devices_w"] == 0
     assert without_pc["feed_forward"] > with_pc["feed_forward"]
+
+
+AC = "sensor.air_conditioner_power"
+COP = "sensor.air_conditioner_cop_factor"
+
+
+async def test_factor_entity_sets_heat_from_devices(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-ROOMS-012"""
+    from custom_components.thermogeist.config_flow import factor_entity_key
+
+    hass.states.async_set(AC, "500", {"device_class": "power", "unit_of_measurement": "W"})
+    hass.states.async_set(COP, "420", {"unit_of_measurement": "%"})
+    entry = await setup_house(hass, HOUSE_WITH_LOAD)
+    basics = {
+        "name": "Living room",
+        "temperature_entity": ROOM_SENSOR,
+        "share_mode": "known",
+        "design_indoor_temperature": 20.0,
+        "heat_sources": [AC],
+    }
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "room"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], basics)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"known_share": 30.0}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {AC: 400.0, factor_entity_key(AC): COP}
+    )
+    await hass.async_block_till_done()
+
+    assert result["data"]["heat_sources"] == [{"entity": AC, "factor": 400.0, "factor_entity": COP}]
+    assert float(hass.states.get(HEAT).state) == 2100.0
+    assert hass.states.get(HEAT).attributes["sources"] == {AC: 420.0}
+    assert hass.states.get(HEAT).attributes["factor_entities"] == {AC: COP}
+
+    hass.states.async_set(COP, "unavailable")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert float(hass.states.get(HEAT).state) == 2000.0

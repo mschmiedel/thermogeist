@@ -52,3 +52,13 @@ def test_heat_sources_reduce_the_demand() -> None:
     assert net_demand_w(800.0, sources) == 300.0
     assert net_demand_w(400.0, sources) == 0.0
     assert net_demand_w(None, sources) is None
+
+
+def test_factor_entity_wins_and_is_limited() -> None:
+    """Scenario: SCN-HEAT-006"""
+    from custom_components.thermogeist.core.heat import effective_factor_pct
+
+    assert effective_factor_pct(None, 400.0) == 400.0
+    assert effective_factor_pct(420.0, 400.0) == 420.0
+    assert effective_factor_pct(900.0, 400.0) == 500.0
+    assert effective_factor_pct(-20.0, 400.0) == 0.0
