@@ -83,7 +83,7 @@ Thermogeist controls Sonoff TRVZB thermostats.
 - Hydraulic balancing (DIA-030 to DIA-033)
 - Flow temperature: hold during hot water and defrost, return sensor, heating curve fallback (CTL-039, MDL-019) – next
 - Diagnostic sensors for the controller parts (CTL-041); controller state across restarts (CTL-040) done
-- **Internal heat sources** (gaming PC, server, aquarium …) from power sensors (MDL-040, MDL-042 to MDL-044 done); open: pre-fill from the room's area (MDL-041, with HAI-007), learning (MDL-045), fixed-power switch (MDL-047), air-to-air heat pumps with factors above 100 % (MDL-048) or a COP estimated from the temperatures (MDL-049)
+- **Internal heat sources** (gaming PC, server, aquarium …) from power sensors (MDL-040, MDL-042 to MDL-044 done); open: pre-fill from the room's area (MDL-041, with HAI-007), learning (MDL-045), fixed-power switch (MDL-047), air-to-air heat pumps with factors above 100 % (MDL-048) or a factor from an entity, e.g. a COP template (MDL-049)
 - Openings and neighbouring zones: doors to unheated halls, door sensors, separate learning (OPN-*)
 - Usability of the setup: dialogs that show only what is needed (HAI-016) – next; done: room coverage (MDL-046), thermostats inside their room (HAI-007), flow/return/spread on the house (DIA-042)
 - Generic on/off heaters with energy source and optional output/power entities (ACT-060 to ACT-065); idea for much later, not decided: let an on/off heater also choose between stages; wood stove as disturbance (MDL-050); hybrid heat generators (MDL-051, later)
