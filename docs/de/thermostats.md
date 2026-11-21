@@ -73,14 +73,19 @@ Wert. Sollwerte bleiben zwischen 5 und 30 °C, in 0,5-K-Schritten.
 Grenzen von *über Sollwert*: keine Mindestöffnung und keine ruhige Ventilbewegung – wie weit das
 Ventil öffnet, entscheidet der Regler im Thermostat.
 
-> **Regeln über den Sollwert wird unterstützt, kann sich aber unrund verhalten.** Thermogeist
-> sieht nur den Sollwert am Thermostat, nicht, wer ihn geändert hat: jemand am Rad, der eigene
-> Zeitplan des Thermostats, seine Fensterfunktion oder sein Frostschutz sehen gleich aus. Ohne
-> Eingang für externe Temperatur zeigt die Anzeige außerdem einen korrigierten Wert statt deines
-> Raum-Sollwerts. Thermogeist fängt die bekannten Fälle ab (siehe *Fensterfunktion des
-> Thermostats* unten), aber seltsame Momente bleiben möglich. Bietet dein Thermostat eine
-> Ventilstellung, ist die Regelung über das Ventil die ruhigere Wahl. Schalte Zeitplan und
-> Fenstererkennung des Thermostats ab, wo das geht.
+> **Grenze beim Regeln über den Sollwert: Alles, was am Display des Thermostats steht, wird
+> ignoriert.** Am Rad drehen oder Tasten am Thermostat drücken wirkt nicht dauerhaft –
+> Thermogeist stellt innerhalb von etwa einer Minute seinen eigenen Wert wieder ein. Stell die
+> Temperatur in Home Assistant ein (Klima-Entität des Raums, Dashboards, Sprachassistenten).
+> Der Grund: Thermogeist sieht nur den Sollwert am Thermostat, nicht, wer ihn geändert hat.
+> Jemand am Rad, der eigene Zeitplan des Thermostats, seine Fensterfunktion oder sein
+> Frostschutz sehen gleich aus.
+>
+> Weitere Grenzen: Ohne Eingang für externe Temperatur zeigt die Anzeige einen korrigierten Wert
+> statt deines Raum-Sollwerts, und wie weit das Ventil öffnet, entscheidet der Regler im
+> Thermostat. Räume können deshalb ein halbes Grad zu warm werden. Bietet dein Thermostat eine
+> Ventilstellung, ist die Regelung über das Ventil die ruhigere Wahl. Schalte Zeitpläne und
+> Fenstererkennung des Thermostats ab.
 
 ## Regeln
 
@@ -104,15 +109,17 @@ Was beim Ausschalten passiert: Alle gemerkten Geräteeinstellungen und die Venti
 zurückgesetzt; Sollwert-Thermostate bekommen den einfachen Raum-Sollwert. Das Thermostat regelt
 wieder selbst.
 
-**Am Rad drehen** an einem geregelten Thermostat setzt den Raum-Sollwert (nach 20 Sekunden ohne
-weiteres Drehen). Du siehst das im Logbuch. Bei korrigiertem Sollwert zählt der Unterschied:
-Drehen von 22,5 auf 23,5 °C macht den Raum-Sollwert ein Grad höher.
+**Am Rad drehen** an einem Thermostat, das **über das Ventil** geregelt wird, setzt den
+Raum-Sollwert (nach 20 Sekunden ohne weiteres Drehen). Du siehst das im Logbuch. An einem
+Thermostat, das **über den Sollwert** geregelt wird, wird das Rad ignoriert (siehe die Grenze
+oben).
 
 **Fensterfunktion des Thermostats:** Manche Thermostate senken ihren Sollwert selbst, wenn ein
-Fenster aufgeht (Bosch Raumklima zum Beispiel auf 8 °C), und stellen ihn beim Schließen zurück.
-Das darf nicht dein Raum-Sollwert werden. Solange ein Fensterkontakt des Raums offen ist und
-noch 2 Minuten nach dem Schließen, übernimmt Thermogeist deshalb keine Sollwert-Änderungen vom
-Thermostat und schreibt danach seinen eigenen Wert wieder hin. Wer in dieser Zeit am Rad dreht,
+Fenster aufgeht (zum Beispiel auf 8 °C), und stellen ihn beim Schließen zurück. Das darf nicht
+dein Raum-Sollwert werden. Bei einem Thermostat, das über das Ventil geregelt wird, übernimmt
+Thermogeist deshalb keine Sollwert-Änderungen vom Thermostat, solange ein Fensterkontakt des
+Raums offen ist und noch 2 Minuten nach dem Schließen, und schreibt danach seinen eigenen Wert
+wieder hin. Wer in dieser Zeit am Rad dreht,
 wird ebenfalls ignoriert – später noch einmal drehen oder den Raum in Home Assistant einstellen.
 Das klappt nur, wenn der Fensterkontakt auch im Thermogeist-Raum ausgewählt ist.
 

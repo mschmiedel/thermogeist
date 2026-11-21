@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
-"""Control mode: write plans to thermostats (spec ACT-040 to ACT-054, OVR-001, OVR-005, RSN-003,
-RSN-004).
+"""Control mode: write plans to thermostats (spec ACT-040 to ACT-054, OVR-001, OVR-004, OVR-005,
+RSN-003, RSN-004).
 
 This is HA glue. What to write is decided in ``core`` (controller, decisions, supervision);
 this module only talks to the devices, remembers what it changed and puts it back.
@@ -73,10 +73,10 @@ class ThermostatControl:
     offset_average: MovingAverage = field(default_factory=MovingAverage)
     """ACT-052: device temperature minus room temperature, averaged over 30 minutes."""
     setpoint_offset_k: float = 0.0
-    """Difference between the last sent device setpoint and the room target (OVR-001)."""
+    """Difference between the last sent device setpoint and the room target (ACT-052)."""
     setpoint_written_at: datetime | None = None
-    window_resync: bool = False
-    """OVR-005: a device change during a window was ignored; put our value back afterwards."""
+    resync: bool = False
+    """OVR-004/OVR-005: a device setpoint change was ignored; put our value back."""
 
 
 class ControlManager:
@@ -219,7 +219,7 @@ class ControlManager:
             None if offset is None or room_c is None else room_c + offset,
             external_input=external,
         )
-        self._resync_after_window(thermostat, control, desired)
+        self._resync_device_setpoint(thermostat, control, desired)
         if should_write_setpoint(
             desired,
             control.last_setpoint_c,
@@ -233,13 +233,17 @@ class ControlManager:
             control.last_write_urgent = code in URGENT_CODES
             await self._async_call("climate", "set_temperature", entity, temperature=desired)
 
-    def _resync_after_window(
+    def _resync_device_setpoint(
         self, thermostat: Thermostat, control: ThermostatControl, desired: float
     ) -> None:
-        """OVR-005: once the window is over, a device value left by its window function goes."""
-        if not control.window_resync or self._runtime.window_may_move_device(thermostat.room_id):
+        """OVR-004: an ignored device setpoint is replaced, but not while a window is involved.
+
+        During a window the device's own window function may hold its value; fighting it would
+        only move the motor (OVR-005).
+        """
+        if not control.resync or self._runtime.window_may_move_device(thermostat.room_id):
             return
-        control.window_resync = False
+        control.resync = False
         shown = self._climate_setpoint(thermostat.roles[Role.CLIMATE])
         if shown is not None and abs(shown - desired) > SETPOINT_TOLERANCE_K:
             control.last_setpoint_c = None  # forces the write
@@ -329,8 +333,8 @@ class ControlManager:
         """OVR-004: the device display shows the real room target."""
         entity = thermostat.roles[Role.CLIMATE]
         desired = STOP_SETPOINT_C if target is None else target
-        if control.window_resync and not self._runtime.window_may_move_device(thermostat.room_id):
-            control.window_resync = False  # the comparison below puts the value back
+        if control.resync and not self._runtime.window_may_move_device(thermostat.room_id):
+            control.resync = False  # the comparison below puts the value back
         current = self._climate_setpoint(entity)
         if current is None or abs(current - desired) > SETPOINT_TOLERANCE_K:
             control.last_setpoint_c = desired
@@ -417,7 +421,7 @@ class ControlManager:
         )
         await self.async_set_enabled(room_id, False)
 
-    # ----- manual operation on the device (OVR-001) --------------------------------------
+    # ----- manual operation on the device (OVR-001, OVR-004) --------------------------------------
 
     @callback
     def _on_device_climate(self, event: Event[EventStateChangedData]) -> None:
@@ -434,6 +438,11 @@ class ControlManager:
             if control.pending_override is not None:
                 control.pending_override()
                 control.pending_override = None
+            if thermostat.kind is Kind.SETPOINT:
+                # OVR-004: knob, schedule or window function of the device look the same.
+                control.resync = True
+                _LOGGER.debug("%s: device setpoint %s ignored", thermostat.name, value)
+                continue
             if self._ignore_for_window(thermostat, control):
                 continue
 
@@ -455,11 +464,7 @@ class ControlManager:
         if self._ignore_for_window(thermostat, control):
             return
         control.last_setpoint_c = value
-        # ACT-052: with the setpoint strategy the device shows the corrected value; the room
-        # setpoint is what the user meant, i.e. without the offset.
-        room_setpoint = round_setpoint(value - control.setpoint_offset_k)
-        if thermostat.kind is Kind.SETPOINT:
-            control.setpoint_offset_k = value - room_setpoint
+        room_setpoint = round_setpoint(value)
         room_name = self._rooms[thermostat.room_id].room.name
         await self.async_logbook(
             room_name, "logbook_manual_setpoint", thermostat=thermostat.name, setpoint=room_setpoint
@@ -472,8 +477,8 @@ class ControlManager:
         Devices with their own window function (e.g. Bosch Room Climate Control) lower their
         setpoint themselves; Thermogeist cannot tell that from a turned knob.
         """
-        if control.window_resync or self._runtime.window_may_move_device(thermostat.room_id):
-            control.window_resync = True
+        if control.resync or self._runtime.window_may_move_device(thermostat.room_id):
+            control.resync = True
             _LOGGER.debug("%s: setpoint change around a window ignored", thermostat.name)
             return True
         return False

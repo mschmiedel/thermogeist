@@ -248,42 +248,41 @@ async def test_setpoint_thermostat_window_and_knob(
     await tick(hass, freezer, 11)
     assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 22.5
     hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 22.5, "current_temperature": 22.0})
-    await tick(hass, freezer, 120)  # OVR-005: past the window grace period
+    await tick(hass, freezer, 120)  # past the window grace period (OVR-005)
 
-    # Turning the knob to 23.5 means one degree more in the room, not 23.5 °C.
+    # OVR-004: the knob of a setpoint thermostat is ignored and its value replaced.
+    written = len(calls.climate)
     hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 23.5, "current_temperature": 22.0})
-    await tick(hass, freezer, 21)
-    assert hass.states.get("climate.living_room").attributes["temperature"] == 21.0
+    await tick(hass, freezer, 61)
+    assert hass.states.get("climate.living_room").attributes["temperature"] == 20.0
+    assert Calls.values(calls.climate[written:], OLD_CLIMATE, "temperature") == [22.5]
 
 
 async def test_device_window_function_is_not_adopted(
     hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
 ) -> None:
     """Scenario: SCN-CONTROL-014"""
-    calls = await controlled_old_trv(hass, windows=True)
+    _, calls = await controlled_bosch(hass, windows=True)
     await switch(hass, True)
     await tick(hass, freezer, 91)
-    hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 22.5, "current_temperature": 22.0})
+    logbook = async_capture_events(hass, "logbook_entry")
 
     hass.states.async_set(WINDOW, "on", {"device_class": "window"})
     await tick(hass, freezer, 31)
-    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 5.0
-    hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 8.0, "current_temperature": 22.0})
+    assert Calls.values(calls.climate, DEVICE_CLIMATE, "temperature")[-1] == 7.0
+    hass.states.async_set(DEVICE_CLIMATE, "heat", {"temperature": 8.0})
     await tick(hass, freezer, 21)
     assert hass.states.get("climate.living_room").attributes["temperature"] == 20.0
 
     hass.states.async_set(WINDOW, "off", {"device_class": "window"})
     await tick(hass, freezer, 11)
-    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 22.5
-    written_at_close = len(calls.climate)
-    hass.states.async_set(OLD_CLIMATE, "heat", {"temperature": 8.0, "current_temperature": 22.0})
+    hass.states.async_set(DEVICE_CLIMATE, "heat", {"temperature": 8.0})
     for _ in range(18):
         await tick(hass, freezer, 10)
 
     assert hass.states.get("climate.living_room").attributes["temperature"] == 20.0
-    assert Calls.values(calls.climate, OLD_CLIMATE, "temperature")[-1] == 22.5
-    # After the grace period the device's leftover 8 °C is replaced.
-    assert Calls.values(calls.climate[written_at_close:], OLD_CLIMATE, "temperature") == [22.5]
+    assert Calls.values(calls.climate, DEVICE_CLIMATE, "temperature")[-1] == 20.0
+    assert not any("manual" in str(e.data) or "8.0" in e.data["message"] for e in logbook)
 
 
 async def test_bosch_can_be_controlled_by_setpoint(
