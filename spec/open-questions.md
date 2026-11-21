@@ -50,6 +50,11 @@ Test setup: pipe probe (e.g. SNZB-02LD) on the flow pipe at the valve, values in
   then its own regulation takes over. Confirmed every 10 minutes since ACT-047.
 - Sonoff TRVZB / TRV-ZBT: control is implemented through the same roles but not yet tested on a
   real device.
+- Bosch Smart Home radiator thermostats (HT I, via the Bosch SHC integration): the reported
+  valve position (`valvetappet`) changes on average every 30–90 minutes, with gaps of up to
+  7 hours; the valve visibly moves long before the report. Nothing on the device (e.g. silent
+  mode) triggers an earlier report. Estimated output (MDL-013) and the sizing operation check
+  (DIA-015) are therefore rough in such rooms; no workaround, documented as a limit (OVR-006).
 - Override duration options (OVR-010) follow with schedules; until then a manual change is the
   new room setpoint.
 

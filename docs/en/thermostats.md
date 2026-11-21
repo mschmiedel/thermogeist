@@ -84,6 +84,12 @@ controller decides how far it opens.
 > opens. Rooms can therefore end up half a degree too warm. If your thermostat offers a valve
 > position, control by valve is the calmer choice. Switch off the thermostat's own schedules
 > and window detection.
+>
+> Some thermostats report their valve position only every now and then. Bosch Smart Home
+> radiator thermostats, for example, often report it minutes to hours after the valve has
+> moved – you can already feel the heat while the position still says 0 %. The control is not
+> affected (it works with the setpoint), but the *Estimated radiator output*, the *Radiator
+> size* and the *Valve position* of such rooms are only rough.
 
 ## Control
 

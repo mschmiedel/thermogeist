@@ -86,6 +86,12 @@ Ventil öffnet, entscheidet der Regler im Thermostat.
 > Thermostat. Räume können deshalb ein halbes Grad zu warm werden. Bietet dein Thermostat eine
 > Ventilstellung, ist die Regelung über das Ventil die ruhigere Wahl. Schalte Zeitpläne und
 > Fenstererkennung des Thermostats ab.
+>
+> Manche Thermostate melden ihre Ventilstellung nur ab und zu. Bosch-Smart-Home-Thermostate
+> zum Beispiel melden sie oft erst Minuten bis Stunden, nachdem das Ventil gefahren ist – die
+> Wärme ist schon zu spüren, während die Stellung noch 0 % zeigt. Die Regelung ist davon nicht
+> betroffen (sie arbeitet mit dem Sollwert), aber *Geschätzte Heizleistung*, *Heizkörpergröße*
+> und *Ventilstellung* solcher Räume sind nur grob.
 
 ## Regeln
 
