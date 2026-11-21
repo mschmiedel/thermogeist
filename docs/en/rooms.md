@@ -64,8 +64,9 @@ normal room; few exterior walls give them a small share.
 
 On the house you additionally see **Heat load not assigned to a room** and **Room coverage**:
 how much of the heat load your rooms (and the share outside Thermogeist) cover, with the missing
-share and the living area not yet in any room as attributes. **Heat demand of rooms** and **Heat
-supply of rooms** show what your rooms need and get right now, in watts – unlike the **Heat
+share and the living area not yet in any room as attributes. **Heat demand of rooms**, **Estimated
+radiator output of rooms** and **Heat from devices of rooms** add up the rooms' values in
+watts – what your rooms need and get right now – unlike the **Heat
 load**, the fixed planning value for the coldest day. With flow and return sensors the
 house also shows **Flow temperature**, **Return temperature** and **Spread** – the averaged
 values the controller uses – and **Flow on the design day**, from the heating curve Thermogeist

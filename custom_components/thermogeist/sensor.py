@@ -99,16 +99,25 @@ HOUSE_SENSORS: tuple[HouseSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value=lambda r: _round_or_none(r.house_balance().demand_w, 0),
-        attributes=lambda r: _balance_attributes(r, supply=False),
+        attributes=lambda r: _balance_attributes(r),
     ),
     HouseSensorDescription(
-        key="rooms_heat_supply",
+        key="rooms_estimated_output",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value=lambda r: _round_or_none(r.house_balance().supply_w, 0),
-        attributes=lambda r: _balance_attributes(r, supply=True),
+        value=lambda r: _round_or_none(r.house_balance().radiators_w, 0),
+        attributes=lambda r: _balance_attributes(r),
+    ),
+    HouseSensorDescription(
+        key="rooms_heat_from_devices",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value=lambda r: _round_or_none(r.house_balance().devices_w, 0),
+        attributes=lambda r: _balance_attributes(r),
     ),
     HouseSensorDescription(
         key="flow_temperature_used",
@@ -159,17 +168,13 @@ HOUSE_SENSORS: tuple[HouseSensorDescription, ...] = (
 """DIA-014: the learned heating curve, extended to the design day."""
 
 
-def _balance_attributes(runtime: HouseRuntime, *, supply: bool) -> dict[str, Any]:
-    """MDL-052, MDL-053: both sums cover the same rooms."""
+def _balance_attributes(runtime: HouseRuntime) -> dict[str, Any]:
+    """MDL-052 to MDL-054: all house sums cover the same rooms."""
     balance = runtime.house_balance()
-    attributes: dict[str, Any] = {
+    return {
         "rooms": balance.rooms,
         "rooms_without_estimate": list(balance.rooms_without_estimate),
     }
-    if supply:
-        attributes["radiators_w"] = round(balance.radiators_w)
-        attributes["devices_w"] = round(balance.devices_w)
-    return attributes
 
 
 def _design_day_flow(runtime: HouseRuntime) -> float | None:

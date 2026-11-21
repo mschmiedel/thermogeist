@@ -486,7 +486,7 @@ class HouseRuntime:
         )
 
     def house_balance(self) -> HouseBalance:
-        """MDL-052, MDL-053: demand and supply summed over the rooms with an estimate."""
+        """MDL-052 to MDL-054: the rooms' sums, over the rooms with a radiator estimate."""
         return house_balance(
             [
                 RoomBalanceInput(

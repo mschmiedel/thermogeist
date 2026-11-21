@@ -201,8 +201,11 @@
       "rooms_heat_demand": {
         "name": "Wärmebedarf der Räume"
       },
-      "rooms_heat_supply": {
-        "name": "Wärmezufuhr der Räume"
+      "rooms_estimated_output": {
+        "name": "Geschätzte Heizleistung der Räume"
+      },
+      "rooms_heat_from_devices": {
+        "name": "Wärme aus Geräten der Räume"
       },
       "flow_temperature_used": {
         "name": "Vorlauftemperatur"

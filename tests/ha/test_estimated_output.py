@@ -41,11 +41,12 @@ async def test_house_shows_demand_and_supply_of_rooms(
     await tick(hass, freezer, 61)
 
     demand = hass.states.get("sensor.home_heat_demand_of_rooms")
-    supply = hass.states.get("sensor.home_heat_supply_of_rooms")
+    radiators = hass.states.get("sensor.home_estimated_radiator_output_of_rooms")
+    devices = hass.states.get("sensor.home_heat_from_devices_of_rooms")
     assert float(demand.state) == pytest.approx(
         float(hass.states.get("sensor.living_room_heat_demand").state), abs=1
     )
-    assert float(supply.state) == pytest.approx(float(hass.states.get(OUTPUT).state), abs=1)
-    assert supply.attributes["devices_w"] == 0
-    assert supply.attributes["rooms"] == 1
-    assert supply.attributes["rooms_without_estimate"] == []
+    assert float(radiators.state) == pytest.approx(float(hass.states.get(OUTPUT).state), abs=1)
+    assert float(devices.state) == 0
+    assert radiators.attributes["rooms"] == 1
+    assert radiators.attributes["rooms_without_estimate"] == []

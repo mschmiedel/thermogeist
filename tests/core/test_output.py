@@ -63,7 +63,7 @@ def test_house_balance_covers_the_same_rooms() -> None:
     )
 
     assert balance.demand_w == 500.0
-    assert balance.supply_w == 500.0
-    assert (balance.radiators_w, balance.devices_w) == (400.0, 100.0)
+    assert balance.radiators_w == 400.0
+    assert balance.devices_w == 100.0
     assert balance.rooms == 2
     assert balance.rooms_without_estimate == ("C",)

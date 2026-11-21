@@ -14,13 +14,19 @@ keinen Wert zeigt. Diagnose- und Konfigurations-Entitäten findest du auf der Ge
 |---|---|---|---|
 | Zentralmodus | *Automatisch*, *Aus* oder *Frostschutz* für das ganze Haus. Bleibt über Neustarts erhalten. | immer | – |
 | Heizungsart | Wärmepumpe, Kessel oder Elektro-Direktheizung – bestimmt, wie ruhig Thermogeist regelt. Diagnose. | immer | – |
-| Heizlast | Die eingetragene Heizlast in kW: was das Haus am kältesten Auslegungstag braucht. Ein fester Planungswert, nicht der Bedarf von jetzt (siehe *Wärmebedarf der Räume*). Diagnose. | immer | keine Heizlast eingetragen |
+| Heizlast | Die eingetragene Heizlast in kW: was das Haus am kältesten Auslegungstag braucht. Ein fester Planungswert, nicht der Bedarf von jetzt (siehe *Wärmebedarf der Räume* unten). Diagnose. | immer | keine Heizlast eingetragen |
 | Normaußentemperatur | Die Außentemperatur, für die die Heizlast berechnet wurde. Diagnose. | immer | nicht eingetragen |
 | Anteil außerhalb von Thermogeist | Teil der Heizlast in Räumen, die Thermogeist nicht regelt, wie eingetragen. Diagnose. | immer | – |
 | Heizlast ohne Raum | Teil der Heizlast, den noch kein Raum (und kein Anteil außerhalb) abdeckt. Diagnose. | immer | – |
 | Abdeckung durch Räume | 100 % minus der Teil ohne Raum. Attribute: `missing_pct`, `floor_area_not_in_rooms_m2`, `rooms`. | immer | – |
-| Wärmebedarf der Räume | Watt, die deine Räume gerade brauchen, um ihr Ziel zu halten – die Summe ihres *Wärmebedarfs*, über dieselben Räume wie *Wärmezufuhr der Räume*. Attribute: `rooms`, `rooms_without_estimate`. | immer | keine Heizlast am Haus |
-| Wärmezufuhr der Räume | Watt, die deine Räume gerade bekommen: die *Geschätzte Heizleistung* plus die *Wärme aus Geräten* aller Räume. Ein Raum, dessen Heizkörper sich nicht schätzen lassen, fehlt in beiden Summen und steht in `rooms_without_estimate`. Attribute: `radiators_w`, `devices_w`, `rooms`, `rooms_without_estimate`. Es zählen nur Räume in Thermogeist (siehe *Abdeckung durch Räume*); das ist nicht die Leistung deiner Wärmepumpe oder deines Kessels. | immer | kein Raum hat eine Schätzung |
+| Wärmebedarf der Räume | Watt, die deine Räume gerade brauchen, um ihr Ziel zu halten – die Summe ihres *Wärmebedarfs*. | immer | keine Heizlast am Haus |
+| Geschätzte Heizleistung der Räume | Watt, die alle Heizkörper gerade abgeben – die Summe der *Geschätzten Heizleistung* der Räume. Nur Heizkörper: Vergleiche sie über die Zeit mit dem, was deine Wärmepumpe oder dein Kessel liefert (Wärmemengenzähler). | immer | kein Raum hat eine Schätzung |
+| Wärme aus Geräten der Räume | Watt, die deine Geräte in die Räume abgeben – die Summe der *Wärme aus Geräten* der Räume. Getrennt gehalten, weil diese Wärme aus der Steckdose kommt, nicht aus der Heizung. | immer | kein Raum hat eine Schätzung |
+
+Die drei Summen umfassen dieselben Räume, du kannst sie also direkt vergleichen. Ein Raum, dessen Heizkörper sich nicht schätzen lassen (keine Ventilstellung oder kein Thermostat), fehlt in allen dreien und steht im Attribut `rooms_without_estimate`; `rooms` sagt, wie viele gezählt sind. Es zählen nur Räume in Thermogeist (siehe *Abdeckung durch Räume*). Eine gemeinsame Summe aus Heizkörpern und Geräten gibt es nicht; ein Template kann beides addieren, wenn du sie brauchst.
+
+| Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
+|---|---|---|---|
 | Vorlauftemperatur | Der gemittelte Vorlauf, mit dem die Regelung rechnet (`source`: dein Sensor). | Vorlauf-Sensor gewählt | der Sensor liefert keinen plausiblen Wert |
 | Rücklauftemperatur | Der gemittelte Rücklauf. | Rücklauf-Sensor gewählt | der Sensor liefert keinen Wert |
 | Spreizung | Vorlauf minus Rücklauf, begrenzt auf 1–10 K; ersetzt die angenommenen 5 K. | Vorlauf- und Rücklauf-Sensor gewählt | einer davon liefert keinen Wert |

@@ -201,8 +201,11 @@
       "rooms_heat_demand": {
         "name": "Heat demand of rooms"
       },
-      "rooms_heat_supply": {
-        "name": "Heat supply of rooms"
+      "rooms_estimated_output": {
+        "name": "Estimated radiator output of rooms"
+      },
+      "rooms_heat_from_devices": {
+        "name": "Heat from devices of rooms"
       },
       "flow_temperature_used": {
         "name": "Flow temperature"
