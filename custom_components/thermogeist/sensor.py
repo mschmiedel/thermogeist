@@ -280,6 +280,42 @@ RADIATOR_SIZING = RoomSensorDescription(
 """DIA-012: only for rooms with thermostats."""
 
 
+class EstimatedOutputSensor(RoomEntity, SensorEntity):
+    """MDL-013: estimated heat output of the room's radiators, next to the heat demand."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
+        super().__init__(entry, room_id, "estimated_output")
+
+    @property
+    def native_value(self) -> float | None:
+        return _round_or_none(self.runtime.estimated_output(self._room_id).output_w, 0)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        estimate = self.runtime.estimated_output(self._room_id)
+        attributes: dict[str, Any] = {
+            "max_output_w": _round_or_none(estimate.max_output_w, 0),
+            "radiators": {
+                r.name: {
+                    "output_w": _round_or_none(r.output_w, 0),
+                    "max_output_w": _round_or_none(r.max_output_w, 0),
+                    "valve_pct": _round_or_none(r.valve_pct, 0),
+                    "valve_source": r.valve_source.value if r.valve_source else None,
+                }
+                for r in estimate.radiators
+            },
+            "valve_characteristic": "assumed",
+        }
+        if estimate.missing:
+            attributes["missing"] = list(estimate.missing)
+        return attributes
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThermogeistConfigEntry,
@@ -298,6 +334,7 @@ async def async_setup_entry(
             sensors.append(RoomSensor(entry, room_id, HEAT_FROM_DEVICES))
         if state.thermostat_ids:
             sensors.append(PlannedValveSensor(entry, room_id))
+            sensors.append(EstimatedOutputSensor(entry, room_id))
             sensors.append(RoomSensor(entry, room_id, RADIATOR_SIZING))
         async_add_entities(sensors, config_subentry_id=room_id)
     for thermostat_id, thermostat in entry.runtime_data.thermostats.items():

@@ -120,6 +120,9 @@
       },
       "design_day_flow": {
         "default": "mdi:thermometer-chevron-up"
+      },
+      "estimated_output": {
+        "default": "mdi:radiator"
       }
     },
     "switch": {

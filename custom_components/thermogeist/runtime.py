@@ -24,7 +24,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOCS_URL, DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
 from .control import ControlManager
-from .core.actuator import DeviceProfile, Role, Thermostat
+from .core.actuator import DeviceProfile, Kind, Role, Thermostat
 from .core.controller import (
     ControllerInputs,
     ControllerResult,
@@ -49,6 +49,7 @@ from .core.heat import (
     room_heat_loss_w_per_k,
 )
 from .core.house import FROST_PROTECTION_SETPOINT_C, CentralMode, HeatingType, House
+from .core.output import OutputEstimate, RadiatorInput, ValveSource, estimate_room_output
 from .core.profiles import (
     WINDOW_SETTINGS,
     ControlSetting,
@@ -442,6 +443,26 @@ class HouseRuntime:
         )
         if finished is not None:
             self._close_hour(finished, now)
+
+    def estimated_output(self, room_id: str) -> OutputEstimate:
+        """MDL-013: what the room's radiators give right now (estimate)."""
+        state = self.rooms[room_id]
+        controlled = self.control.is_enabled(room_id) and state.plan is not None
+        radiators = []
+        for tid in state.thermostat_ids:
+            thermostat = self.thermostats[tid]
+            entity = thermostat.roles.get(Role.VALVE_READ)
+            valve = numeric_state(self._hass, entity) if entity else None
+            source = ValveSource.REPORTED if valve is not None else None
+            if valve is None and controlled and thermostat.kind is Kind.VALVE:
+                assert state.plan is not None
+                valve, source = state.plan.output_pct, ValveSource.PLANNED
+            radiators.append(
+                RadiatorInput(thermostat.name, thermostat.rated_output_w, valve, source)
+            )
+        return estimate_room_output(
+            radiators, self.flow_used_c, state.current_temperature_c, self.spread_used_k
+        )
 
     def _sizing_valve_pct(self, room_id: str, state: RoomState) -> float | None:
         """DIA-015: the reported valve, else the plan while Thermogeist controls the room."""

@@ -55,6 +55,7 @@ normal room; few exterior walls give them a small share.
 | Active reason | Why the room aims for its current target. Every reason has an [FAQ page](faq/README.md). |
 | Target temperature | What the room actually aims for right now – e.g. 7 °C during frost protection. |
 | Heat demand | Watts the room needs right now to hold its target (needs a heat load on the house). |
+| Estimated radiator output | Only with thermostats: watts the radiators give right now, from rated output, flow, room temperature and valve position – compare it with the heat demand ([how it is estimated](entities.md#estimated-radiator-output)). |
 | Share of heat load | The room's share, estimated or entered. |
 | Heat loss coefficient | Watts per kelvin of temperature difference to outside. |
 | Windows | Only with window contacts: on while one is open. Attributes: the contacts, `heating_paused`, `frost_guard`, and the times in use. In **Configuration**: *Window: close after*, *Window: resume heating after* (house value until you change it, attribute `source`) and *Window: reset times to house*. |
@@ -67,6 +68,8 @@ share and the living area not yet in any room as attributes. With flow and retur
 house also shows **Flow temperature**, **Return temperature** and **Spread** – the averaged
 values the controller uses – and **Flow on the design day**, from the heating curve Thermogeist
 learns ([FAQ](faq/radiator_sizing.md)).
+
+All entities with their meaning and availability: [All entities](entities.md).
 
 To change a room, open the Thermogeist entry, click the gear icon (⚙) next to the room and choose
 **Edit room**. The same menu adds, edits and removes the room's thermostats.

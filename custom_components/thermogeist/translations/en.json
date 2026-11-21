@@ -170,6 +170,9 @@
       "heat_demand": {
         "name": "Heat demand"
       },
+      "estimated_output": {
+        "name": "Estimated radiator output"
+      },
       "room_share": {
         "name": "Share of heat load"
       },

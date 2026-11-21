@@ -94,7 +94,7 @@ corrects only after hours – and again in the other direction when the device i
 | MDL-010 | Room heat loss coefficient H (W/K) | `P_room / (T_design_in − T_design_out)` with `P_room = heat load · share`, `T_design_in` from MDL-039 | implemented |
 | MDL-011 | Current demand (W) | `H · (T_set − T_outdoor)` | implemented |
 | MDL-012 | Available radiator output (W) | rated output · (ΔT / 49.8 K)^1.3 (EN 442), with `ΔT = flow − 2.5 K − room` (half of a typical 5 K spread); 0 if ΔT ≤ 0 | implemented |
-| MDL-013 | Expected heat demand | demand / available output | planned |
+| MDL-013 | Estimated radiator output (W) per room | Per thermostat: available output (MDL-012) × the inverse of the assumed valve characteristic (CTL-036): 0 below the opening point (10 %), then `((valve − 10 %) / 90 %)^(1/2)`. Valve: the reported position, else the planned one while Thermogeist sets a valve-based thermostat; a setpoint thermostat without reported valve has none. The room sensor sums all thermostats and is unknown as soon as one lacks rated output, valve position, flow or room temperature (`missing`); attributes: `max_output_w` (all fully open), per radiator output, maximum, valve and its source, `valve_characteristic: assumed`. Sits next to the heat demand so users can compare both. | implemented |
 | MDL-014 | Time constant τ = C / H | C estimated from room volume and construction | implemented |
 | MDL-015 | Oversizing factor | available output on the design day (learned design-day flow, DIA-014; room at its setpoint) / demand on the design day | implemented |
 

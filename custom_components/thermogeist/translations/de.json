@@ -170,6 +170,9 @@
       "heat_demand": {
         "name": "Wärmebedarf"
       },
+      "estimated_output": {
+        "name": "Geschätzte Heizleistung"
+      },
       "room_share": {
         "name": "Anteil an der Heizlast"
       },

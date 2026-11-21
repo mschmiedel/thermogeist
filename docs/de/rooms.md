@@ -55,6 +55,7 @@ ergeben einen kleinen Anteil.
 | Aktueller Grund | Warum der Raum sein aktuelles Ziel anstrebt. Jeder Grund hat eine [FAQ-Seite](faq/README.md). |
 | Zieltemperatur | Was der Raum gerade wirklich anstrebt – z. B. 7 °C bei Frostschutz. |
 | Wärmebedarf | Watt, die der Raum gerade braucht, um sein Ziel zu halten (braucht eine Heizlast beim Haus). |
+| Geschätzte Heizleistung | Nur mit Thermostaten: Watt, die die Heizkörper gerade abgeben, aus Nennleistung, Vorlauf, Raumtemperatur und Ventilstellung – zum Vergleich mit dem Wärmebedarf ([so wird geschätzt](entities.md#geschätzte-heizleistung)). |
 | Anteil an der Heizlast | Der Anteil des Raums, geschätzt oder eingetragen. |
 | Wärmeverlustkoeffizient | Watt pro Kelvin Temperaturunterschied nach draußen. |
 | Fenster | Nur mit Fensterkontakten: an, solange einer offen ist. Attribute: die Kontakte, `heating_paused`, `frost_guard` und die geltenden Zeiten. Unter **Konfiguration**: *Fenster: schließen nach*, *Fenster: wieder heizen nach* (Wert vom Haus, bis du ihn änderst, Attribut `source`) und *Fenster: Zeiten auf Haus zurücksetzen*. |
