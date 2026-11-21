@@ -58,6 +58,7 @@ heavily oversized rooms.
 | DIA-021 | Valve 100 %, pipe stays cold (calibration probe) | air, stuck valve pin, TRV not opening | planned |
 | DIA-022 | One room needs a lot, others little | uneven distribution | planned |
 | DIA-023 | Statically fine, empirically too small | wrong input, radiator covered, presetting too closed (`cause: input_or_hydraulics`) | implemented |
+| DIA-024 | The thermostat itself reports heating (`hvac_action: heating`, reported or derived valve clearly open) for at least an hour, the flow is well above the room, no window is open, but the room temperature does not rise | thermostat not opening: lost calibration, stuck pin. Repair issue per thermostat with the hint to recalibrate. Thresholds to be derived from field data; false alarms to rule out: radiator too small in severe cold, airing without contact, very slow rooms. Field finding: a Sonoff TRVZB lost its calibration after a firmware update while Zigbee2MQTT and Home Assistant reported it as fine. | planned |
 
 ## Hydraulic balancing (staged)
 
