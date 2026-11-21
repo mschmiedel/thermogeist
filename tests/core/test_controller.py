@@ -215,11 +215,32 @@ def test_safe_position_is_no_starting_point() -> None:
         clock.advance(timedelta(minutes=1))
     assert lowest.output_pct < 40.0
 
-    restart = controller.step(inputs(**{**warm, "room_c": None}), clock.now())
-    assert restart.output_pct == 40.0
-    assert restart.limits == (Limit.SAFETY,)
+    silent = controller.step(inputs(**{**warm, "safety": True}), clock.now())
+    assert silent.output_pct == 40.0
+    assert silent.limits == (Limit.SAFETY,)
 
     clock.advance(timedelta(minutes=1))
     back = controller.step(inputs(**warm), clock.now())
     assert back.output_pct == pytest.approx(lowest.output_pct, abs=1)
     assert Limit.RATE_LIMIT not in back.limits
+
+
+def test_restart_continues_from_the_last_plan() -> None:
+    """Scenario: SCN-CTL-022"""
+    clock = FakeTimeProvider(START)
+    before = RoomController()
+    for _ in range(3):
+        planned = before.step(inputs(feed_forward_pct=46.0), clock.now())
+        clock.advance(timedelta(minutes=1))
+    snapshot = before.snapshot()
+
+    after = RoomController()
+    assert after.restore(snapshot, clock.now(), clock.now())
+    waiting = after.step(inputs(room_c=None, feed_forward_pct=None), clock.now())
+    assert waiting.output_pct == planned.output_pct
+
+    clock.advance(timedelta(minutes=1))
+    # Low flow after the restart: the feed-forward alone would ask for 100 %.
+    resumed = after.step(inputs(feed_forward_pct=100.0), clock.now())
+    assert resumed.output_pct == pytest.approx(planned.output_pct, abs=1)
+    assert Limit.RATE_LIMIT in resumed.limits

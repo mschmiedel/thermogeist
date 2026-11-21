@@ -163,6 +163,7 @@ class RoomController:
             "integral_pct": self.state.integral_pct,
             "integral_has_start_bias": self.state.integral_has_start_bias,
             "min_opening_relaxed": self.state.min_opening_relaxed,
+            "output_pct": self.state.last_output_pct,
         }
 
     def restore(self, snapshot: Mapping[str, Any], saved_at: datetime, now: datetime) -> bool:
@@ -173,6 +174,10 @@ class RoomController:
         self.state.integral_pct = float(integral) if integral is not None else None
         self.state.integral_has_start_bias = bool(snapshot.get("integral_has_start_bias"))
         self.state.min_opening_relaxed = bool(snapshot.get("min_opening_relaxed"))
+        # CTL-040: continue from the last plan, rate-limited from the first step (like seed).
+        output = snapshot.get("output_pct")
+        if output is not None:
+            self.seed(float(output))
         return True
 
     def step(self, inputs: ControllerInputs, now: datetime) -> ControllerResult:
@@ -198,6 +203,14 @@ class RoomController:
             result = ControllerResult(
                 0.0, 0.0, 0.0, self.state.integral_pct or 0.0, (Limit.STOPPED,)
             )
+        elif not inputs.safety and inputs.room_c is None and self.state.last_output_pct is not None:
+            # CTL-034: right after a restart the room temperature is not read yet; keep the last
+            # plan instead of falling back to the safe position.
+            held = self.state.last_reported_pct
+            if held is None:
+                held = float(round(self.state.last_output_pct))
+            self.state.last_time = now
+            return ControllerResult(held, 0.0, 0.0, self.state.integral_pct or 0.0, ())
         elif inputs.safety or inputs.room_c is None:
             self.state.resume_at_once = True
             safe = max(settings.min_opening_pct, SAFETY_MIN_OPENING_PCT)

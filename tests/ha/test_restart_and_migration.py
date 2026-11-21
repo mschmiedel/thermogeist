@@ -3,6 +3,7 @@
 
 from typing import Any
 
+import pytest
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -35,6 +36,7 @@ async def test_integral_is_restored_after_restart(
                     "integral_pct": -4.0,
                     "integral_has_start_bias": False,
                     "min_opening_relaxed": False,
+                    "output_pct": 46.0,
                 }
             },
         },
@@ -43,6 +45,8 @@ async def test_integral_is_restored_after_restart(
     await assign(hass, entry.entry_id, room_id, device_id, 1500.0)  # reloads the house
 
     assert hass.states.get(PLANNED).attributes["integral"] == -4.0
+    # CTL-040: the plan continues from the stored position, rate-limited.
+    assert float(hass.states.get(PLANNED).state) == pytest.approx(46.0, abs=1)
 
 
 async def test_changed_valves_start_fresh(

@@ -121,8 +121,11 @@ the Thermogeist room.
 
 **After the window:** once all contacts are closed (10 seconds by default), the valve goes
 straight to the position needed now – no slow ramp-up, also with a heat pump. The same
-happens after a restart or a silent room sensor: until the room temperature is known the
-valve stays at the safe minimum opening, then it goes straight to the computed position. Thermostats
+happens after a silent room sensor reports again: until then the valve stays at the safe
+minimum opening, then it goes straight to the computed position.
+
+**After a restart** of Home Assistant every room continues from its last planned position
+and moves on from there as calmly as before – a restart never makes the valves jump. Thermostats
 controlled by setpoint get 5 °C while the window is open; some (Bosch Smart Home) switch
 themselves *off* at 5 °C. Thermogeist switches them back to *heat* and sends the setpoint
 again.
