@@ -25,6 +25,7 @@ from .core.actuator import Kind, Role
 from .core.decisions import ReasonCode
 from .core.house import HeatingType
 from .core.room import ShareMode
+from .core.sizing import Sizing, SizingResult
 from .entity import HouseEntity, RoomEntity, ThermostatEntity
 from .runtime import HouseRuntime, RoomState, numeric_state
 
@@ -126,7 +127,40 @@ HOUSE_SENSORS: tuple[HouseSensorDescription, ...] = (
             r.house.flow_temperature_entity and r.house.return_temperature_entity
         ),
     ),
+    HouseSensorDescription(
+        key="design_day_flow",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda r: _design_day_flow(r),
+        attributes=lambda r: _curve_attributes(r),
+        exists=lambda r: r.house.flow_temperature_entity is not None,
+    ),
 )
+"""DIA-014: the learned heating curve, extended to the design day."""
+
+
+def _design_day_flow(runtime: HouseRuntime) -> float | None:
+    curve = runtime.heating_curve
+    design = runtime.house.design_outdoor_temperature_c
+    if curve is None or design is None:
+        return None
+    return round(curve.flow_at(design), 1)
+
+
+def _curve_attributes(runtime: HouseRuntime) -> dict[str, Any]:
+    curve = runtime.heating_curve
+    design = runtime.house.design_outdoor_temperature_c
+    if curve is None:
+        return {"hours": len(runtime.curve_hours)}
+    return {
+        "slope_k_per_k": round(curve.slope_k_per_k, 3),
+        "hours": curve.hours,
+        "outdoor_min_c": round(curve.outdoor_min_c, 1),
+        "outdoor_max_c": round(curve.outdoor_max_c, 1),
+        "confidence": curve.confidence_at(design).value if design is not None else None,
+    }
 
 
 def _share_attributes(state: RoomState, runtime: HouseRuntime) -> dict[str, Any]:
@@ -208,6 +242,44 @@ HEAT_FROM_DEVICES = RoomSensorDescription(
 """MDL-044: only for rooms with heat sources."""
 
 
+def _sizing_attributes(state: RoomState, _runtime: HouseRuntime) -> dict[str, Any]:
+    result: SizingResult | None = state.sizing
+    if result is None:
+        return {}
+    attributes: dict[str, Any] = {
+        "load_pct": _round_or_none(result.load_pct, 0),
+        "factor": _round_or_none(result.factor, 2),
+        "confidence": result.confidence.value if result.confidence else None,
+        "basis": result.basis.value,
+        "cause": result.cause.value if result.cause else None,
+        "design_flow_c": _round_or_none(result.design_flow_c, 1),
+        "design_demand_w": _round_or_none(result.design_demand_w, 0),
+        "design_output_w": _round_or_none(result.design_output_w, 0),
+        "full_open_hours": result.full_open_hours,
+        "faq": f"{DOCS_URL}/en/faq/radiator_sizing.md",
+    }
+    if result.missing:
+        attributes["missing"] = list(result.missing)
+    if result.reserve:
+        attributes["note"] = "reserve"
+    return attributes
+
+
+def _round_or_none(value: float | None, digits: int) -> float | None:
+    return None if value is None else round(value, digits)
+
+
+RADIATOR_SIZING = RoomSensorDescription(
+    key="radiator_sizing",
+    device_class=SensorDeviceClass.ENUM,
+    options=[s.value for s in Sizing],
+    entity_category=EntityCategory.DIAGNOSTIC,
+    value=lambda state: state.sizing.sizing.value if state.sizing else None,
+    attributes=_sizing_attributes,
+)
+"""DIA-012: only for rooms with thermostats."""
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThermogeistConfigEntry,
@@ -226,6 +298,7 @@ async def async_setup_entry(
             sensors.append(RoomSensor(entry, room_id, HEAT_FROM_DEVICES))
         if state.thermostat_ids:
             sensors.append(PlannedValveSensor(entry, room_id))
+            sensors.append(RoomSensor(entry, room_id, RADIATOR_SIZING))
         async_add_entities(sensors, config_subentry_id=room_id)
     for thermostat_id, thermostat in entry.runtime_data.thermostats.items():
         thermostat_sensors: list[SensorEntity] = [ThermostatKindSensor(entry, thermostat_id)]

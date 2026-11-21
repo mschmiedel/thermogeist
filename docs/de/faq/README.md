@@ -11,3 +11,7 @@ Jede Seite erklärt einen Grund, den Thermogeist für einen Raum anzeigen kann.
 - [Fenster offen](window_open.md) – `window_open`
 - [Wartet nach Neustart](startup_hold.md) – `startup_hold`
 - [Thermostat regelt selbst](device_overrides_valve.md) – `device_overrides_valve`
+
+Diagnosen:
+
+- [Heizkörpergröße](radiator_sizing.md) – `radiator_sizing`, Reparaturhinweise *Heizkörper zu klein*, *viel größer als nötig*, *Vorlauf wahrscheinlich höher als nötig*

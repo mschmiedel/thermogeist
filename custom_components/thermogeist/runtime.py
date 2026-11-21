@@ -47,7 +47,7 @@ from .core.heat import (
     net_demand_w,
     room_heat_loss_w_per_k,
 )
-from .core.house import FROST_PROTECTION_SETPOINT_C, CentralMode, House
+from .core.house import FROST_PROTECTION_SETPOINT_C, CentralMode, HeatingType, House
 from .core.profiles import (
     WINDOW_SETTINGS,
     ControlSetting,
@@ -57,6 +57,22 @@ from .core.profiles import (
 )
 from .core.radiator import time_constant_h, usable_spread_k
 from .core.room import Room
+from .core.sizing import (
+    CurveHour,
+    HeatingCurve,
+    HourCollector,
+    HourResult,
+    Sizing,
+    SizingInputs,
+    SizingResult,
+    all_heavily_oversized,
+    assess,
+    fit_heating_curve,
+    full_open_hours_in_window,
+    fully_open_in_cold,
+    recent_hours,
+    with_house_cause,
+)
 from .core.smoothing import HEAT_SOURCE_WINDOW, MovingAverage, plausible_flow
 from .core.time_provider import SystemTimeProvider, TimeProvider
 
@@ -98,11 +114,15 @@ class RoomState:
     plan_at: datetime | None = None
     plan_code: ReasonCode | None = None
     source_averages: dict[str, MovingAverage] = field(default_factory=dict)
+    """MDL-040: power of each heat source, averaged over 10 minutes."""
     source_factors: dict[str, float] = field(default_factory=dict)
     """MDL-049: factor in use per heat source (from its factor entity or the fixed value)."""
-    """MDL-040: power of each heat source, averaged over 10 minutes."""
     heat_from_sources_w: float | None = None
     """MDL-044: heat the devices release into the room (after factors), None without sources."""
+    sizing: SizingResult | None = None
+    """DIA-012: radiator size, None for rooms without thermostats."""
+    full_open_hours: list[datetime] = field(default_factory=list)
+    """DIA-015: hours of the last 7 days with the valve fully open in the cold."""
 
 
 class HouseRuntime:
@@ -162,6 +182,10 @@ class HouseRuntime:
         self._return_average = MovingAverage()
         self.return_used_c: float | None = None
         self.spread_used_k: float | None = None
+        self._hour_collector = HourCollector()
+        self.curve_hours: list[CurveHour] = []
+        """DIA-014: hours while heating ran, last 60 days."""
+        self.heating_curve: HeatingCurve | None = None
 
     # ----- lifecycle -------------------------------------------------------------------------
 
@@ -186,7 +210,24 @@ class HouseRuntime:
         for room_id, setpoint in stored.get("setpoints", {}).items():
             if room_id in self.rooms:
                 self.rooms[room_id].user_setpoint_c = float(setpoint)
+        self._load_sizing(stored.get("sizing", {}))
         self.control.load(stored)
+
+    def _load_sizing(self, stored: dict[str, Any]) -> None:
+        now = self._clock.now()
+        self.curve_hours = recent_hours(
+            (
+                CurveHour(datetime.fromisoformat(hour), float(outdoor), float(flow))
+                for hour, outdoor, flow in stored.get("curve", [])
+            ),
+            now,
+        )
+        self.heating_curve = fit_heating_curve(self.curve_hours)
+        for room_id, hours in stored.get("full_open", {}).items():
+            if room_id in self.rooms:
+                self.rooms[room_id].full_open_hours = full_open_hours_in_window(
+                    (datetime.fromisoformat(h) for h in hours), now
+                )
 
     @callback
     def async_start(self) -> None:
@@ -219,6 +260,8 @@ class HouseRuntime:
         for orphan in [tid for tid in self.control.restore if tid not in self.thermostats]:
             self._hass.async_create_task(self.control.async_restore_orphan(orphan))
         self._reevaluate()
+        self._update_sizing()
+        self._notify()
 
     @callback
     def async_stop(self) -> None:
@@ -296,6 +339,7 @@ class HouseRuntime:
     async def async_set_room_setpoint(self, room_id: str, setpoint_c: float) -> None:
         self.rooms[room_id].user_setpoint_c = setpoint_c
         await self._save()
+        self._update_sizing()
         self._reevaluate()
 
     def outdoor_temperature_c(self) -> float | None:
@@ -361,6 +405,130 @@ class HouseRuntime:
             self._read_temperature(state, now)
             self._sample_sources(state, now)
         self._reevaluate()
+        self._sample_sizing(now)
+
+    # ----- radiator sizing (DIA-012 to DIA-015) -----------------------------------------------
+
+    def _sample_sizing(self, now: datetime) -> None:
+        outdoor = self.outdoor_temperature_c()
+        raw_flow = (
+            numeric_state(self._hass, self.house.flow_temperature_entity)
+            if self.house.flow_temperature_entity
+            else None
+        )
+        rooms = [
+            s.current_temperature_c
+            for s in self.rooms.values()
+            if s.current_temperature_c is not None
+        ]
+        full_open = {
+            room_id: fully_open_in_cold(
+                self._sizing_valve_pct(room_id, state),
+                state.current_temperature_c,
+                state.decision.target_setpoint_c if state.decision else None,
+                outdoor,
+                state.decision is not None and state.decision.code is ReasonCode.SETPOINT,
+            )
+            for room_id, state in self.rooms.items()
+            if state.thermostat_ids
+        }
+        finished = self._hour_collector.add(
+            now,
+            outdoor,
+            raw_flow if plausible_flow(raw_flow) else None,
+            sum(rooms) / len(rooms) if rooms else None,
+            full_open,
+        )
+        if finished is not None:
+            self._close_hour(finished, now)
+
+    def _sizing_valve_pct(self, room_id: str, state: RoomState) -> float | None:
+        """DIA-015: the reported valve, else the plan while Thermogeist controls the room."""
+        actual = self._actual_valve_pct(state)
+        if actual is not None:
+            return actual
+        if self.control.is_enabled(room_id) and state.plan is not None:
+            return state.plan.output_pct
+        return None
+
+    def _close_hour(self, finished: HourResult, now: datetime) -> None:
+        if finished.curve_hour is not None:
+            self.curve_hours.append(finished.curve_hour)
+        self.curve_hours = recent_hours(self.curve_hours, now)
+        self.heating_curve = fit_heating_curve(self.curve_hours)
+        for room_id, state in self.rooms.items():
+            if room_id in finished.full_open_rooms:
+                state.full_open_hours.append(finished.hour)
+            state.full_open_hours = full_open_hours_in_window(state.full_open_hours, now)
+        self._update_sizing()
+        self._save_later()
+        self._notify()
+
+    def _update_sizing(self) -> None:
+        heat_pump = self.house.heating_type is HeatingType.HEAT_PUMP
+        for state in self.rooms.values():
+            if not state.thermostat_ids:
+                continue
+            state.sizing = assess(
+                SizingInputs(
+                    heat_loss_w_per_k=state.heat_loss_w_per_k,
+                    setpoint_c=state.user_setpoint_c,
+                    design_outdoor_c=self.house.design_outdoor_temperature_c,
+                    rated_output_w=state.rated_output_w,
+                    has_flow_sensor=self.house.flow_temperature_entity is not None,
+                    curve=self.heating_curve,
+                    spread_k=self.spread_used_k,
+                    full_open_hours=len(state.full_open_hours),
+                    heat_pump=heat_pump,
+                )
+            )
+        results = [s.sizing for s in self.rooms.values() if s.sizing is not None]
+        all_oversized = all_heavily_oversized(results)
+        if all_oversized:
+            for state in self.rooms.values():
+                if state.sizing is not None:
+                    state.sizing = with_house_cause(state.sizing)
+        self._update_sizing_issues(all_oversized, heat_pump)
+
+    def _update_sizing_issues(self, all_oversized: bool, heat_pump: bool) -> None:
+        """DIA-013: actionable sizing results under Settings > Repairs."""
+        for room_id, state in self.rooms.items():
+            sizing = state.sizing.sizing if state.sizing else None
+            self._set_issue(
+                f"radiator_undersized_{room_id}",
+                sizing is Sizing.UNDERSIZED,
+                "radiator_undersized",
+                {"room": state.room.name},
+            )
+            self._set_issue(
+                f"radiator_oversized_{room_id}",
+                sizing is Sizing.HEAVILY_OVERSIZED and not heat_pump,
+                "radiator_oversized",
+                {"room": state.room.name},
+            )
+        self._set_issue(
+            "flow_higher_than_needed",
+            all_oversized,
+            "flow_higher_than_needed",
+            {"house": self.house.name},
+        )
+
+    def _set_issue(
+        self, issue_id: str, active: bool, key: str, placeholders: dict[str, str]
+    ) -> None:
+        if not active:
+            ir.async_delete_issue(self._hass, DOMAIN, issue_id)
+            return
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=key,
+            translation_placeholders=placeholders,
+            learn_more_url=f"{DOCS_URL}/en/faq/radiator_sizing.md",
+        )
 
     def _sample_sources(self, state: RoomState, now: datetime) -> None:
         """MDL-040: one sample per minute; unavailable or negative readings count as 0 W."""
@@ -570,6 +738,17 @@ class HouseRuntime:
                 for rid, values in self.room_overrides.items()
             },
             "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
+            "sizing": {
+                "curve": [
+                    [h.hour.isoformat(), round(h.outdoor_c, 2), round(h.flow_c, 2)]
+                    for h in self.curve_hours
+                ],
+                "full_open": {
+                    rid: [h.isoformat() for h in s.full_open_hours]
+                    for rid, s in self.rooms.items()
+                    if s.full_open_hours
+                },
+            },
         } | self.control.dump()
 
 

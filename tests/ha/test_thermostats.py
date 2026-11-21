@@ -282,9 +282,11 @@ async def test_plan_is_correct_right_after_restart(
     hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
 ) -> None:
     """Scenario: SCN-THERMO-006"""
+    # The restore cache must exist before the first entities register, else their removal on
+    # reload fails depending on which tests ran before.
+    mock_restore_cache(hass, [State("select.home_central_mode", "auto")])
     entry, room_id = await house_with_room(hass)
     await assign(hass, entry.entry_id, room_id, sonoff(hass), 2000.0)
-    mock_restore_cache(hass, [State("select.home_central_mode", "auto")])
     reasons: list[str] = []
     async_track_state_change_event(
         hass,

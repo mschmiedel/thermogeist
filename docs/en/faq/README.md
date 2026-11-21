@@ -11,3 +11,7 @@ Each page explains one reason Thermogeist can show for a room.
 - [Window open](window_open.md) – `window_open`
 - [Waiting after restart](startup_hold.md) – `startup_hold`
 - [Thermostat regulates on its own](device_overrides_valve.md) – `device_overrides_valve`
+
+Diagnoses:
+
+- [Radiator size](radiator_sizing.md) – `radiator_sizing`, repair issues *radiator too small*, *much larger than needed*, *flow temperature probably higher than needed*

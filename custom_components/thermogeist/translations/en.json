@@ -203,6 +203,19 @@
       },
       "spread_used": {
         "name": "Spread"
+      },
+      "radiator_sizing": {
+        "name": "Radiator size",
+        "state": {
+          "heavily_oversized": "Much larger than needed",
+          "right_size": "Right size",
+          "tight": "Just enough",
+          "undersized": "Too small",
+          "not_assessable": "Not assessable yet"
+        }
+      },
+      "design_day_flow": {
+        "name": "Flow on the design day"
       }
     },
     "number": {
@@ -438,6 +451,18 @@
     "device_overrides_valve": {
       "title": "{thermostat} keeps regulating on its own",
       "description": "Thermogeist wrote the valve position of {thermostat} several times, but the thermostat changed it back each time. Control for {room} was switched off; the thermostat regulates on its own again. See the FAQ for what to check, then switch control on again."
+    },
+    "radiator_undersized": {
+      "title": "Radiators in {room} are probably too small",
+      "description": "On the coldest design day {room} will probably not reach its setpoint: its radiators deliver less heat at the learned flow temperature than the room loses. The sensor Radiator size shows the numbers and the probable cause. See the FAQ for what you can do."
+    },
+    "radiator_oversized": {
+      "title": "Radiators in {room} are much larger than needed",
+      "description": "Even on the coldest design day {room} needs less than a third of what its radiators can deliver. The valve works mostly almost closed, which makes control less fine. See the FAQ for what you can do."
+    },
+    "flow_higher_than_needed": {
+      "title": "Flow temperature of {house} is probably higher than needed",
+      "description": "All rooms of {house} need less than a third of what their radiators deliver, even on the coldest design day. A lower heating curve would probably be enough and saves energy, especially with a heat pump. Thermogeist does not change the heating system; see the FAQ."
     }
   }
 }

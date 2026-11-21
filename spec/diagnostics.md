@@ -2,26 +2,45 @@
 
 ## Radiator sizing per room
 
-Two sources that check each other:
+Can the radiators of a room hold its setpoint on the design day? Two sources:
 
-1. **Static** from inputs: available radiator output / room demand (MDL-015).
-2. **Empirical** from operation: average opening in steady phases plotted against outdoor
-   temperature and extrapolated to the design temperature. This source takes precedence.
+1. **Static** from inputs (MDL-015): the room's demand on the design day compared with what its
+   radiators deliver at the flow temperature of that day. The flow temperature is never asked
+   for; it comes from the learned heating curve (DIA-014).
+2. **Operation:** the valve stays wide open in cold weather and the room still does not reach its
+   setpoint (DIA-015). This can only say "undersized"; it wins over the static result.
 
-| ID | Classification | Criterion (initial value) | Status |
+Later: extrapolate the average opening of steady phases to the design day (DIA-006).
+
+| ID | Classification | Criterion | Status |
 |---|---|---|---|
-| DIA-001 | heavily oversized | demand at design temperature < 30 % | planned |
-| DIA-002 | right size | 30–90 % | planned |
-| DIA-003 | tight | 90–100 % | planned |
-| DIA-004 | undersized | > 100 %, or permanently 100 % in cold weather without reaching setpoint | planned |
-| DIA-005 | not assessable | fewer than 5 steady days below 5 °C | planned |
+| DIA-001 | heavily oversized | load on the design day < 30 % of the radiator output | implemented |
+| DIA-002 | right size | 30–90 % | implemented |
+| DIA-003 | tight | 90–100 % | implemented |
+| DIA-004 | undersized | > 100 %, or the operation check (DIA-015) | implemented |
+| DIA-005 | not assessable | heat load, radiator output or flow sensor missing, or the heating curve not learned yet; the attribute `missing` says what is missing | implemented |
+| DIA-006 | (empirical) | Average opening in steady phases plotted against the outdoor temperature and extrapolated to the design day, with precedence over the static result. Needs at least 5 steady days below 5 °C. | planned |
+
+Load on the design day = `H · (setpoint − design outdoor temperature) / available output`, where
+`H` is the heat loss coefficient (MDL-010), the setpoint is the room's own setpoint (what the
+user wants, not the design indoor temperature), and the available output is MDL-012 at the
+learned design-day flow, with the room at its setpoint and the spread the controller uses
+(measured, else 5 K). Devices that heat the room (MDL-040) are not counted: they cannot be relied
+on. The oversizing factor (MDL-015) is the inverse: available output / demand.
 
 | ID | Requirement | Status |
 |---|---|---|
-| DIA-010 | The message depends on the profile. With a heat pump, oversizing is a reserve, not a fault. | planned |
-| DIA-011 | If all rooms are oversized, a house-level hint follows (flow temperature probably higher than needed), without touching the heating system. | planned |
-| DIA-012 | Sensor `<room>_sizing` with factor, confidence, data basis and probable cause. | planned |
-| DIA-013 | Actionable cases as an HA repair issue with a link to the FAQ entry. | planned |
+| DIA-010 | The message depends on the profile. With a heat pump, oversizing is a reserve, not a fault (attribute `note: reserve`, no repair issue). | implemented |
+| DIA-011 | If all assessable rooms (at least 2) are heavily oversized, a house-level repair issue says the flow temperature is probably higher than needed, without touching the heating system. For every profile: with a heat pump a lower flow saves the most. | implemented |
+| DIA-012 | Per room with thermostats a sensor *Radiator size* (`radiator_sizing`, enum of DIA-001 to DIA-005) with attributes `load_pct`, `factor`, `confidence`, `basis` (`static` or `operation`), `cause`, `design_flow_c`, `design_demand_w`, `design_output_w`, `full_open_hours` and, if any, `missing` and `note`. Recomputed every hour and at start-up. | implemented |
+| DIA-013 | Repair issues with a link to the FAQ entry: *undersized* for every profile; *heavily oversized* only for boiler and direct electric (DIA-010); the house-level issue of DIA-011. An issue disappears as soon as its condition is gone. | implemented |
+| DIA-014 | Learned heating curve: once per hour the median flow (plausible values, CTL-039) and the mean outdoor temperature of that hour, only while heating ran (median flow at least 5 K above the mean room temperature of the house, `HEATING_RUNNING_MARGIN_K`). A straight line through the hours of the last 60 days (least squares) gives the flow at the design outdoor temperature. Learned once there are at least 48 hours and the outdoor temperatures span at least 5 K, and the line falls with rising outdoor temperature; until then "not assessable". `confidence` from how far the line is extended below the coldest hour seen: up to 5 K *high*, up to 15 K *medium*, beyond *low*. The hours survive restarts. House sensor *Flow on the design day* with `slope_k_per_k`, `hours`, `outdoor_min_c`, `outdoor_max_c` and `confidence`. | implemented |
+| DIA-015 | Operation check: an hour counts as "fully open in the cold" when for at least 90 % of its minutes the valve was at least 95 % open, the room was more than 0.5 K below its target, the outdoor temperature was below 5 °C and the active reason was `setpoint`. The valve is the reported position if a thermostat reports one, else the planned position while Thermogeist controls the room; in observe mode without a reported position the hour does not count. At least 6 such hours in the last 7 days mean *undersized* with `basis: operation`. The hours survive restarts. | implemented |
+
+`cause` names the probable cause (see below): `radiator_small` when the static result is
+undersized, `input_or_hydraulics` when only the operation check says undersized (DIA-023),
+`flow_high` for heavily oversized rooms when all rooms are (DIA-011), `radiator_large` for other
+heavily oversized rooms.
 
 ## House balance
 
@@ -38,7 +57,7 @@ Two sources that check each other:
 | DIA-020 | Valve 100 %, room cold, other rooms fine | presetting too closed, hydraulics | planned |
 | DIA-021 | Valve 100 %, pipe stays cold (calibration probe) | air, stuck valve pin, TRV not opening | planned |
 | DIA-022 | One room needs a lot, others little | uneven distribution | planned |
-| DIA-023 | Statically fine, empirically too small | wrong input, radiator covered | planned |
+| DIA-023 | Statically fine, empirically too small | wrong input, radiator covered, presetting too closed (`cause: input_or_hydraulics`) | implemented |
 
 ## Hydraulic balancing (staged)
 

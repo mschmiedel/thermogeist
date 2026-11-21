@@ -58,13 +58,15 @@ ergeben einen kleinen Anteil.
 | Anteil an der Heizlast | Der Anteil des Raums, geschätzt oder eingetragen. |
 | Wärmeverlustkoeffizient | Watt pro Kelvin Temperaturunterschied nach draußen. |
 | Fenster | Nur mit Fensterkontakten: an, solange einer offen ist. Attribute: die Kontakte, `heating_paused`, `frost_guard` und die geltenden Zeiten. Unter **Konfiguration**: *Fenster: schließen nach*, *Fenster: wieder heizen nach* (Wert vom Haus, bis du ihn änderst, Attribut `source`) und *Fenster: Zeiten auf Haus zurücksetzen*. |
+| Heizkörpergröße | Nur mit Thermostaten: Schaffen die Heizkörper den Sollwert am kältesten Auslegungstag? *Viel größer als nötig*, *passend*, *knapp*, *zu klein* oder *noch nicht bewertbar*, mit den Zahlen als Attribute ([FAQ](faq/radiator_sizing.md)). |
 | Wärme aus Geräten | Nur mit Wärmequellen: Watt, die die Geräte an den Raum abgeben (nach Faktor, Mittel über 10 Minuten). Attribute: der geltende Faktor pro Gerät und die Faktor-Sensoren. |
 
 Beim Haus siehst du zusätzlich **Heizlast ohne Raum** und **Abdeckung durch Räume**: wie viel
 der Heizlast deine Räume (und der Anteil außerhalb von Thermogeist) abdecken, mit dem fehlenden
 Anteil und der Wohnfläche, die noch in keinem Raum steckt, als Attribute. Mit Vor- und
 Rücklaufsensor zeigt das Haus außerdem **Vorlauftemperatur**, **Rücklauftemperatur** und
-**Spreizung** – die gemittelten Werte, mit denen die Regelung rechnet.
+**Spreizung** – die gemittelten Werte, mit denen die Regelung rechnet – und **Vorlauf am
+Auslegungstag** aus der Heizkurve, die Thermogeist lernt ([FAQ](faq/radiator_sizing.md)).
 
 Um einen Raum zu ändern, öffne den Thermogeist-Eintrag, klick auf das Zahnrad (⚙) neben dem Raum
 und wähle **Raum bearbeiten**. Im selben Menü fügst du die Thermostate des Raums hinzu, änderst

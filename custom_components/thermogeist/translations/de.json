@@ -203,6 +203,19 @@
       },
       "spread_used": {
         "name": "Spreizung"
+      },
+      "radiator_sizing": {
+        "name": "Heizkörpergröße",
+        "state": {
+          "heavily_oversized": "Viel größer als nötig",
+          "right_size": "Passend",
+          "tight": "Knapp",
+          "undersized": "Zu klein",
+          "not_assessable": "Noch nicht bewertbar"
+        }
+      },
+      "design_day_flow": {
+        "name": "Vorlauf am Auslegungstag"
       }
     },
     "number": {
@@ -438,6 +451,18 @@
     "device_overrides_valve": {
       "title": "{thermostat} regelt immer wieder selbst",
       "description": "Thermogeist hat die Ventilstellung von {thermostat} mehrmals geschrieben, aber das Thermostat hat sie jedes Mal zurückgestellt. Regeln für {room} wurde ausgeschaltet; das Thermostat regelt wieder selbst. In den häufigen Fragen steht, was du prüfen kannst; danach Regeln wieder einschalten."
+    },
+    "radiator_undersized": {
+      "title": "Heizkörper in {room} sind wahrscheinlich zu klein",
+      "description": "Am kältesten Auslegungstag erreicht {room} seinen Sollwert wahrscheinlich nicht: Die Heizkörper geben beim gelernten Vorlauf weniger Wärme ab, als der Raum verliert. Der Sensor Heizkörpergröße zeigt die Zahlen und die wahrscheinliche Ursache. In der FAQ steht, was du tun kannst."
+    },
+    "radiator_oversized": {
+      "title": "Heizkörper in {room} sind viel größer als nötig",
+      "description": "Selbst am kältesten Auslegungstag braucht {room} weniger als ein Drittel dessen, was seine Heizkörper liefern können. Das Ventil arbeitet meist fast geschlossen, die Regelung wird dadurch gröber. In der FAQ steht, was du tun kannst."
+    },
+    "flow_higher_than_needed": {
+      "title": "Vorlauf von {house} ist wahrscheinlich höher als nötig",
+      "description": "Alle Räume von {house} brauchen selbst am kältesten Auslegungstag weniger als ein Drittel dessen, was ihre Heizkörper liefern. Eine niedrigere Heizkurve würde wahrscheinlich reichen und spart Energie, besonders mit einer Wärmepumpe. Thermogeist ändert nichts an der Heizung, siehe FAQ."
     }
   }
 }

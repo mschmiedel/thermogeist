@@ -110,6 +110,16 @@
       },
       "spread_used": {
         "default": "mdi:arrow-expand-vertical"
+      },
+      "radiator_sizing": {
+        "default": "mdi:radiator",
+        "state": {
+          "undersized": "mdi:radiator-off",
+          "not_assessable": "mdi:help-circle-outline"
+        }
+      },
+      "design_day_flow": {
+        "default": "mdi:thermometer-chevron-up"
       }
     },
     "switch": {

@@ -96,7 +96,7 @@ corrects only after hours – and again in the other direction when the device i
 | MDL-012 | Available radiator output (W) | rated output · (ΔT / 49.8 K)^1.3 (EN 442), with `ΔT = flow − 2.5 K − room` (half of a typical 5 K spread); 0 if ΔT ≤ 0 | implemented |
 | MDL-013 | Expected heat demand | demand / available output | planned |
 | MDL-014 | Time constant τ = C / H | C estimated from room volume and construction | implemented |
-| MDL-015 | Oversizing factor | available output at design temperature / demand | planned |
+| MDL-015 | Oversizing factor | available output on the design day (learned design-day flow, DIA-014; room at its setpoint) / demand on the design day | implemented |
 
 ## Without inputs
 

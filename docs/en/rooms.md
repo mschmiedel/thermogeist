@@ -58,13 +58,15 @@ normal room; few exterior walls give them a small share.
 | Share of heat load | The room's share, estimated or entered. |
 | Heat loss coefficient | Watts per kelvin of temperature difference to outside. |
 | Windows | Only with window contacts: on while one is open. Attributes: the contacts, `heating_paused`, `frost_guard`, and the times in use. In **Configuration**: *Window: close after*, *Window: resume heating after* (house value until you change it, attribute `source`) and *Window: reset times to house*. |
+| Radiator size | Only with thermostats: can the radiators hold the setpoint on the coldest design day? *Much larger than needed*, *right size*, *just enough*, *too small* or *not assessable yet*, with the numbers as attributes ([FAQ](faq/radiator_sizing.md)). |
 | Heat from devices | Only with heat sources: watts the devices release into the room (after factors, 10-minute average). Attributes: the factor in use per device and the factor sensors. |
 
 On the house you additionally see **Heat load not assigned to a room** and **Room coverage**:
 how much of the heat load your rooms (and the share outside Thermogeist) cover, with the missing
 share and the living area not yet in any room as attributes. With flow and return sensors the
 house also shows **Flow temperature**, **Return temperature** and **Spread** – the averaged
-values the controller uses.
+values the controller uses – and **Flow on the design day**, from the heating curve Thermogeist
+learns ([FAQ](faq/radiator_sizing.md)).
 
 To change a room, open the Thermogeist entry, click the gear icon (⚙) next to the room and choose
 **Edit room**. The same menu adds, edits and removes the room's thermostats.
