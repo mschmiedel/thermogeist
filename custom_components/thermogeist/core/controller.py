@@ -100,8 +100,9 @@ class ControllerState:
     last_reported_pct: float | None = None
     last_time: datetime | None = None
     min_opening_relaxed: bool = False
-    window_was_open: bool = False
-    """RUL-010: the next step after a window is not rate-limited."""
+    resume_at_once: bool = False
+    """RUL-010, CTL-034: the next regular step after a window or the safe position is not
+    rate-limited."""
     integral_has_start_bias: bool = False
     """True while the integral contains the start value used without feed-forward."""
 
@@ -179,24 +180,26 @@ class RoomController:
         settings = inputs.settings
 
         if inputs.window_open:
-            self.state.window_was_open = True
+            self.state.resume_at_once = True
             result = ControllerResult(
                 0.0, 0.0, 0.0, self.state.integral_pct or 0.0, (Limit.WINDOW,)
             )
             self.state.last_time = now
             self.state.last_reported_pct = 0.0
             return result
-        if self.state.window_was_open:
-            # RUL-010: window closed again - straight to the position needed now, no ramp-up.
+        if self.state.resume_at_once:
+            # RUL-010, CTL-034: after a window or the safe position, straight to the position
+            # needed now - neither is a starting point to ramp from.
             self.state.last_output_pct = None
             self.state.last_reported_pct = None
-            self.state.window_was_open = False
+            self.state.resume_at_once = False
 
         if inputs.target_c is None:
             result = ControllerResult(
                 0.0, 0.0, 0.0, self.state.integral_pct or 0.0, (Limit.STOPPED,)
             )
         elif inputs.safety or inputs.room_c is None:
+            self.state.resume_at_once = True
             safe = max(settings.min_opening_pct, SAFETY_MIN_OPENING_PCT)
             result = ControllerResult(
                 safe, 0.0, 0.0, self.state.integral_pct or 0.0, (Limit.SAFETY,)

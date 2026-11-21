@@ -203,3 +203,23 @@ def test_window_open_from_the_start_returns_at_once() -> None:
     later = controller.step(inputs(room_c=19.4, feed_forward_pct=90.0), clock.now())
     assert later.output_pct == pytest.approx(69.0, abs=1)
     assert Limit.RATE_LIMIT in later.limits
+
+
+def test_safe_position_is_no_starting_point() -> None:
+    """Scenario: SCN-CTL-021"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    warm = {"target_c": 19.5, "room_c": 21.0, "feed_forward_pct": 10.0}
+    for _ in range(120):
+        lowest = controller.step(inputs(**warm), clock.now())
+        clock.advance(timedelta(minutes=1))
+    assert lowest.output_pct < 40.0
+
+    restart = controller.step(inputs(**{**warm, "room_c": None}), clock.now())
+    assert restart.output_pct == 40.0
+    assert restart.limits == (Limit.SAFETY,)
+
+    clock.advance(timedelta(minutes=1))
+    back = controller.step(inputs(**warm), clock.now())
+    assert back.output_pct == pytest.approx(lowest.output_pct, abs=1)
+    assert Limit.RATE_LIMIT not in back.limits
