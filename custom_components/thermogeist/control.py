@@ -41,6 +41,8 @@ if TYPE_CHECKING:
 EXTERNAL_TEMPERATURE_REFRESH = timedelta(minutes=20)
 """ACT-041: Bosch falls back to its own sensor after 30 min without a value."""
 EXTERNAL_TEMPERATURE_STEP_K = 0.1
+LOST_EXTERNAL_K = 0.5
+"""ACT-049: the device shows something else than the last value sent; send it again."""
 OVERRIDE_DEBOUNCE_S = 20
 """OVR-002: wait until the knob has stopped turning."""
 STOP_SETPOINT_C = CLOSED_SETPOINT_C
@@ -62,6 +64,8 @@ class ThermostatControl:
     external_value_c: float | None = None
     external_sent_at: datetime | None = None
     settings_applied: bool = False
+    settings_written_at: datetime | None = None
+    """ACT-049: only a device change after this counts as a reset."""
     pending_override: CALLBACK_TYPE | None = None
     last_write_urgent: bool = False
     """Leaving an urgent state (window closed again) is just as urgent as entering it."""
@@ -187,6 +191,9 @@ class ControlManager:
             if not control.settings_applied:
                 await self._async_apply_settings(tid, thermostat)
                 control.settings_applied = True
+                control.settings_written_at = self._runtime.now()
+            else:
+                await self._async_check_settings(tid, thermostat, control)
             if thermostat.kind is Kind.SETPOINT:
                 await self._async_external_temperature(thermostat, control, state)
                 await self._async_device_setpoint(thermostat, control, state)
@@ -337,6 +344,7 @@ class ControlManager:
         changed = (
             control.external_value_c is None
             or abs(value - control.external_value_c) >= EXTERNAL_TEMPERATURE_STEP_K
+            or self._external_lost(entity, control)
         )
         due = (
             control.external_sent_at is None
@@ -346,6 +354,17 @@ class ControlManager:
             await self._async_call("number", "set_value", entity, value=value)
             control.external_value_c = value
             control.external_sent_at = now
+
+    def _external_lost(self, entity: str, control: ThermostatControl) -> bool:
+        """ACT-049: the device changed the value itself after we sent it (e.g. to 0)."""
+        state = self._hass.states.get(entity)
+        sent = control.external_value_c
+        if state is None or sent is None or control.external_sent_at is None:
+            return False
+        if state.last_changed <= control.external_sent_at:
+            return False
+        shown = self._number(entity)
+        return shown is not None and abs(shown - sent) > LOST_EXTERNAL_K
 
     async def _async_setpoint(
         self, thermostat: Thermostat, control: ThermostatControl, target: float | None
@@ -366,23 +385,57 @@ class ControlManager:
 
     # ----- device settings and restore (ACT-008, ACT-042) ---------------------------------
 
-    async def _async_apply_settings(self, tid: str, thermostat: Thermostat) -> None:
+    def _device_settings(self, thermostat: Thermostat) -> list[tuple[str, str]]:
+        """ACT-042: (entity id, value) of the settings the profile needs for control."""
         profile = self._profiles.get(thermostat.profile_id or "")
         if profile is None or thermostat.device_id is None:
-            return
+            return []
         entries = er.async_entries_for_device(er.async_get(self._hass), thermostat.device_id)
         settings = (
             profile.setpoint_control_settings
             if thermostat.kind is Kind.SETPOINT
             else profile.control_settings
         )
+        found = []
         for expose, value in settings.get(Source.Z2M, ()):
             entity = next(
                 (e for e in entries if e.unique_id.endswith(f"_{expose}_zigbee2mqtt")), None
             )
             if entity is not None:
-                self._remember(tid, entity.entity_id)
-                await self._async_set_state(entity.entity_id, value)
+                found.append((entity.entity_id, value))
+        return found
+
+    async def _async_apply_settings(self, tid: str, thermostat: Thermostat) -> None:
+        for entity_id, value in self._device_settings(thermostat):
+            self._remember(tid, entity_id)
+            await self._async_set_state(entity_id, value)
+
+    async def _async_check_settings(
+        self, tid: str, thermostat: Thermostat, control: ThermostatControl
+    ) -> None:
+        """ACT-049: a firmware update or restart of the device resets its settings."""
+        for entity_id, value in self._device_settings(thermostat):
+            state = self._hass.states.get(entity_id)
+            if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                continue
+            if _same_setting(state.state, value):
+                continue
+            written = control.settings_written_at
+            if written is not None and state.last_changed <= written:
+                # The device never confirmed our value; rewriting every minute would only cost
+                # battery. A reset shows up as a change after our write.
+                continue
+            await self._async_set_state(entity_id, value)
+            control.settings_written_at = self._runtime.now()
+            control.external_value_c = None  # resend the room temperature right away
+            room_name = self._rooms[thermostat.room_id].room.name
+            await self.async_logbook(
+                room_name,
+                "logbook_device_setting_reset",
+                thermostat=thermostat.name,
+                setting=entity_id,
+                value=value,
+            )
 
     async def _async_write_number(self, tid: str, entity_id: str, value: float) -> None:
         self._remember(tid, entity_id)
@@ -545,3 +598,13 @@ class ControlManager:
             return None
         value = state.attributes.get(ATTR_TEMPERATURE)
         return float(value) if value is not None else None
+
+
+def _same_setting(current: str, wanted: str) -> bool:
+    """Compare a device setting, numbers by value (Home Assistant reports "5.0" for 5)."""
+    if current == wanted:
+        return True
+    try:
+        return float(current) == float(wanted)
+    except ValueError:
+        return False

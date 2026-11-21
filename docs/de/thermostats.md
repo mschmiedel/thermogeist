@@ -104,7 +104,10 @@ Was beim Einschalten passiert:
    (*Wartet nach Neustart*).
 2. Geräteeinstellungen, die fürs Regeln nötig sind, werden gesetzt – z. B. Bosch
    `operating_mode` → *manual*, beim Sonoff *smart temperature control* aus. Die vorherigen Werte
-   merkt sich Thermogeist.
+   merkt sich Thermogeist. Diese Einstellungen werden jede Minute geprüft: Setzt das Thermostat
+   eine selbst zurück – ein Firmware-Update tut das oft, z. B. greift das Sonoff dann wieder auf
+   seinen eigenen Fühler zurück –, stellt Thermogeist sie sofort wieder ein, schickt die
+   Raumtemperatur erneut und vermerkt das im Logbuch.
 3. Jede Minute, über Ventilstellung: geplante Ventilstellung, Mindestöffnung (Sonoff),
    Raumtemperatur als externe Temperatur und das Raumziel als Sollwert am Thermostat, damit die
    Anzeige stimmt.

@@ -483,3 +483,59 @@ async def test_switched_off_thermostat_is_switched_back_to_heat(
 
     assert [c.data["hvac_mode"] for c in modes] == ["heat"]
     assert Calls.values(calls.climate[written:], OLD_CLIMATE, "temperature")[-1] == 22.5
+
+
+async def test_reset_device_settings_are_set_again(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-CONTROL-017"""
+    hass.states.async_set(FLOW_SENSOR, "40.0", {"device_class": "temperature"})
+    entry = await setup_house(
+        hass, {**HOUSE_WITH_LOAD, "flow_temperature_entity": FLOW_SENSOR}, [LIVING_ROOM]
+    )
+    room_id = next(iter(entry.subentries))
+    device_id = z2m_device(
+        hass,
+        "Living TRV",
+        "SONOFF",
+        "TRVZB",
+        {
+            "climate": ("climate", "heat"),
+            "valve_opening_degree": ("number", "100", "%"),
+            "valve_closing_degree": ("number", "100", "%"),
+            "external_temperature_input": ("number", "20", "°C"),
+            "temperature_sensor_select": ("select", "local_temperature"),
+            "smart_temperature_control": ("switch", "on"),
+        },
+    )
+    await assign(hass, entry.entry_id, room_id, device_id, 2000.0)
+    calls = Calls(hass)
+    switches = async_mock_service(hass, "switch", "turn_off")
+    select = "select.living_trv_temperature_sensor_select"
+    external = "number.living_trv_external_temperature_input"
+    logbook = async_capture_events(hass, "logbook_entry")
+    await switch(hass, True)
+    await tick(hass, freezer, 91)
+    assert Calls.values(calls.select, select, "option") == ["remote_temperature"]
+    assert Calls.values(calls.number, external, "value") == [19.5]
+
+    # The mocks do not change states: the device "never confirms" - no rewrite every minute.
+    await tick(hass, freezer, 120)
+    assert Calls.values(calls.select, select, "option") == ["remote_temperature"]
+    assert len(switches) == 1
+
+    # The real device confirms our values ...
+    hass.states.async_set(select, "remote_temperature")
+    hass.states.async_set(external, "19.5", {"unit_of_measurement": "°C"})
+    await tick(hass, freezer, 60)
+    # ... and resets itself on a firmware update.
+    hass.states.async_set(select, "local_temperature")
+    hass.states.async_set(external, "0", {"unit_of_measurement": "°C"})
+    await tick(hass, freezer, 61)
+
+    assert Calls.values(calls.select, select, "option") == [
+        "remote_temperature",
+        "remote_temperature",
+    ]
+    assert Calls.values(calls.number, external, "value") == [19.5, 19.5]
+    assert any("temperature_sensor_select" in e.data["message"] for e in logbook)

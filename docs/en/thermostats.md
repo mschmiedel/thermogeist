@@ -100,7 +100,10 @@ What happens when you switch it on:
 
 1. For 90 seconds after a Home Assistant restart nothing is written (*Waiting after restart*).
 2. Device settings needed for control are applied – e.g. Bosch `operating_mode` → *manual*,
-   Sonoff *smart temperature control* off. The previous values are remembered.
+   Sonoff *smart temperature control* off. The previous values are remembered. These settings
+   are checked every minute: if the thermostat resets one itself – a firmware update often
+   does, e.g. the Sonoff falls back to its own sensor – Thermogeist sets it again at once,
+   sends the room temperature again and notes it in the logbook.
 3. Every minute, by valve position: planned valve position, minimum opening (Sonoff), room
    temperature as external temperature, and the room target as the thermostat's setpoint, so its
    display stays honest.

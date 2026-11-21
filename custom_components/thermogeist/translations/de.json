@@ -446,6 +446,9 @@
     "logbook_manual_setpoint": {
       "message": "an {thermostat} auf {setpoint} °C gestellt; neuer Raum-Sollwert"
     },
+    "logbook_device_setting_reset": {
+      "message": "{thermostat} hatte {setting} zurückgesetzt; wieder auf {value} gestellt"
+    },
     "logbook_device_overrides_valve": {
       "message": "{thermostat} verstellt seine Ventilstellung immer wieder selbst; Raum zurück auf Beobachten"
     },
