@@ -100,7 +100,7 @@ residual heat) are built by the user with template entities instead of extra pro
 | ACT-101 | `valve_opening_degree` = position while heating (from the controller). | implemented |
 | ACT-102 | `valve_closing_degree` = 100 − minimum opening (fallback, works without HA). Whenever the planned position is below the minimum opening (room clearly too warm, CTL-037, held there by CTL-043, window, central stop), it follows the planned position, because the device rests on it as long as the room is above its setpoint; once the plan is back at or above the minimum it returns to the minimum opening. | implemented |
 | ACT-103 | `external_temperature_input` + `temperature_sensor_select: remote_temperature`, fallback via `remote_source_offline`. | implemented |
-| ACT-104 | `smart_temperature_control` off, built-in schedule off, built-in window detection off. | implemented |
+| ACT-104 | `smart_temperature_control` off, built-in schedule off, built-in window detection off, `temperature_accuracy` −0.2 K (the smallest value). The TRVZB only opens to `valve_opening_degree` while it heats, and with the factory −1 K it starts heating only 1 K below its setpoint; until then it rests at the minimum opening although Thermogeist plans more (field finding Alex: 0.9 K too cold, plan 74 %, valve at 30 %). Firmware without `temperature_accuracy` simply has no such entity and the setting is skipped. | implemented |
 | ACT-105 | Firmware ≥ 1.1.4 for valve degrees, ≥ 1.3.0 for `temperature_accuracy`. Older firmware is detected and reported. | planned |
 
 ### Sonoff TRV-ZBT (Gen2, Zigbee2MQTT)

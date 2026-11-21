@@ -30,7 +30,8 @@
   "notes": [
     "Firmware 1.1.4 or newer is needed for valve_opening_degree and valve_closing_degree.",
     "Set temperature_sensor_select to remote_temperature to use the external temperature.",
-    "Switch off smart_temperature_control: it disables manual valve positions."
+    "Switch off smart_temperature_control: it disables manual valve positions.",
+    "temperature_accuracy -0.2: the thermostat heats with the planned opening as soon as the room is 0.2 K below the setpoint (factory -1 K)."
   ],
   "control_settings": {
     "z2m": [
@@ -41,6 +42,10 @@
       {
         "expose": "temperature_sensor_select",
         "value": "remote_temperature"
+      },
+      {
+        "expose": "temperature_accuracy",
+        "value": "-0.2"
       }
     ]
   }

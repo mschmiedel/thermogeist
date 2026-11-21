@@ -1,11 +1,11 @@
 # SCN-CONTROL-017: Settings a firmware update reset are set again
 
-**Spec:** ACT-049, ACT-042
+**Spec:** ACT-049, ACT-042, ACT-104
 **Test:** `tests/ha/test_control.py::test_reset_device_settings_are_set_again`
 
 ## Initial state
-A controlled Sonoff TRVZB; Thermogeist has set `temperature_sensor_select: remote_temperature`
-and sent the room temperature 19.5 °C.
+A controlled Sonoff TRVZB; Thermogeist has set `temperature_sensor_select: remote_temperature`,
+`temperature_accuracy: -0.2` (factory -1) and sent the room temperature 19.5 °C.
 
 ## Steps
 1. The thermostat restarts after a firmware update: it reports `local_temperature` and an

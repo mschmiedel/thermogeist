@@ -506,6 +506,7 @@ async def test_reset_device_settings_are_set_again(
             "external_temperature_input": ("number", "20", "°C"),
             "temperature_sensor_select": ("select", "local_temperature"),
             "smart_temperature_control": ("switch", "on"),
+            "temperature_accuracy": ("number", "-1", "°C"),
         },
     )
     await assign(hass, entry.entry_id, room_id, device_id, 2000.0)
@@ -518,6 +519,9 @@ async def test_reset_device_settings_are_set_again(
     await tick(hass, freezer, 91)
     assert Calls.values(calls.select, select, "option") == ["remote_temperature"]
     assert Calls.values(calls.number, external, "value") == [19.5]
+    # ACT-104: heat as soon as the room is 0.2 K below the setpoint, not 1 K.
+    accuracy = "number.living_trv_temperature_accuracy"
+    assert Calls.values(calls.number, accuracy, "value") == [-0.2]
 
     # The mocks do not change states: the device "never confirms" - no rewrite every minute.
     await tick(hass, freezer, 120)
