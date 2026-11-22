@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MIT
+import json
 from datetime import timedelta
 from typing import Any
 
@@ -12,6 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
+    async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
 )
@@ -508,3 +510,43 @@ async def test_feed_forward_ignores_a_warm_room(
     await hass.async_block_till_done()
 
     assert hass.states.get(PLANNED).attributes["feed_forward"] == pytest.approx(before, abs=0.1)
+
+
+@pytest.mark.parametrize("expected_lingering_timers", [True])  # MQTT test client
+async def test_unknown_thermostat_is_detected_from_z2m(
+    hass: HomeAssistant, mqtt_mock: Any, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-THERMO-020"""
+    entry, room_id = await house_with_room(hass)
+    device_id = z2m_device(
+        hass,
+        "Hall TRV",
+        "Acme",
+        "TRV-42",
+        {
+            "climate": ("climate", "heat"),
+            "valve_opening_degree": ("number", "100", "%"),
+            "valve_closing_degree": ("number", "100", "%"),
+            "external_temperature_input": ("number", "20", "°C"),
+        },
+    )
+    device = dr.async_get(hass).async_get(device_id)
+    ieee = next(i for d, i in device.identifiers if d == "mqtt").removeprefix("zigbee2mqtt_")
+    exposes = [
+        {"type": "numeric", "name": "valve_opening_degree", "access": 7, "unit": "%"},
+        {"type": "numeric", "name": "valve_closing_degree", "access": 7, "unit": "%"},
+        {"type": "numeric", "name": "external_temperature_input", "access": 7, "unit": "°C"},
+    ]
+    payload = [{"ieee_address": ieee, "supported": True, "definition": {"exposes": exposes}}]
+    async_fire_mqtt_message(hass, "zigbee2mqtt/bridge/devices", json.dumps(payload))
+    await hass.async_block_till_done()
+
+    roles_form = await start_thermostat(hass, entry.entry_id, room_id, device_id, 1500.0)
+
+    assert roles_form["description_placeholders"]["profile"] == (
+        "Detected from Zigbee2MQTT (not tested)"
+    )
+    roles = suggested(roles_form)
+    assert roles["valve_write"] == "number.hall_trv_valve_opening_degree"
+    assert roles["valve_min"] == "number.hall_trv_valve_closing_degree"
+    assert roles["external_temperature"] == "number.hall_trv_external_temperature_input"

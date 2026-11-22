@@ -22,6 +22,7 @@ from .house_config import (
     thermostats_from_entry,
 )
 from .runtime import HouseRuntime
+from .z2m import async_track_devices
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -67,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) 
         thermostats_from_entry(entry),
         profiles=await async_get_profiles(hass),
     )
+    await async_track_devices(hass)
     await runtime.async_load()
     runtime.house_device_id = _house_device(hass, entry).id
     entry.runtime_data = runtime

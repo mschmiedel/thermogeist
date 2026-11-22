@@ -46,6 +46,13 @@ Known models today:
 | Sonoff TRV-ZBT (Gen2) | Valve-based | Switch off *smart temperature control*. |
 | Bosch Radiator Thermostat II (BTH-RA) | Valve-based | No minimum opening on the device. Keeps a written valve position for 15 minutes only; Thermogeist confirms it every 10 minutes. |
 
+**Other thermostats via Zigbee2MQTT:** if Home Assistant's MQTT integration is set up,
+Thermogeist reads what Zigbee2MQTT knows about the device and fills in the roles from the usual
+names (valve position, minimum opening, external temperature, child lock). The dialog then
+shows *Detected from Zigbee2MQTT (not tested)*. Check the suggestions; Thermogeist changes no
+device settings on such thermostats, because it does not know what they would switch off.
+Without MQTT, or if nothing fits, the thermostat is controlled by its setpoint.
+
 Every other thermostat works **setpoint-based**: Thermogeist tells it which temperature to aim
 for, and the thermostat moves its valve itself.
 

@@ -47,6 +47,14 @@ Bekannte Modelle bisher:
 | Sonoff TRV-ZBT (Gen2) | Über Ventilstellung | *Smart temperature control* ausschalten. |
 | Bosch Heizkörperthermostat II (BTH-RA) | Über Ventilstellung | Keine Mindestöffnung im Gerät. Hält eine geschriebene Ventilstellung nur 15 Minuten; Thermogeist bestätigt sie alle 10 Minuten. |
 
+**Andere Thermostate über Zigbee2MQTT:** Ist die MQTT-Integration von Home Assistant
+eingerichtet, liest Thermogeist, was Zigbee2MQTT über das Gerät weiß, und füllt die Rollen über
+die üblichen Namen vor (Ventilstellung, Mindestöffnung, externe Temperatur, Kindersicherung). Der
+Dialog zeigt dann *Aus Zigbee2MQTT erkannt (nicht getestet)*. Prüf die Vorschläge; an solchen
+Thermostaten ändert Thermogeist keine Geräteeinstellungen, weil es nicht weiß, was es damit
+abschalten würde. Ohne MQTT, oder wenn nichts passt, wird das Thermostat über den Sollwert
+geregelt.
+
 Alle anderen Thermostate funktionieren **über den Sollwert**: Thermogeist sagt ihnen, welche
 Temperatur sie anpeilen sollen, und das Thermostat bewegt sein Ventil selbst.
 

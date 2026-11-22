@@ -80,6 +80,7 @@ from .const import (
 )
 from .core.actuator import (
     DeviceEntity,
+    DeviceProfile,
     EntityFacts,
     Role,
     Source,
@@ -89,6 +90,7 @@ from .core.actuator import (
     resolve_roles,
 )
 from .core.estimation import known_shares_exceed_total
+from .core.exposes import profile_from_exposes
 from .core.house import (
     DESIGN_TEMP_C_MAX,
     DESIGN_TEMP_C_MIN,
@@ -126,8 +128,14 @@ from .core.room import (
 )
 from .device_profiles import async_get_profiles
 from .house_config import house_from_config, house_from_entry, room_from_config, rooms_from_entry
+from .z2m import device_definition
 
 CONF_THERMOSTAT = "thermostat"
+AUTO_PROFILE_NAME = {
+    "en": "Detected from Zigbee2MQTT (not tested)",
+    "de": "Aus Zigbee2MQTT erkannt (nicht getestet)",
+}
+"""ACT-038: shown instead of a profile name for automatically detected thermostats."""
 """Field of the pick step (edit or remove a thermostat)."""
 
 DETAIL_KEYS = (
@@ -345,12 +353,22 @@ class ThermostatSteps(ConfigSubentryFlow):
             step_id="thermostat", data_schema=vol.Schema(schema), last_step=False
         )
 
+    def _profile_from_z2m(self, device: dr.DeviceEntry) -> DeviceProfile | None:
+        """ACT-034, ACT-038: roles from the device's Zigbee2MQTT exposes, marked untested."""
+        definition = device_definition(self.hass, device)
+        if not definition:
+            return None
+        name = AUTO_PROFILE_NAME.get(self.hass.config.language, AUTO_PROFILE_NAME["en"])
+        return profile_from_exposes(definition.get("exposes") or (), name)
+
     async def _detect(self, device_id: str, defaults: Mapping[str, Any]) -> None:
         """Find profile and roles for the device (ACT-031, ACT-032)."""
         device = dr.async_get(self.hass).async_get(device_id)
         entries = er.async_entries_for_device(er.async_get(self.hass), device_id)
         profiles = await async_get_profiles(self.hass)
         profile = find_profile(profiles, device.manufacturer, device.model_id) if device else None
+        if profile is None and device is not None:
+            profile = self._profile_from_z2m(device)
         detected = resolve_roles(
             [DeviceEntity(e.entity_id, e.unique_id, e.domain) for e in entries], profile
         )

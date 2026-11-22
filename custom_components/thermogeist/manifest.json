@@ -1,8 +1,13 @@
 {
   "domain": "thermogeist",
   "name": "Thermogeist",
-  "codeowners": ["@mschmiedel"],
+  "codeowners": [
+    "@mschmiedel"
+  ],
   "config_flow": true,
+  "after_dependencies": [
+    "mqtt"
+  ],
   "dependencies": [],
   "documentation": "https://github.com/mschmiedel/thermogeist",
   "integration_type": "hub",
