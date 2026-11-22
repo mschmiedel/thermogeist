@@ -20,25 +20,40 @@ Die Installation über HACS beschreiben wir, sobald Thermogeist veröffentlicht 
 Öffne **Einstellungen → Geräte & Dienste → Integration hinzufügen** und suche nach
 **Thermogeist**.
 
-Die ganze Einrichtung auf einen Blick – jeder Kasten ist ein Schritt im Dialog:
+Die ganze Einrichtung auf einen Blick. **Blaue** Kästen sind Schritte im Dialog, **graue**
+Rauten deine Antworten, **gelbe** Kästen das, was du vorher bereitlegen solltest:
 
 ```mermaid
 flowchart TD
-    A["Haus: Name, Heizungsart, Außensensor"] --> B{"Heizlast bekannt?<br/>Wassertemperatur gemessen?"}
-    B -- "Heizlast: ja" --> C["Heizlast und Normaußentemperatur"]
-    B -- "gemessen" --> D["Vorlauf- und Rücklaufsensor"]
-    B -- "nein / nein" --> E
-    C --> E
-    D --> E["Raum anlegen: Name, Raumsensor, Anteil"]
-    E --> F{"Anteil bekannt?"}
-    F -- "schätzen" --> G["Größe und Lage"]
-    F -- "bekannt" --> H["Anteil in %"]
-    G --> I{"Thermostat hinzufügen?"}
-    H --> I
-    I -- "ja" --> J["Gerät und Heizkörperleistung,<br/>Rollen werden erkannt"]
-    J --> I
-    I -- "fertig" --> K["Raum gespeichert – Beobachten"]
-    K --> L["Regeln einschalten, wenn dir die Planung passt"]
+    A["Haus: Name, Heizungsart, Außensensor"] --> B{"Heizlast bekannt?"}
+    B -- "ja" --> C["Heizlast und Normaußentemperatur"]
+    B -- "nein" --> D
+    C --> D{"Wassertemperatur gemessen?"}
+    D -- "ja" --> E["Vorlauf- (und Rücklauf-)sensor"]
+    D -- "nein" --> F
+    E --> F["Raum anlegen: Name, Raumsensor, Anteil"]
+    F --> G{"Anteil bekannt?"}
+    G -- "schätzen" --> H["Größe und Lage"]
+    G -- "bekannt" --> I["Anteil in %"]
+    H --> J{"Thermostat hinzufügen?"}
+    I --> J
+    J -- "ja" --> K["Gerät und Heizkörperleistung,<br/>Rollen werden erkannt"]
+    K --> J
+    J -- "fertig" --> L["Raum gespeichert – Beobachten"]
+    L --> M["Regeln einschalten, wenn dir die Planung passt"]
+
+    P1["Außensensor in Home Assistant"] -.-> A
+    P2["Heizlastberechnung, falls vorhanden"] -.-> C
+    P3["Vorlauf-/Rücklaufsensor in Home Assistant"] -.-> E
+    P4["Raumtemperatursensor"] -.-> F
+    P5["Datenblatt des Heizkörpers oder Größe und Typ"] -.-> K
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class A,C,E,F,H,I,K,L,M step
+    class B,D,G,J ask
+    class P1,P2,P3,P4,P5 prep
 ```
 
 ### Schritt 1: die drei wichtigsten Angaben
@@ -51,8 +66,8 @@ flowchart TD
 
 ### Schritt 2: ein paar Fragen
 
-Deine Antworten bestimmen, was Thermogeist als Nächstes fragt – du siehst nur Felder, die du
-ausfüllen kannst.
+Deine Antworten bestimmen, was Thermogeist als Nächstes fragt – du siehst nur die Felder, die
+du ausfüllen musst.
 
 | Frage | Was folgt |
 |---|---|

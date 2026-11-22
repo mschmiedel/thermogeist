@@ -20,25 +20,40 @@ Installation through HACS will be described once Thermogeist is published.
 
 Go to **Settings → Devices & services → Add integration** and search for **Thermogeist**.
 
-The whole setup at a glance – each box is one dialog step:
+The whole setup at a glance. **Blue** boxes are dialog steps, **grey** diamonds are your
+answers, **yellow** boxes are what you should have ready beforehand:
 
 ```mermaid
 flowchart TD
-    A["House: name, heating type, outdoor sensor"] --> B{"Heat load known?<br/>Water temperature measured?"}
-    B -- "heat load: yes" --> C["Heat load and design outdoor temperature"]
-    B -- "measured" --> D["Flow and return sensor"]
-    B -- "no / no" --> E
-    C --> E
-    D --> E["Add a room: name, room sensor, share"]
-    E --> F{"Share known?"}
-    F -- "estimate" --> G["Size and position"]
-    F -- "known" --> H["Share in %"]
-    G --> I{"Add a thermostat?"}
-    H --> I
-    I -- "yes" --> J["Device and radiator output,<br/>roles are detected"]
-    J --> I
-    I -- "done" --> K["Room saved – observe mode"]
-    K --> L["Switch Control on when you like the plan"]
+    A["House: name, heating type, outdoor sensor"] --> B{"Heat load known?"}
+    B -- "yes" --> C["Heat load and design outdoor temperature"]
+    B -- "no" --> D
+    C --> D{"Water temperature measured?"}
+    D -- "yes" --> E["Flow (and return) sensor"]
+    D -- "no" --> F
+    E --> F["Add a room: name, room sensor, share"]
+    F --> G{"Share known?"}
+    G -- "estimate" --> H["Size and position"]
+    G -- "known" --> I["Share in %"]
+    H --> J{"Add a thermostat?"}
+    I --> J
+    J -- "yes" --> K["Device and radiator output,<br/>roles are detected"]
+    K --> J
+    J -- "done" --> L["Room saved – observe mode"]
+    L --> M["Switch Control on when you like the plan"]
+
+    P1["Outdoor sensor in Home Assistant"] -.-> A
+    P2["Heat load calculation, if you have one"] -.-> C
+    P3["Flow / return sensor in Home Assistant"] -.-> E
+    P4["Room temperature sensor"] -.-> F
+    P5["Radiator data sheet or size and type"] -.-> K
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class A,C,E,F,H,I,K,L,M step
+    class B,D,G,J ask
+    class P1,P2,P3,P4,P5 prep
 ```
 
 ### Step 1: the three essentials
@@ -51,7 +66,7 @@ flowchart TD
 
 ### Step 2: a few questions
 
-Your answers decide what Thermogeist asks next – you only see fields you can fill in.
+Your answers decide what Thermogeist asks next – you only see the fields you need to fill in.
 
 | Question | What follows |
 |---|---|
