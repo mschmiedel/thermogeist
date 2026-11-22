@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType, section
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.thermogeist.const import DOMAIN
@@ -88,3 +89,57 @@ async def setup_house(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
+
+
+async def finish_new_room(hass: HomeAssistant, result: Any) -> Any:
+    """HAI-021: a new room ends with "add a thermostat / done"; choose done."""
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "new_room_thermostats"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "new_room_done"}
+    )
+    await hass.async_block_till_done()
+    return result
+
+
+def nest(schema: Any, answers: dict[str, Any]) -> dict[str, Any]:
+    """Put flat answers into the collapsible sections of a form (HAI-016), like a user would."""
+    nested: dict[str, Any] = {}
+    remaining = dict(answers)
+    for marker, value in schema.schema.items():
+        if isinstance(value, section):
+            inner = {
+                str(k): remaining.pop(str(k)) for k in value.schema.schema if str(k) in remaining
+            }
+            inner |= (
+                remaining.pop(str(marker), {}) if isinstance(answers.get(str(marker)), dict) else {}
+            )
+            nested[str(marker)] = inner
+    nested |= remaining
+    return nested
+
+
+@pytest.fixture(autouse=True)
+def answers_fill_sections(hass: HomeAssistant) -> Any:
+    """Tests answer room and thermostat forms with flat dicts; sections are filled for them."""
+    manager = hass.config_entries.subentries
+    shown: dict[str, Any] = {}
+    original_init, original_configure = manager.async_init, manager.async_configure
+
+    def remember(result: Any) -> Any:
+        if result.get("type") is FlowResultType.FORM:
+            shown[result["flow_id"]] = result["data_schema"]
+        return result
+
+    async def init(*args: Any, **kwargs: Any) -> Any:
+        return remember(await original_init(*args, **kwargs))
+
+    async def configure(flow_id: str, user_input: Any = None) -> Any:
+        schema = shown.get(flow_id)
+        if schema is not None and isinstance(user_input, dict) and "next_step_id" not in user_input:
+            user_input = nest(schema, user_input)
+        return remember(await original_configure(flow_id, user_input))
+
+    manager.async_init = init  # type: ignore[method-assign]
+    manager.async_configure = configure  # type: ignore[method-assign]
+    return manager

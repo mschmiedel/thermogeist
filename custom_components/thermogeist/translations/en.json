@@ -19,21 +19,41 @@
         }
       },
       "details": {
-        "title": "Details (optional)",
-        "description": "The more Thermogeist knows, the better it starts. Every field can stay empty.",
+        "title": "A few questions",
+        "description": "Your answers decide what Thermogeist asks next. Everything can be changed later.",
+        "data": {
+          "heat_load_known": "Do you know the heat load?",
+          "flow_measurement": "Is the water temperature measured?",
+          "living_area": "Heated living area"
+        },
+        "data_description": {
+          "heat_load_known": "Yes, if you have a heat load calculation (heating installer or energy consultant).",
+          "flow_measurement": "A sensor for the water going to the radiators (flow) and, optionally, coming back (return).",
+          "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %."
+        }
+      },
+      "heat_load": {
+        "title": "Heat load",
+        "description": "Values from your heat load calculation.",
         "data": {
           "heat_load": "Heat load",
           "design_outdoor_temperature": "Design outdoor temperature",
-          "living_area": "Heated living area",
-          "share_outside": "Share outside Thermogeist",
-          "flow_temperature_entity": "Flow temperature sensor",
-          "return_temperature_entity": "Return temperature sensor"
+          "share_outside": "Share outside Thermogeist"
         },
         "data_description": {
           "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
-          "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
-          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %."
+        }
+      },
+      "flow": {
+        "title": "Water temperatures",
+        "description": "The sensors in the heating circuit.",
+        "data": {
+          "flow_temperature_entity": "Flow temperature sensor",
+          "return_temperature_entity": "Return temperature sensor"
+        },
+        "data_description": {
           "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor.",
           "return_temperature_entity": "Optional. The temperature of the water coming back from the radiators, measured at the same place as the flow (e.g. heating circuit return). Thermogeist then uses the measured difference between flow and return instead of assuming 5 K. Calibrate strap-on sensors the same way as the flow sensor."
         }
@@ -56,20 +76,40 @@
         "data": {
           "heating_type": "Heating type",
           "outdoor_temperature_entity": "Outdoor temperature sensor",
-          "heat_load": "Heat load",
-          "design_outdoor_temperature": "Design outdoor temperature",
-          "living_area": "Heated living area",
-          "share_outside": "Share outside Thermogeist",
-          "flow_temperature_entity": "Flow temperature sensor",
-          "return_temperature_entity": "Return temperature sensor"
+          "heat_load_known": "Do you know the heat load?",
+          "flow_measurement": "Is the water temperature measured?",
+          "living_area": "Heated living area"
         },
         "data_description": {
           "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
           "outdoor_temperature_entity": "Any sensor measuring the outdoor temperature, e.g. a weather station or the heat pump's outdoor sensor.",
+          "heat_load_known": "Yes, if you have a heat load calculation (heating installer or energy consultant).",
+          "flow_measurement": "A sensor for the water going to the radiators (flow) and, optionally, coming back (return).",
+          "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %."
+        }
+      },
+      "heat_load": {
+        "title": "Heat load",
+        "description": "Values from your heat load calculation.",
+        "data": {
+          "heat_load": "Heat load",
+          "design_outdoor_temperature": "Design outdoor temperature",
+          "share_outside": "Share outside Thermogeist"
+        },
+        "data_description": {
           "heat_load": "Heat the house needs on the coldest design day, from your heat load calculation (heating installer or energy consultant). Leave empty if unknown.",
           "design_outdoor_temperature": "The outdoor temperature your heat load was calculated for. Required if you enter a heat load. Not sure? Search the web for \"design outdoor temperature\" (in Germany: \"Normaußentemperatur\") together with your postcode.",
-          "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %.",
-          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %.",
+          "share_outside": "Part of the heat load in rooms Thermogeist does not control, e.g. a bathroom with floor heating. Only needed if you know it from a heat load calculation; otherwise Thermogeist works it out from the living area. Leave empty for 0 %."
+        }
+      },
+      "flow": {
+        "title": "Water temperatures",
+        "description": "The sensors in the heating circuit.",
+        "data": {
+          "flow_temperature_entity": "Flow temperature sensor",
+          "return_temperature_entity": "Return temperature sensor"
+        },
+        "data_description": {
           "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor.",
           "return_temperature_entity": "Optional. The temperature of the water coming back from the radiators, measured at the same place as the flow (e.g. heating circuit return). Thermogeist then uses the measured difference between flow and return instead of assuming 5 K. Calibrate strap-on sensors the same way as the flow sensor."
         }
@@ -117,6 +157,19 @@
         "automatic": "Automatic",
         "valve": "By valve position",
         "setpoint": "By setpoint"
+      }
+    },
+    "heat_load_known": {
+      "options": {
+        "yes": "Yes, from a heat load calculation",
+        "no": "No"
+      }
+    },
+    "flow_measurement": {
+      "options": {
+        "none": "No",
+        "flow": "Flow only",
+        "flow_return": "Flow and return"
       }
     }
   },
@@ -289,19 +342,37 @@
             "name": "Name",
             "area": "Area",
             "temperature_entity": "Room temperature sensor",
-            "share_mode": "Share of the heat load",
-            "design_indoor_temperature": "Design indoor temperature",
-            "window_sensors": "Window and door contacts",
-            "heat_sources": "Devices that heat the room"
+            "share_mode": "Share of the heat load"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
             "area": "Optional. The room device is placed in this Home Assistant area.",
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
-            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
-            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
-            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
-            "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
+            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead."
+          },
+          "sections": {
+            "windows_devices": {
+              "name": "Windows and devices",
+              "description": "Optional: contacts that pause heating, and devices whose heat counts.",
+              "data": {
+                "window_sensors": "Window and door contacts",
+                "heat_sources": "Devices that heat the room"
+              },
+              "data_description": {
+                "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
+                "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
+              }
+            },
+            "more": {
+              "name": "More",
+              "description": "Rarely needed.",
+              "data": {
+                "design_indoor_temperature": "Design indoor temperature"
+              },
+              "data_description": {
+                "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets."
+              }
+            }
           }
         },
         "geometry": {
@@ -310,7 +381,6 @@
           "data": {
             "floor_area": "Floor area",
             "ceiling_height": "Ceiling height",
-            "ceiling_low": "Lowest point under a sloped ceiling",
             "exterior_walls": "Exterior walls",
             "above": "Above the room",
             "below": "Below the room"
@@ -318,10 +388,21 @@
           "data_description": {
             "floor_area": "Galleries and open spaces count their floor area once.",
             "ceiling_height": "With a sloped ceiling: the highest point.",
-            "ceiling_low": "Only for sloped ceilings. Thermogeist uses the mean of lowest and highest point.",
             "exterior_walls": "Walls that face outside. A corner room usually has 2, a hallway inside the house 0.",
             "above": "What is directly above the ceiling.",
             "below": "What is directly below the floor."
+          },
+          "sections": {
+            "sloped_ceiling": {
+              "name": "Sloped ceiling",
+              "description": "Only for rooms under a sloped roof.",
+              "data": {
+                "ceiling_low": "Lowest point under a sloped ceiling"
+              },
+              "data_description": {
+                "ceiling_low": "Only for sloped ceilings. Thermogeist uses the mean of lowest and highest point."
+              }
+            }
           }
         },
         "known_share": {
@@ -336,7 +417,13 @@
         },
         "heat_source_factors": {
           "title": "How much heat stays in the room?",
-          "description": "Per device: the share of its power that stays in the room as heat ({devices}). 100 % for electronics, lights, fridges and heat pump dryers. Less for devices whose heat leaves with exhaust air or waste water, e.g. vented dryer 10–20 %, washing machine 10–20 %, dishwasher 20–40 %. More for an air conditioner heating the room: its COP × 100 %, e.g. 400 % (choose a little below the SCOP on the energy label). Optional per device: a factor sensor in % (e.g. a template) that wins over the number while it is available. See the docs: Rooms → Devices that heat the room."
+          "description": "Per device: the share of its power that stays in the room as heat ({devices}). 100 % for electronics, lights, fridges and heat pump dryers. Less for devices whose heat leaves with exhaust air or waste water, e.g. vented dryer 10–20 %, washing machine 10–20 %, dishwasher 20–40 %. More for an air conditioner heating the room: its COP × 100 %, e.g. 400 % (choose a little below the SCOP on the energy label). Optional per device: a factor sensor in % (e.g. a template) that wins over the number while it is available. See the docs: Rooms → Devices that heat the room.",
+          "sections": {
+            "factor_sensors": {
+              "name": "Factor from a sensor",
+              "description": "Optional: a sensor in % per device, e.g. a COP template for an air conditioner."
+            }
+          }
         },
         "edit_room": {
           "title": "Change room",
@@ -345,19 +432,37 @@
             "name": "Name",
             "area": "Area",
             "temperature_entity": "Room temperature sensor",
-            "share_mode": "Share of the heat load",
-            "design_indoor_temperature": "Design indoor temperature",
-            "window_sensors": "Window and door contacts",
-            "heat_sources": "Devices that heat the room"
+            "share_mode": "Share of the heat load"
           },
           "data_description": {
             "name": "Shown as the device name, e.g. \"Living room\".",
             "area": "Optional. The room device is placed in this Home Assistant area.",
             "temperature_entity": "A sensor in the room, ideally away from the radiator and out of direct sunlight.",
-            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead.",
-            "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets.",
-            "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
-            "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
+            "share_mode": "Most people let Thermogeist estimate it. If you have a room-by-room heat load calculation, enter the value instead."
+          },
+          "sections": {
+            "windows_devices": {
+              "name": "Windows and devices",
+              "description": "Optional: contacts that pause heating, and devices whose heat counts.",
+              "data": {
+                "window_sensors": "Window and door contacts",
+                "heat_sources": "Devices that heat the room"
+              },
+              "data_description": {
+                "window_sensors": "Optional. If any of them is open for 30 seconds, the room stops heating until it is closed again.",
+                "heat_sources": "Optional. Power sensors (W) of devices in this room, e.g. a PC, server or fridge. Their heat is subtracted from what the radiator has to deliver. Next you say how much of each device's power stays in the room."
+              }
+            },
+            "more": {
+              "name": "More",
+              "description": "Rarely needed.",
+              "data": {
+                "design_indoor_temperature": "Design indoor temperature"
+              },
+              "data_description": {
+                "design_indoor_temperature": "Planning value from the heat load calculation, not the temperature you heat to. Usually 20 °C; bathrooms 24 °C, heated halls 15 °C. Your setpoint decides how warm the room really gets."
+              }
+            }
           }
         },
         "reconfigure": {
@@ -392,9 +497,6 @@
             "valve_min": "Minimum opening on the device",
             "external_temperature": "External temperature input",
             "child_lock": "Child lock",
-            "calibration_trigger": "Start calibration",
-            "calibration_status": "Calibration status",
-            "valve_refresh_minutes": "Confirm valve position every … minutes",
             "strategy": "How to control"
           },
           "data_description": {
@@ -403,8 +505,40 @@
             "valve_write": "Lets Thermogeist set the valve position directly. Without it the thermostat is controlled by setpoint.",
             "valve_min": "A fallback stored on the device; it still works when Home Assistant is down.",
             "external_temperature": "Lets the thermostat use the room sensor instead of its own.",
-            "valve_refresh_minutes": "Some thermostats drop a valve position set from outside after a while (Bosch: after 15 minutes). Thermogeist then resends the unchanged value at this interval – a radio message, no motor movement. Empty = off.",
             "strategy": "Automatic: by valve position if the thermostat allows it, otherwise by setpoint. Valve: Thermogeist sets the valve itself (calm, with minimum opening). Setpoint: Thermogeist tells the thermostat which temperature to aim for, and the thermostat moves its valve itself."
+          },
+          "sections": {
+            "detected_roles": {
+              "name": "Detected roles – check if you like",
+              "description": "Thermogeist found these entities. Open only to change them.",
+              "data": {
+                "climate": "Climate entity",
+                "valve_read": "Valve position (read)",
+                "valve_write": "Valve position (set)",
+                "valve_min": "Minimum opening on the device",
+                "external_temperature": "External temperature input",
+                "child_lock": "Child lock"
+              },
+              "data_description": {
+                "climate": "The thermostat's own climate entity (setpoint, its temperature).",
+                "valve_read": "Only if the thermostat reports how far its valve really is open. Leave empty for Sonoff thermostats; never the entity from valve position (set).",
+                "valve_write": "Lets Thermogeist set the valve position directly. Without it the thermostat is controlled by setpoint.",
+                "valve_min": "A fallback stored on the device; it still works when Home Assistant is down.",
+                "external_temperature": "Lets the thermostat use the room sensor instead of its own."
+              }
+            },
+            "more": {
+              "name": "More",
+              "description": "Calibration and valve confirmation; rarely changed.",
+              "data": {
+                "calibration_trigger": "Start calibration",
+                "calibration_status": "Calibration status",
+                "valve_refresh_minutes": "Confirm valve position every … minutes"
+              },
+              "data_description": {
+                "valve_refresh_minutes": "Some thermostats drop a valve position set from outside after a while (Bosch: after 15 minutes). Thermogeist then resends the unchanged value at this interval – a radio message, no motor movement. Empty = off."
+              }
+            }
           }
         },
         "edit_thermostat": {
@@ -418,6 +552,14 @@
           "description": "The thermostat gets its own device settings back and regulates on its own again.",
           "data": {
             "thermostat": "Thermostat"
+          }
+        },
+        "new_room_thermostats": {
+          "title": "Thermostats of {room}",
+          "description": "Add the thermostats of this room now ({count} so far), or finish.",
+          "menu_options": {
+            "add_new_room_thermostat": "Add a thermostat",
+            "new_room_done": "Done – save the room"
           }
         }
       },

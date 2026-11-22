@@ -15,9 +15,11 @@ from .conftest import (
     HOUSE_WITH_LOAD,
     LIVING_ROOM,
     ROOM_SENSOR,
+    finish_new_room,
     report_room_temperature,
     setup_house,
 )
+from .test_thermostats import sonoff, suggested
 
 CLIMATE = "climate.living_room"
 REASON = "sensor.living_room_active_reason"
@@ -40,8 +42,7 @@ async def _add_room(hass: HomeAssistant, entry_id: str, basics: dict, step2: dic
     )
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], basics)
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], step2)
-    await hass.async_block_till_done()
-    return result
+    return await finish_new_room(hass, result)
 
 
 async def test_add_estimated_room(
@@ -86,6 +87,7 @@ async def test_known_share_over_total_is_rejected(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"known_share": 30.0}
     )
+    result = await finish_new_room(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -208,3 +210,44 @@ async def test_reason_is_not_rewritten_while_unchanged(
 
     assert [e for e in changes if e.data["entity_id"] == REASON] == []
     assert hass.states.get(REASON).attributes["since"] == since
+
+
+async def test_new_room_offers_thermostats(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-ROOMS-014"""
+    entry = await setup_house(hass, HOUSE_WITH_LOAD)
+    device_id = sonoff(hass)
+    basics = {k: LIVING_ROOM[k] for k in ("name", "temperature_entity", "share_mode")}
+    geometry = {k: v for k, v in LIVING_ROOM.items() if k not in basics}
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "room"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], basics)
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], geometry)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "new_room_thermostats"
+    assert not entry.subentries  # not saved yet
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "add_new_room_thermostat"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"device": device_id, "rated_output": 1500.0}
+    )
+    assert result["step_id"] == "roles"
+    top = {str(m): v for m, v in result["data_schema"].schema.items()}
+    assert "strategy" in top
+    assert top["detected_roles"].options["collapsed"] is True
+    # The frontend submits the pre-filled values, also from the collapsed section.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], suggested(result)
+    )
+    assert result["step_id"] == "new_room_thermostats"
+    assert result["description_placeholders"]["count"] == "1"
+
+    result = await finish_new_room(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    room = next(iter(entry.subentries.values()))
+    assert len(room.data["thermostats"]) == 1
+    assert hass.states.get("sensor.living_room_planned_valve_position") is not None

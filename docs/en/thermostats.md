@@ -7,8 +7,10 @@
 
 ## Add a thermostat
 
-Thermostats belong to their room. Open the Thermogeist entry of your house, click the gear
-icon (⚙) next to the room and choose **Add thermostat**. A room can have several thermostats.
+Thermostats belong to their room. When you **add a room**, Thermogeist asks at the end:
+**Add a thermostat** or **Done** – add all of the room's thermostats right there. Later: open the
+Thermogeist entry of your house, click the gear icon (⚙) next to the room and choose **Add
+thermostat**. A room can have several thermostats.
 
 The same menu offers **Edit room**, **Edit thermostat** and **Remove thermostat**. To move a
 thermostat to another room, remove it here and add it there; on removal it gets its own device
@@ -23,8 +25,11 @@ settings back.
 
 ### Step 2: what does what?
 
-Thermogeist recognises known models and pre-fills which entity does what. Check the list and
-change anything that looks wrong; empty fields are simply not used. You can pick entities of
+Thermogeist recognises known models and pre-fills which entity does what. Then only **How to
+control** is shown open; the detected entities sit in the collapsed section *Detected roles –
+check if you like*, calibration and valve confirmation under *More*. For a thermostat
+Thermogeist does not know, the roles are shown open. Change anything that looks wrong; empty
+fields are simply not used. You can pick entities of
 other devices too – some integrations (e.g. Bosch Smart Home) split climate and valve
 position across separate devices.
 

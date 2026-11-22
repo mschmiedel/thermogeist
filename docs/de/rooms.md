@@ -17,9 +17,12 @@
 | Bereich | Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet. |
 | Raumtemperatursensor | Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne. |
 | Anteil an der Heizlast | *Aus Größe und Lage schätzen* (die meisten) oder *Ich kenne den Anteil* (wenn du eine raumweise Heizlastberechnung hast). |
-| Fenster- und Türkontakte | Optional. Ist einer 30 Sekunden offen, hört der Raum auf zu heizen, bis alle 10 Sekunden zu sind; beide Zeiten lassen sich ändern ([Häufige Fragen](faq/window_open.md)). |
-| Auslegungs-Innentemperatur | Planungswert aus der Heizlastberechnung – nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Ein Bad mit 24 °C bekommt einen größeren Anteil. |
-| Geräte, die den Raum heizen | Optional. Leistungssensoren (W) von Geräten im Raum, siehe [unten](#geräte-die-den-raum-heizen). |
+| *Fenster und Geräte* (zugeklappt) – Fenster- und Türkontakte | Optional. Ist einer 30 Sekunden offen, hört der Raum auf zu heizen, bis alle 10 Sekunden zu sind; beide Zeiten lassen sich ändern ([Häufige Fragen](faq/window_open.md)). |
+| *Fenster und Geräte* – Geräte, die den Raum heizen | Optional. Leistungssensoren (W) von Geräten im Raum, siehe [unten](#geräte-die-den-raum-heizen). |
+| *Mehr* (zugeklappt) – Auslegungs-Innentemperatur | Planungswert aus der Heizlastberechnung – nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Ein Bad mit 24 °C bekommt einen größeren Anteil. |
+
+Zugeklappte Bereiche öffnen sich von selbst, wenn sie schon einen Wert enthalten – beim
+Bearbeiten eines Raums verschwindet also nichts, was du eingetragen hast.
 
 ### Schritt 2a: Größe und Lage (Schätzung)
 
@@ -29,7 +32,7 @@ Grobe Werte reichen – Thermogeist lernt das echte Verhalten später.
 |---|---|
 | Grundfläche | In m². Galerien und Lufträume zählen ihre Grundfläche einmal. |
 | Raumhöhe | Bei Dachschräge: die höchste Stelle. |
-| Niedrigste Stelle unter der Dachschräge | Nur bei Dachschräge. Thermogeist rechnet mit dem Mittel aus niedrigster und höchster Stelle. |
+| *Dachschräge* (zugeklappt) – Niedrigste Stelle unter der Dachschräge | Nur bei Dachschräge. Thermogeist rechnet mit dem Mittel aus niedrigster und höchster Stelle. |
 | Außenwände | Wände nach draußen. Ein Eckraum hat meist 2, ein innenliegender Flur 0. |
 | Über / unter dem Raum | Beheizter Raum, unbeheizter Raum (Dachboden, Keller), Dach oder Erdreich. |
 

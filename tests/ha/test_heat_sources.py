@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
-from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, ROOM_SENSOR, setup_house
-from .test_thermostats import FLOW_SENSOR, PLANNED, assign, z2m_device
+from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, ROOM_SENSOR, finish_new_room, setup_house
+from .test_thermostats import FLOW_SENSOR, PLANNED, assign, suggested, z2m_device
 
 PC = "sensor.gaming_pc_power"
 HEAT = "sensor.living_room_heat_from_devices"
@@ -43,7 +43,7 @@ async def test_room_dialog_asks_for_factors(
     )
     assert result["step_id"] == "heat_source_factors"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {PC: 50.0})
-    await hass.async_block_till_done()
+    result = await finish_new_room(hass, result)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["heat_sources"] == [{"entity": PC, "factor": 50.0}]
@@ -57,8 +57,12 @@ async def test_room_dialog_asks_for_factors(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"next_step_id": "edit_room"}
     )
-    marker = next(m for m in result["data_schema"].schema if str(m) == "heat_sources")
-    assert marker.description == {"suggested_value": [PC]}
+    assert suggested(result)["heat_sources"] == [PC]
+    # HAI-016: the section holding a value is open when editing.
+    devices = next(
+        v for m, v in result["data_schema"].schema.items() if str(m) == "windows_devices"
+    )
+    assert devices.options["collapsed"] is False
 
 
 async def test_feed_forward_subtracts_device_heat(
@@ -120,6 +124,7 @@ async def test_factor_entity_sets_heat_from_devices(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {AC: 400.0, factor_entity_key(AC): COP}
     )
+    result = await finish_new_room(hass, result)
     await hass.async_block_till_done()
 
     assert result["data"]["heat_sources"] == [{"entity": AC, "factor": 400.0, "factor_entity": COP}]

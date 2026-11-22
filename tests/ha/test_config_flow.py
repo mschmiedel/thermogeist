@@ -16,19 +16,22 @@ async def _start_with_required(hass: HomeAssistant, answers: dict) -> dict:
     result = await hass.config_entries.flow.async_configure(result["flow_id"], answers)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "details"
-    assert result["last_step"] is True
     return result
+
+
+NONE = {"heat_load_known": "no", "flow_measurement": "none"}
 
 
 async def test_minimal_setup_creates_house(hass: HomeAssistant, outdoor_sensor: str) -> None:
     """Scenario: SCN-SETUP-001"""
     result = await _start_with_required(hass, REQUIRED)
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], NONE)
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home"
+    assert "heat_load_known" not in result["data"]
     assert hass.states.get("select.home_central_mode").state == "auto"
     assert hass.states.get("number.home_minimum_valve_opening").state == "40.0"
     assert hass.states.get("sensor.home_heating_type").state == "heat_pump"
@@ -39,6 +42,10 @@ async def test_heat_load_without_design_temperature_shows_error(
 ) -> None:
     """Scenario: SCN-SETUP-002"""
     result = await _start_with_required(hass, REQUIRED)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**NONE, "heat_load_known": "yes"}
+    )
+    assert result["step_id"] == "heat_load"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {"heat_load": 8.0})
     assert result["type"] is FlowResultType.FORM
@@ -79,10 +86,51 @@ async def test_two_houses_can_be_added(hass: HomeAssistant, outdoor_sensor: str)
     result = await _start_with_required(
         hass, {**REQUIRED, "name": "Granny flat", "heating_type": "boiler"}
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], NONE)
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert hass.states.get("sensor.home_heating_type").state == "heat_pump"
     assert hass.states.get("sensor.granny_flat_heating_type").state == "boiler"
+
+
+async def test_questions_decide_the_details(hass: HomeAssistant, outdoor_sensor: str) -> None:
+    """Scenario: SCN-SETUP-008"""
+    for name in ("sensor.flow", "sensor.return"):
+        hass.states.async_set(name, "35", {"device_class": "temperature"})
+    result = await _start_with_required(hass, REQUIRED)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"heat_load_known": "no", "flow_measurement": "flow_return"}
+    )
+    assert result["step_id"] == "flow"
+    assert {str(k) for k in result["data_schema"].schema} == {
+        "flow_temperature_entity",
+        "return_temperature_entity",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"flow_temperature_entity": "sensor.flow", "return_temperature_entity": "sensor.return"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+
+    # Options: the answers are pre-selected; "no flow measurement" clears both sensors.
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    defaults = {str(k): k.default() for k in result["data_schema"].schema if callable(k.default)}
+    assert defaults["heat_load_known"] == "no"
+    assert defaults["flow_measurement"] == "flow_return"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "heating_type": "heat_pump",
+            "outdoor_temperature_entity": outdoor_sensor,
+            "heat_load_known": "no",
+            "flow_measurement": "none",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["flow_temperature_entity"] is None
+    assert result["data"]["return_temperature_entity"] is None

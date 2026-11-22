@@ -7,9 +7,10 @@
 
 ## Thermostat hinzufügen
 
-Thermostate gehören zu ihrem Raum. Öffne den Thermogeist-Eintrag deines Hauses, klick auf das
-Zahnrad (⚙) neben dem Raum und wähle **Thermostat hinzufügen**. Ein Raum kann mehrere
-Thermostate haben.
+Thermostate gehören zu ihrem Raum. Wenn du **einen Raum anlegst**, fragt Thermogeist am Ende:
+**Thermostat hinzufügen** oder **Fertig** – füge dort gleich alle Thermostate des Raums hinzu.
+Später: Öffne den Thermogeist-Eintrag deines Hauses, klick auf das Zahnrad (⚙) neben dem Raum
+und wähle **Thermostat hinzufügen**. Ein Raum kann mehrere Thermostate haben.
 
 Dasselbe Menü bietet **Raum bearbeiten**, **Thermostat bearbeiten** und **Thermostat entfernen**.
 Um ein Thermostat in einen anderen Raum zu verschieben, entferne es hier und füge es dort hinzu;
@@ -24,8 +25,11 @@ beim Entfernen bekommt es seine eigenen Geräteeinstellungen zurück.
 
 ### Schritt 2: Was macht was?
 
-Bekannte Modelle erkennt Thermogeist und trägt vor, welche Entität was macht. Prüfe die Liste
-und ändere, was nicht passt; leere Felder werden einfach nicht genutzt. Du kannst auch Entitäten
+Bekannte Modelle erkennt Thermogeist und trägt vor, welche Entität was macht. Dann ist nur **Wie
+regeln** offen; die erkannten Entitäten stehen im zugeklappten Bereich *Erkannte Rollen – bei
+Bedarf prüfen*, Kalibrierung und Ventil-Bestätigung unter *Mehr*. Bei einem Thermostat, das
+Thermogeist nicht kennt, sind die Rollen offen. Ändere, was nicht passt; leere Felder werden
+einfach nicht genutzt. Du kannst auch Entitäten
 anderer Geräte wählen – manche Integrationen (z. B. Bosch Smart Home) legen Klima und
 Ventilposition auf getrennte Geräte.
 

@@ -28,18 +28,28 @@ Die Installation über HACS beschreiben wir, sobald Thermogeist veröffentlicht 
 | Heizungsart | Wärmepumpe, Kessel (Gas, Öl, Pellets, Fernwärme) oder Elektro-Direktheizung. Davon hängt ab, wie ruhig Thermogeist regelt. |
 | Außentemperatursensor | Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler deiner Wärmepumpe. |
 
-### Schritt 2: Details (optional)
+### Schritt 2: ein paar Fragen
 
-Jedes Feld darf leer bleiben. Je mehr du ausfüllst, desto besser startet Thermogeist.
+Deine Antworten bestimmen, was Thermogeist als Nächstes fragt – du siehst nur Felder, die du
+ausfüllen kannst.
+
+| Frage | Was folgt |
+|---|---|
+| Kennst du die Heizlast? | **Ja**, wenn es eine Heizlastberechnung gibt (Heizungsbauer oder Energieberater): Ein Schritt fragt Heizlast, Normaußentemperatur und, falls bekannt, den Anteil außerhalb von Thermogeist. **Nein**: nichts weiter. |
+| Wird die Wassertemperatur gemessen? | **Nein**, **nur Vorlauf** oder **Vorlauf und Rücklauf**: Ein Schritt fragt nach dem einen oder den beiden Sensoren – sorgfältig wählen, siehe [Den Vorlauf-Sensor wählen](thermostats.md#den-vorlauf-sensor-wählen). |
+| Beheizte Wohnfläche | Die gesamte beheizte Fläche, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast: Ein Raum mit 20 m² in einem Haus mit 160 m² startet bei etwa 12,5 %. Empfohlen. |
+
+Die Werte in den folgenden Schritten:
 
 | Feld | Was du einträgst |
 |---|---|
-| Heizlast | Die Wärme, die dein Haus am kältesten Auslegungstag braucht, in kW. Sie steht in der Heizlastberechnung deines Heizungsbauers oder Energieberaters. |
-| Normaußentemperatur | Die Außentemperatur, für die die Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. |
-| Vorlauftemperatursensor | Optional. Die Wassertemperatur zu den Heizkörpern – sorgfältig wählen, siehe [Den Vorlauf-Sensor wählen](thermostats.md#den-vorlauf-sensor-wählen). |
-| Rücklauftemperatursensor | Optional. Das Wasser, das von den Heizkörpern zurückkommt; Thermogeist nutzt dann die gemessene Spreizung statt 5 K anzunehmen. |
-| Beheizte Wohnfläche | Die gesamte beheizte Fläche, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe: Ein Raum mit 20 m² in einem Haus mit 160 m² startet bei etwa 12,5 %. Empfohlen. |
-| Anteil außerhalb von Thermogeist | Teil der Heizlast in Räumen, die Thermogeist nicht regeln soll, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. |
+| Heizlast | Die Wärme, die dein Haus am kältesten Auslegungstag braucht, in kW, aus der Heizlastberechnung. |
+| Normaußentemperatur | Die Außentemperatur, für die die Heizlast berechnet wurde. |
+| Anteil außerhalb von Thermogeist | Teil der Heizlast in Räumen, die Thermogeist nicht regeln soll, z. B. ein Bad mit Fußbodenheizung. Nur, wenn du ihn kennst; sonst ergibt er sich aus der Wohnfläche. |
+| Vorlauf-/Rücklauftemperatursensor | Das Wasser zu den Heizkörpern und zurück; mit beiden nutzt Thermogeist die gemessene Spreizung statt 5 K anzunehmen. |
+
+In den Haus-Einstellungen sind die Antworten vorausgewählt; wer später *Nein* antwortet,
+entfernt die zugehörigen Werte.
 
 > **Tipp: die Normaußentemperatur finden.** Sie hängt von deinem Wohnort ab. Suche im Web nach
 > „Normaußentemperatur“ und deiner Postleitzahl. Hast du eine Heizlastberechnung, steht der

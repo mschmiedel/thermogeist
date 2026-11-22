@@ -7,7 +7,7 @@ import pytest
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant, State
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, section
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
@@ -77,11 +77,14 @@ def sonoff(hass: HomeAssistant) -> str:
 
 
 def suggested(result: dict[str, Any]) -> dict[str, str]:
+    """Pre-filled values of a form, also inside collapsible sections (HAI-016)."""
     values = {}
-    for marker in result["data_schema"].schema:
-        description = marker.description or {}
-        if description.get("suggested_value"):
-            values[str(marker)] = description["suggested_value"]
+    for marker, value in result["data_schema"].schema.items():
+        markers = value.schema.schema if isinstance(value, section) else {marker: value}
+        for inner in markers:
+            description = inner.description or {}
+            if description.get("suggested_value"):
+                values[str(inner)] = description["suggested_value"]
     return values
 
 

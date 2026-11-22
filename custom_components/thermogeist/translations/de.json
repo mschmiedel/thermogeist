@@ -19,21 +19,41 @@
         }
       },
       "details": {
-        "title": "Details (optional)",
-        "description": "Je mehr Thermogeist weiß, desto besser startet es. Jedes Feld darf leer bleiben.",
+        "title": "Ein paar Fragen",
+        "description": "Deine Antworten bestimmen, was Thermogeist als Nächstes fragt. Alles lässt sich später ändern.",
+        "data": {
+          "heat_load_known": "Kennst du die Heizlast?",
+          "flow_measurement": "Wird die Wassertemperatur gemessen?",
+          "living_area": "Beheizte Wohnfläche"
+        },
+        "data_description": {
+          "heat_load_known": "Ja, wenn es eine Heizlastberechnung gibt (Heizungsbauer oder Energieberater).",
+          "flow_measurement": "Ein Sensor für das Wasser, das zu den Heizkörpern fließt (Vorlauf), und optional für das zurückfließende (Rücklauf).",
+          "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %."
+        }
+      },
+      "heat_load": {
+        "title": "Heizlast",
+        "description": "Werte aus deiner Heizlastberechnung.",
         "data": {
           "heat_load": "Heizlast",
           "design_outdoor_temperature": "Normaußentemperatur",
-          "living_area": "Beheizte Wohnfläche",
-          "share_outside": "Anteil außerhalb von Thermogeist",
-          "flow_temperature_entity": "Vorlauftemperatursensor",
-          "return_temperature_entity": "Rücklauftemperatursensor"
+          "share_outside": "Anteil außerhalb von Thermogeist"
         },
         "data_description": {
           "heat_load": "Wärme, die das Haus am kältesten Auslegungstag braucht, aus deiner Heizlastberechnung (Heizungsbauer oder Energieberater). Leer lassen, wenn unbekannt.",
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
-          "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
-          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %.",
+          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %."
+        }
+      },
+      "flow": {
+        "title": "Wassertemperaturen",
+        "description": "Die Sensoren im Heizkreis.",
+        "data": {
+          "flow_temperature_entity": "Vorlauftemperatursensor",
+          "return_temperature_entity": "Rücklauftemperatursensor"
+        },
+        "data_description": {
           "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen.",
           "return_temperature_entity": "Optional. Die Temperatur des Wassers, das von den Heizkörpern zurückkommt, gemessen an derselben Stelle wie der Vorlauf (z. B. Heizkreis-Rücklauf). Thermogeist nutzt dann den gemessenen Unterschied zwischen Vor- und Rücklauf, statt 5 K anzunehmen. Anlegefühler genauso kalibrieren wie den Vorlauf-Fühler."
         }
@@ -56,20 +76,40 @@
         "data": {
           "heating_type": "Heizungsart",
           "outdoor_temperature_entity": "Außentemperatursensor",
-          "heat_load": "Heizlast",
-          "design_outdoor_temperature": "Normaußentemperatur",
-          "living_area": "Beheizte Wohnfläche",
-          "share_outside": "Anteil außerhalb von Thermogeist",
-          "flow_temperature_entity": "Vorlauftemperatursensor",
-          "return_temperature_entity": "Rücklauftemperatursensor"
+          "heat_load_known": "Kennst du die Heizlast?",
+          "flow_measurement": "Wird die Wassertemperatur gemessen?",
+          "living_area": "Beheizte Wohnfläche"
         },
         "data_description": {
           "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
           "outdoor_temperature_entity": "Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler der Wärmepumpe.",
+          "heat_load_known": "Ja, wenn es eine Heizlastberechnung gibt (Heizungsbauer oder Energieberater).",
+          "flow_measurement": "Ein Sensor für das Wasser, das zu den Heizkörpern fließt (Vorlauf), und optional für das zurückfließende (Rücklauf).",
+          "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %."
+        }
+      },
+      "heat_load": {
+        "title": "Heizlast",
+        "description": "Werte aus deiner Heizlastberechnung.",
+        "data": {
+          "heat_load": "Heizlast",
+          "design_outdoor_temperature": "Normaußentemperatur",
+          "share_outside": "Anteil außerhalb von Thermogeist"
+        },
+        "data_description": {
           "heat_load": "Wärme, die das Haus am kältesten Auslegungstag braucht, aus deiner Heizlastberechnung (Heizungsbauer oder Energieberater). Leer lassen, wenn unbekannt.",
           "design_outdoor_temperature": "Die Außentemperatur, für die deine Heizlast berechnet wurde. Pflicht, wenn du eine Heizlast angibst. Nicht sicher? Suche im Web nach „Normaußentemperatur“ und deiner Postleitzahl.",
-          "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %.",
-          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %.",
+          "share_outside": "Teil der Heizlast in Räumen, die Thermogeist nicht regelt, z. B. ein Bad mit Fußbodenheizung. Nur nötig, wenn du ihn aus einer Heizlastberechnung kennst, sonst ergibt er sich aus der Wohnfläche. Leer lassen für 0 %."
+        }
+      },
+      "flow": {
+        "title": "Wassertemperaturen",
+        "description": "Die Sensoren im Heizkreis.",
+        "data": {
+          "flow_temperature_entity": "Vorlauftemperatursensor",
+          "return_temperature_entity": "Rücklauftemperatursensor"
+        },
+        "data_description": {
           "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen.",
           "return_temperature_entity": "Optional. Die Temperatur des Wassers, das von den Heizkörpern zurückkommt, gemessen an derselben Stelle wie der Vorlauf (z. B. Heizkreis-Rücklauf). Thermogeist nutzt dann den gemessenen Unterschied zwischen Vor- und Rücklauf, statt 5 K anzunehmen. Anlegefühler genauso kalibrieren wie den Vorlauf-Fühler."
         }
@@ -117,6 +157,19 @@
         "automatic": "Automatisch",
         "valve": "Über Ventilstellung",
         "setpoint": "Über Sollwert"
+      }
+    },
+    "heat_load_known": {
+      "options": {
+        "yes": "Ja, aus einer Heizlastberechnung",
+        "no": "Nein"
+      }
+    },
+    "flow_measurement": {
+      "options": {
+        "none": "Nein",
+        "flow": "Nur Vorlauf",
+        "flow_return": "Vorlauf und Rücklauf"
       }
     }
   },
@@ -289,19 +342,37 @@
             "name": "Name",
             "area": "Bereich",
             "temperature_entity": "Raumtemperatursensor",
-            "share_mode": "Anteil an der Heizlast",
-            "design_indoor_temperature": "Auslegungs-Innentemperatur",
-            "window_sensors": "Fenster- und Türkontakte",
-            "heat_sources": "Geräte, die den Raum heizen"
+            "share_mode": "Anteil an der Heizlast"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
             "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
-            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
-            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
-            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
-            "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
+            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein."
+          },
+          "sections": {
+            "windows_devices": {
+              "name": "Fenster und Geräte",
+              "description": "Optional: Kontakte, die das Heizen pausieren, und Geräte, deren Wärme zählt.",
+              "data": {
+                "window_sensors": "Fenster- und Türkontakte",
+                "heat_sources": "Geräte, die den Raum heizen"
+              },
+              "data_description": {
+                "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
+                "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
+              }
+            },
+            "more": {
+              "name": "Mehr",
+              "description": "Selten nötig.",
+              "data": {
+                "design_indoor_temperature": "Auslegungs-Innentemperatur"
+              },
+              "data_description": {
+                "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert."
+              }
+            }
           }
         },
         "geometry": {
@@ -310,7 +381,6 @@
           "data": {
             "floor_area": "Grundfläche",
             "ceiling_height": "Raumhöhe",
-            "ceiling_low": "Niedrigste Stelle unter der Dachschräge",
             "exterior_walls": "Außenwände",
             "above": "Über dem Raum",
             "below": "Unter dem Raum"
@@ -318,10 +388,21 @@
           "data_description": {
             "floor_area": "Galerien und Lufträume zählen ihre Grundfläche einmal.",
             "ceiling_height": "Bei Dachschräge: die höchste Stelle.",
-            "ceiling_low": "Nur bei Dachschräge. Thermogeist rechnet mit dem Mittel aus niedrigster und höchster Stelle.",
             "exterior_walls": "Wände nach draußen. Ein Eckraum hat meist 2, ein innenliegender Flur 0.",
             "above": "Was direkt über der Decke liegt.",
             "below": "Was direkt unter dem Boden liegt."
+          },
+          "sections": {
+            "sloped_ceiling": {
+              "name": "Dachschräge",
+              "description": "Nur für Räume unter einer Dachschräge.",
+              "data": {
+                "ceiling_low": "Niedrigste Stelle unter der Dachschräge"
+              },
+              "data_description": {
+                "ceiling_low": "Nur bei Dachschräge. Thermogeist rechnet mit dem Mittel aus niedrigster und höchster Stelle."
+              }
+            }
           }
         },
         "known_share": {
@@ -336,7 +417,13 @@
         },
         "heat_source_factors": {
           "title": "Wie viel Wärme bleibt im Raum?",
-          "description": "Pro Gerät: der Anteil seiner Leistung, der als Wärme im Raum bleibt ({devices}). 100 % für Elektronik, Licht, Kühlschränke und Wärmepumpentrockner. Weniger für Geräte, deren Wärme mit Abluft oder Abwasser hinausgeht, z. B. Ablufttrockner 10–20 %, Waschmaschine 10–20 %, Spülmaschine 20–40 %. Mehr für eine Klimaanlage, die den Raum heizt: ihr COP × 100 %, z. B. 400 % (etwas unter dem SCOP vom Energielabel). Optional pro Gerät: ein Faktor-Sensor in % (z. B. ein Template), der Vorrang vor der Zahl hat, solange er verfügbar ist. Mehr in der Doku: Räume → Geräte, die den Raum heizen."
+          "description": "Pro Gerät: der Anteil seiner Leistung, der als Wärme im Raum bleibt ({devices}). 100 % für Elektronik, Licht, Kühlschränke und Wärmepumpentrockner. Weniger für Geräte, deren Wärme mit Abluft oder Abwasser hinausgeht, z. B. Ablufttrockner 10–20 %, Waschmaschine 10–20 %, Spülmaschine 20–40 %. Mehr für eine Klimaanlage, die den Raum heizt: ihr COP × 100 %, z. B. 400 % (etwas unter dem SCOP vom Energielabel). Optional pro Gerät: ein Faktor-Sensor in % (z. B. ein Template), der Vorrang vor der Zahl hat, solange er verfügbar ist. Mehr in der Doku: Räume → Geräte, die den Raum heizen.",
+          "sections": {
+            "factor_sensors": {
+              "name": "Faktor aus einem Sensor",
+              "description": "Optional: ein Sensor in % pro Gerät, z. B. ein COP-Template für eine Klimaanlage."
+            }
+          }
         },
         "edit_room": {
           "title": "Raum ändern",
@@ -345,19 +432,37 @@
             "name": "Name",
             "area": "Bereich",
             "temperature_entity": "Raumtemperatursensor",
-            "share_mode": "Anteil an der Heizlast",
-            "design_indoor_temperature": "Auslegungs-Innentemperatur",
-            "window_sensors": "Fenster- und Türkontakte",
-            "heat_sources": "Geräte, die den Raum heizen"
+            "share_mode": "Anteil an der Heizlast"
           },
           "data_description": {
             "name": "Wird als Gerätename angezeigt, z. B. „Wohnzimmer“.",
             "area": "Optional. Das Raumgerät wird diesem Home-Assistant-Bereich zugeordnet.",
             "temperature_entity": "Ein Sensor im Raum, möglichst nicht am Heizkörper und nicht in direkter Sonne.",
-            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein.",
-            "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert.",
-            "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
-            "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
+            "share_mode": "Meist lässt man Thermogeist schätzen. Hast du eine raumweise Heizlastberechnung, trag stattdessen den Wert ein."
+          },
+          "sections": {
+            "windows_devices": {
+              "name": "Fenster und Geräte",
+              "description": "Optional: Kontakte, die das Heizen pausieren, und Geräte, deren Wärme zählt.",
+              "data": {
+                "window_sensors": "Fenster- und Türkontakte",
+                "heat_sources": "Geräte, die den Raum heizen"
+              },
+              "data_description": {
+                "window_sensors": "Optional. Ist einer davon 30 Sekunden offen, hört der Raum auf zu heizen, bis er wieder geschlossen ist.",
+                "heat_sources": "Optional. Leistungssensoren (W) von Geräten in diesem Raum, z. B. PC, Server oder Kühlschrank. Ihre Wärme wird von dem abgezogen, was der Heizkörper liefern muss. Danach gibst du an, wie viel der Leistung jedes Geräts im Raum bleibt."
+              }
+            },
+            "more": {
+              "name": "Mehr",
+              "description": "Selten nötig.",
+              "data": {
+                "design_indoor_temperature": "Auslegungs-Innentemperatur"
+              },
+              "data_description": {
+                "design_indoor_temperature": "Planungswert aus der Heizlastberechnung, nicht die Temperatur, auf die du heizt. Meist 20 °C, Bäder 24 °C, beheizte Flure 15 °C. Wie warm der Raum wirklich wird, bestimmt dein Sollwert."
+              }
+            }
           }
         },
         "reconfigure": {
@@ -392,9 +497,6 @@
             "valve_min": "Mindestöffnung im Gerät",
             "external_temperature": "Eingang externe Temperatur",
             "child_lock": "Kindersicherung",
-            "calibration_trigger": "Kalibrierung starten",
-            "calibration_status": "Kalibrierstatus",
-            "valve_refresh_minutes": "Ventilstellung bestätigen alle … Minuten",
             "strategy": "Wie regeln"
           },
           "data_description": {
@@ -403,8 +505,40 @@
             "valve_write": "Damit kann Thermogeist die Ventilstellung direkt setzen. Ohne sie wird über den Sollwert geregelt.",
             "valve_min": "Eine im Gerät gespeicherte Rückfallebene; sie wirkt auch, wenn Home Assistant ausfällt.",
             "external_temperature": "Damit nutzt das Thermostat den Raumsensor statt seines eigenen.",
-            "valve_refresh_minutes": "Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile (Bosch: nach 15 Minuten). Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut – eine Funknachricht, keine Motorbewegung. Leer = aus.",
             "strategy": "Automatisch: über die Ventilstellung, wenn das Thermostat sie erlaubt, sonst über den Sollwert. Ventilstellung: Thermogeist stellt das Ventil selbst (ruhig, mit Mindestöffnung). Sollwert: Thermogeist sagt dem Thermostat, welche Temperatur es anpeilen soll, und das Thermostat bewegt sein Ventil selbst."
+          },
+          "sections": {
+            "detected_roles": {
+              "name": "Erkannte Rollen – bei Bedarf prüfen",
+              "description": "Diese Entitäten hat Thermogeist gefunden. Nur öffnen, um sie zu ändern.",
+              "data": {
+                "climate": "Klima-Entität",
+                "valve_read": "Ventilstellung (lesen)",
+                "valve_write": "Ventilstellung (setzen)",
+                "valve_min": "Mindestöffnung im Gerät",
+                "external_temperature": "Eingang externe Temperatur",
+                "child_lock": "Kindersicherung"
+              },
+              "data_description": {
+                "climate": "Die Klima-Entität des Thermostats (Sollwert, eigene Temperatur).",
+                "valve_read": "Nur, wenn das Thermostat meldet, wie weit sein Ventil wirklich offen ist. Bei Sonoff-Thermostaten leer lassen; nie die Entität aus Ventilstellung (setzen).",
+                "valve_write": "Damit kann Thermogeist die Ventilstellung direkt setzen. Ohne sie wird über den Sollwert geregelt.",
+                "valve_min": "Eine im Gerät gespeicherte Rückfallebene; sie wirkt auch, wenn Home Assistant ausfällt.",
+                "external_temperature": "Damit nutzt das Thermostat den Raumsensor statt seines eigenen."
+              }
+            },
+            "more": {
+              "name": "Mehr",
+              "description": "Kalibrierung und Ventil-Bestätigung; selten geändert.",
+              "data": {
+                "calibration_trigger": "Kalibrierung starten",
+                "calibration_status": "Kalibrierstatus",
+                "valve_refresh_minutes": "Ventilstellung bestätigen alle … Minuten"
+              },
+              "data_description": {
+                "valve_refresh_minutes": "Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile (Bosch: nach 15 Minuten). Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut – eine Funknachricht, keine Motorbewegung. Leer = aus."
+              }
+            }
           }
         },
         "edit_thermostat": {
@@ -418,6 +552,14 @@
           "description": "Das Thermostat bekommt seine eigenen Geräteeinstellungen zurück und regelt wieder selbst.",
           "data": {
             "thermostat": "Thermostat"
+          }
+        },
+        "new_room_thermostats": {
+          "title": "Thermostate von {room}",
+          "description": "Füge die Thermostate dieses Raums gleich hinzu (bisher {count}) oder schließe ab.",
+          "menu_options": {
+            "add_new_room_thermostat": "Thermostat hinzufügen",
+            "new_room_done": "Fertig – Raum speichern"
           }
         }
       },

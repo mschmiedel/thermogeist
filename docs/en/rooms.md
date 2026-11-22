@@ -17,9 +17,12 @@ Open the Thermogeist entry of your house and choose **Add room**.
 | Area | Optional. The room device is placed in this Home Assistant area. |
 | Room temperature sensor | A sensor in the room, ideally away from the radiator and out of direct sunlight. |
 | Share of the heat load | *Estimate from size and position* (most people) or *I know the share* (if you have a room-by-room heat load calculation). |
-| Window and door contacts | Optional. If one is open for 30 seconds, the room stops heating until all are closed for 10 seconds; both times can be changed ([FAQ](faq/window_open.md)). |
-| Design indoor temperature | Planning value from the heat load calculation – not the temperature you heat to. Usually 20 °C, bathrooms 24 °C, heated halls 15 °C. A bathroom designed for 24 °C gets a larger share. |
-| Devices that heat the room | Optional. Power sensors (W) of devices in the room, see [below](#devices-that-heat-the-room). |
+| *Windows and devices* (collapsed) – window and door contacts | Optional. If one is open for 30 seconds, the room stops heating until all are closed for 10 seconds; both times can be changed ([FAQ](faq/window_open.md)). |
+| *Windows and devices* – devices that heat the room | Optional. Power sensors (W) of devices in the room, see [below](#devices-that-heat-the-room). |
+| *More* (collapsed) – design indoor temperature | Planning value from the heat load calculation – not the temperature you heat to. Usually 20 °C, bathrooms 24 °C, heated halls 15 °C. A bathroom designed for 24 °C gets a larger share. |
+
+Collapsed sections open by themselves when they already hold a value, so editing a room never
+hides what you set.
 
 ### Step 2a: size and position (estimate)
 
@@ -29,7 +32,7 @@ Rough values are fine – Thermogeist will learn the real behaviour later.
 |---|---|
 | Floor area | In m². Galleries and open spaces count their floor area once. |
 | Ceiling height | With a sloped ceiling: the highest point. |
-| Lowest point under a sloped ceiling | Only for sloped ceilings. Thermogeist uses the mean of lowest and highest point. |
+| *Sloped ceiling* (collapsed) – lowest point | Only for sloped ceilings. Thermogeist uses the mean of lowest and highest point. |
 | Exterior walls | Walls that face outside. A corner room usually has 2, a hallway inside the house 0. |
 | Above / below the room | Heated room, unheated room (attic, basement), roof or ground. |
 
