@@ -60,6 +60,7 @@ ergeben einen kleinen Anteil.
 | Wärmeverlustkoeffizient | Watt pro Kelvin Temperaturunterschied nach draußen. |
 | Fenster | Nur mit Fensterkontakten: an, solange einer offen ist. Attribute: die Kontakte, `heating_paused`, `frost_guard` und die geltenden Zeiten. Unter **Konfiguration**: *Fenster: schließen nach*, *Fenster: wieder heizen nach* (Wert vom Haus, bis du ihn änderst, Attribut `source`) und *Fenster: Zeiten auf Haus zurücksetzen*. |
 | Heizkörpergröße | Nur mit Thermostaten: Schaffen die Heizkörper den Sollwert am kältesten Auslegungstag? *Viel größer als nötig*, *passend*, *knapp*, *zu klein* oder *noch nicht bewertbar*, mit den Zahlen als Attribute ([FAQ](faq/radiator_sizing.md)). |
+| Gelernter Bedarf | Nur mit Thermostaten: wie viel der erwarteten Wärme der Raum wirklich braucht, gelernt aus ruhigen Stunden; plant das Ventil mit ([FAQ](faq/learned_demand.md)). |
 | Wärme aus Geräten | Nur mit Wärmequellen: Watt, die die Geräte an den Raum abgeben (nach Faktor, Mittel über 10 Minuten). Attribute: der geltende Faktor pro Gerät und die Faktor-Sensoren. |
 
 Beim Haus siehst du zusätzlich **Heizlast ohne Raum** und **Abdeckung durch Räume**: wie viel

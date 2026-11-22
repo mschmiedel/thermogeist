@@ -36,6 +36,9 @@
       },
       "reset_window_delays": {
         "default": "mdi:restore"
+      },
+      "reset_learning": {
+        "default": "mdi:restart"
       }
     },
     "sensor": {
@@ -132,6 +135,9 @@
       },
       "rooms_heat_from_devices": {
         "default": "mdi:desktop-tower-monitor"
+      },
+      "learned_demand": {
+        "default": "mdi:school-outline"
       }
     },
     "switch": {

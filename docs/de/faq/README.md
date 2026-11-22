@@ -15,3 +15,4 @@ Jede Seite erklärt einen Grund, den Thermogeist für einen Raum anzeigen kann.
 Diagnosen:
 
 - [Heizkörpergröße](radiator_sizing.md) – `radiator_sizing`, Reparaturhinweise *Heizkörper zu klein*, *viel größer als nötig*, *Vorlauf wahrscheinlich höher als nötig*
+- [Gelernter Bedarf](learned_demand.md) – `learned_demand`, Taste *Lernen: neu beginnen*

@@ -226,6 +226,9 @@
           "not_assessable": "Noch nicht bewertbar"
         }
       },
+      "learned_demand": {
+        "name": "Gelernter Bedarf"
+      },
       "design_day_flow": {
         "name": "Vorlauf am Auslegungstag"
       }
@@ -256,6 +259,9 @@
       },
       "reset_window_delays": {
         "name": "Fenster: Zeiten auf Haus zurücksetzen"
+      },
+      "reset_learning": {
+        "name": "Lernen: neu beginnen"
       }
     },
     "switch": {
@@ -445,6 +451,9 @@
     },
     "logbook_manual_setpoint": {
       "message": "an {thermostat} auf {setpoint} °C gestellt; neuer Raum-Sollwert"
+    },
+    "logbook_learned_demand": {
+      "message": "braucht etwa {percent} % der Wärme, die seine Angaben erwarten lassen (gelernt)"
     },
     "logbook_device_setting_reset": {
       "message": "{thermostat} hatte {setting} zurückgesetzt; wieder auf {value} gestellt"

@@ -17,7 +17,7 @@ from .test_thermostats import FLOW_SENSOR, PLANNED, assign, z2m_device
 
 
 async def test_integral_is_restored_after_restart(
-    hass: HomeAssistant, hass_storage: dict[str, Any], outdoor_sensor: str, room_sensor: str
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
 ) -> None:
     """Scenario: SCN-CONTROL-013"""
     hass.states.async_set(FLOW_SENSOR, "40.0", {"device_class": "temperature"})
@@ -26,23 +26,16 @@ async def test_integral_is_restored_after_restart(
     )
     room_id = next(iter(entry.subentries))
     device_id = z2m_device(hass, "Old TRV", "Acme", "X1", {"climate": ("climate", "heat")})
-    hass_storage[f"{DOMAIN}.{entry.entry_id}"] = {
-        "version": 1,
-        "key": f"{DOMAIN}.{entry.entry_id}",
-        "data": {
-            "saved_at": dt_util.utcnow().isoformat(),
-            "controller": {
-                room_id: {
-                    "integral_pct": -4.0,
-                    "integral_has_start_bias": False,
-                    "min_opening_relaxed": False,
-                    "output_pct": 46.0,
-                }
-            },
-        },
-    }
+    await assign(hass, entry.entry_id, room_id, device_id, 1500.0)
+    # The running house has learned a correction and planned 46 % ...
+    controller = entry.runtime_data.rooms[room_id].controller
+    controller.state.integral_pct = -4.0
+    controller.state.last_output_pct = 46.0
+    controller.state.last_reported_pct = 46.0
 
-    await assign(hass, entry.entry_id, room_id, device_id, 1500.0)  # reloads the house
+    # ... a reload writes it and the new start reads it back (CTL-040).
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert hass.states.get(PLANNED).attributes["integral"] == -4.0
     # CTL-040: the plan continues from the stored position, rate-limited.

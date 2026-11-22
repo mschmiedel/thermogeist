@@ -15,3 +15,4 @@ Each page explains one reason Thermogeist can show for a room.
 Diagnoses:
 
 - [Radiator size](radiator_sizing.md) – `radiator_sizing`, repair issues *radiator too small*, *much larger than needed*, *flow temperature probably higher than needed*
+- [Learned demand](learned_demand.md) – `learned_demand`, button *Learning: start again*

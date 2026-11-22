@@ -21,6 +21,8 @@ async def async_setup_entry(
     for room_id, state in entry.runtime_data.rooms.items():
         if state.room.window_entities:
             async_add_entities([ResetRoomWindowButton(entry, room_id)], config_subentry_id=room_id)
+        if state.thermostat_ids:
+            async_add_entities([ResetLearningButton(entry, room_id)], config_subentry_id=room_id)
 
 
 class ResetControlSettingsButton(HouseEntity, ButtonEntity):
@@ -43,3 +45,15 @@ class ResetRoomWindowButton(RoomEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         await self.runtime.async_reset_room_overrides(self._room_id)
+
+
+class ResetLearningButton(RoomEntity, ButtonEntity):
+    """LRN-036: the room starts learning what it really needs again."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
+        super().__init__(entry, room_id, "reset_learning")
+
+    async def async_press(self) -> None:
+        await self.runtime.async_reset_learning(self._room_id)

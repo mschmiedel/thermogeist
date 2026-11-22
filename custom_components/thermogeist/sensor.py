@@ -305,6 +305,35 @@ def _round_or_none(value: float | None, digits: int) -> float | None:
     return None if value is None else round(value, digits)
 
 
+def _pct_or_none(value: float | None) -> int | None:
+    return None if value is None else round(value * 100)
+
+
+def _learning_attributes(state: RoomState, _runtime: HouseRuntime) -> dict[str, Any]:
+    learned = state.learned
+    if learned is None:
+        return {}
+    return {
+        "state": learned.state.value,
+        "quiet_hours": learned.hours,
+        "days": learned.days,
+        "night_pct": _pct_or_none(learned.night),
+        "day_pct": _pct_or_none(learned.day),
+        "spread_pct": learned.spread_pct,
+        "faq": f"{DOCS_URL}/en/faq/learned_demand.md",
+    }
+
+
+LEARNED_DEMAND = RoomSensorDescription(
+    key="learned_demand",
+    native_unit_of_measurement=PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value=lambda state: _pct_or_none(state.learned.factor) if state.learned else None,
+    attributes=_learning_attributes,
+)
+"""LRN-035: only for rooms with thermostats."""
+
+
 RADIATOR_SIZING = RoomSensorDescription(
     key="radiator_sizing",
     device_class=SensorDeviceClass.ENUM,
@@ -372,6 +401,7 @@ async def async_setup_entry(
             sensors.append(PlannedValveSensor(entry, room_id))
             sensors.append(EstimatedOutputSensor(entry, room_id))
             sensors.append(RoomSensor(entry, room_id, RADIATOR_SIZING))
+            sensors.append(RoomSensor(entry, room_id, LEARNED_DEMAND))
         async_add_entities(sensors, config_subentry_id=room_id)
     for thermostat_id, thermostat in entry.runtime_data.thermostats.items():
         thermostat_sensors: list[SensorEntity] = [ThermostatKindSensor(entry, thermostat_id)]

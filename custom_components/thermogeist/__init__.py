@@ -81,7 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) -> bool:
-    """Unload one house."""
+    """Unload one house; its state is written at once (CTL-040), not after the save delay."""
+    await entry.runtime_data.async_flush()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

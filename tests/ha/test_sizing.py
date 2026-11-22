@@ -36,12 +36,14 @@ def learned_curve(hours: int = 60) -> list[list[Any]]:
     return rows
 
 
-def store(hass_storage: dict[str, Any], entry_id: str, sizing: dict[str, Any]) -> None:
-    hass_storage[f"{DOMAIN}.{entry_id}"] = {
+async def store(hass_storage: dict[str, Any], entry: Any, sizing: dict[str, Any]) -> None:
+    """Stored data, also loaded into the running house: a reload writes its state first."""
+    hass_storage[f"{DOMAIN}.{entry.entry_id}"] = {
         "version": 1,
-        "key": f"{DOMAIN}.{entry_id}",
+        "key": f"{DOMAIN}.{entry.entry_id}",
         "data": {"sizing": sizing},
     }
+    await entry.runtime_data.async_load()
 
 
 def plain_trv(hass: HomeAssistant, name: str) -> str:
@@ -53,7 +55,7 @@ async def test_undersized_room_sensor_and_issue(
 ) -> None:
     """Scenario: SCN-SIZING-005"""
     entry, room_id = await house_with_room(hass)
-    store(hass_storage, entry.entry_id, {"curve": learned_curve()})
+    await store(hass_storage, entry, {"curve": learned_curve()})
 
     await assign(hass, entry.entry_id, room_id, plain_trv(hass, "Small TRV"), 300.0)
 
@@ -125,7 +127,7 @@ async def test_oversized_rooms(
             },
             [LIVING_ROOM, office],
         )
-        store(hass_storage, entry.entry_id, {"curve": learned_curve()})
+        await store(hass_storage, entry, {"curve": learned_curve()})
         room_ids = list(entry.subentries)
         for number, room_id in enumerate(room_ids):
             await assign(

@@ -60,6 +60,7 @@ normal room; few exterior walls give them a small share.
 | Heat loss coefficient | Watts per kelvin of temperature difference to outside. |
 | Windows | Only with window contacts: on while one is open. Attributes: the contacts, `heating_paused`, `frost_guard`, and the times in use. In **Configuration**: *Window: close after*, *Window: resume heating after* (house value until you change it, attribute `source`) and *Window: reset times to house*. |
 | Radiator size | Only with thermostats: can the radiators hold the setpoint on the coldest design day? *Much larger than needed*, *right size*, *just enough*, *too small* or *not assessable yet*, with the numbers as attributes ([FAQ](faq/radiator_sizing.md)). |
+| Learned demand | Only with thermostats: how much of the expected heat the room really needs, learned from quiet hours; used to plan the valve ([FAQ](faq/learned_demand.md)). |
 | Heat from devices | Only with heat sources: watts the devices release into the room (after factors, 10-minute average). Attributes: the factor in use per device and the factor sensors. |
 
 On the house you additionally see **Heat load not assigned to a room** and **Room coverage**:

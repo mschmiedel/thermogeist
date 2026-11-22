@@ -226,6 +226,9 @@
           "not_assessable": "Not assessable yet"
         }
       },
+      "learned_demand": {
+        "name": "Learned demand"
+      },
       "design_day_flow": {
         "name": "Flow on the design day"
       }
@@ -256,6 +259,9 @@
       },
       "reset_window_delays": {
         "name": "Window: reset times to house"
+      },
+      "reset_learning": {
+        "name": "Learning: start again"
       }
     },
     "switch": {
@@ -445,6 +451,9 @@
     },
     "logbook_manual_setpoint": {
       "message": "set to {setpoint} °C on {thermostat}; new room setpoint"
+    },
+    "logbook_learned_demand": {
+      "message": "needs about {percent} % of the heat its inputs suggest (learned)"
     },
     "logbook_device_setting_reset": {
       "message": "{thermostat} had reset {setting}; set back to {value}"

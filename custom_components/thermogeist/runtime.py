@@ -21,6 +21,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from .const import DOCS_URL, DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
 from .control import ControlManager
@@ -57,6 +58,17 @@ from .core.heat import (
     room_heat_loss_w_per_k,
 )
 from .core.house import FROST_PROTECTION_SETPOINT_C, CentralMode, HeatingType, House
+from .core.learning import (
+    LOGBOOK_CHANGE_PCT,
+    QUIET_MAX_OUTDOOR_C,
+    LearnedDemand,
+    Observation,
+    QuietHourCollector,
+    Sample,
+    is_night,
+    learned_demand,
+    recent,
+)
 from .core.output import (
     HouseBalance,
     OutputEstimate,
@@ -143,6 +155,13 @@ class RoomState:
     """DIA-012: radiator size, None for rooms without thermostats."""
     full_open_hours: list[datetime] = field(default_factory=list)
     """DIA-015: hours of the last 7 days with the valve fully open in the cold."""
+    learn_collector: QuietHourCollector = field(default_factory=QuietHourCollector)
+    learn_observations: list[Observation] = field(default_factory=list)
+    """LRN-031: quiet hours of the last 21 days."""
+    learned: LearnedDemand | None = None
+    """LRN-032: what the room really needs, as a factor of the modelled demand."""
+    learned_logged_pct: float | None = None
+    """LRN-034: factor last written to the logbook."""
 
 
 class HouseRuntime:
@@ -238,6 +257,9 @@ class HouseRuntime:
             if room_id in self.rooms:
                 self.rooms[room_id].user_setpoint_c = float(setpoint)
         self._load_sizing(stored.get("sizing", {}))
+        for state in self.rooms.values():
+            state.learned = learned_demand([], self._clock.now())
+        self._load_learning(stored.get("learning", {}))
         self.control.load(stored)
 
     def _load_sizing(self, stored: dict[str, Any]) -> None:
@@ -294,6 +316,10 @@ class HouseRuntime:
     def async_stop(self) -> None:
         while self._unsubscribe:
             self._unsubscribe.pop()()
+
+    async def async_flush(self) -> None:
+        """Write the state now; a reload must not lose the last minutes (CTL-040, LRN-036)."""
+        await self._save()
 
     async def async_remove(self) -> None:
         await self._store.async_remove()
@@ -433,6 +459,98 @@ class HouseRuntime:
             self._sample_sources(state, now)
         self._reevaluate()
         self._sample_sizing(now)
+        self._sample_learning(now)
+
+    # ----- learning stage 1 (LRN-030 to LRN-037) ---------------------------------------------
+
+    def _sample_learning(self, now: datetime) -> None:
+        outdoor = self.outdoor_temperature_c()
+        night = is_night(dt_util.as_local(now).hour)
+        for room_id, state in self.rooms.items():
+            if not state.thermostat_ids:
+                continue
+            radiators = self.estimated_output(room_id).output_w
+            room_c = state.current_temperature_c
+            demand = current_demand_w(state.heat_loss_w_per_k, room_c, outdoor)
+            quiet = (
+                state.decision is not None
+                and state.decision.code is ReasonCode.SETPOINT
+                and outdoor is not None
+                and outdoor < QUIET_MAX_OUTDOOR_C
+                and self.flow_used_c is not None
+                and radiators is not None
+                and demand is not None
+            )
+            sample = Sample(
+                quiet=quiet,
+                room_c=room_c,
+                target_c=state.decision.target_setpoint_c if state.decision else None,
+                received_w=(
+                    radiators + (state.heat_from_sources_w or 0.0)
+                    if radiators is not None
+                    else None
+                ),
+                demand_w=demand,
+                night=night,
+            )
+            observation = state.learn_collector.add(now, sample)
+            if observation is not None:
+                state.learn_observations = recent([*state.learn_observations, observation], now)
+                self._update_learned(state, now)
+                self._save_later()
+
+    def _update_learned(self, state: RoomState, now: datetime) -> None:
+        state.learned = learned_demand(state.learn_observations, now)
+        factor = state.learned.factor
+        if factor is None:
+            return
+        pct = round(factor * 100)
+        logged = state.learned_logged_pct
+        if logged is None or abs(pct - logged) > LOGBOOK_CHANGE_PCT:
+            state.learned_logged_pct = pct
+            self._hass.async_create_task(
+                self.control.async_logbook(state.room.name, "logbook_learned_demand", percent=pct)
+            )
+
+    def learning_key(self, room_id: str) -> str:
+        """LRN-036: observations belong to these inputs; other inputs start learning again."""
+        state = self.rooms[room_id]
+        heat_loss = state.heat_loss_w_per_k
+        return f"{round(heat_loss, 2) if heat_loss else None}|{self._hardware_key(room_id)}"
+
+    async def async_reset_learning(self, room_id: str) -> None:
+        """LRN-036: start learning again for one room."""
+        state = self.rooms[room_id]
+        state.learn_observations = []
+        state.learn_collector = QuietHourCollector()
+        state.learned_logged_pct = None
+        self._update_learned(state, self._clock.now())
+        await self._save()
+        self._notify()
+
+    def _load_learning(self, stored: dict[str, Any]) -> None:
+        now = self._clock.now()
+        for room_id, data in stored.items():
+            if room_id not in self.rooms or data.get("key") != self.learning_key(room_id):
+                continue
+            state = self.rooms[room_id]
+            state.learn_observations = recent(
+                (
+                    Observation(datetime.fromisoformat(hour), float(ratio), bool(night))
+                    for hour, ratio, night in data.get("observations", [])
+                ),
+                now,
+            )
+            logged = data.get("logged_pct")
+            state.learned_logged_pct = float(logged) if logged is not None else None
+            state.learned = learned_demand(state.learn_observations, now)
+
+    def _learned_factor(self, state: RoomState) -> float:
+        """LRN-034: what the feed-forward multiplies the modelled demand with."""
+        if state.learned is None:
+            return 1.0
+        night = is_night(dt_util.as_local(self._clock.now()).hour)
+        return state.learned.factor_at(night) or 1.0
 
     # ----- radiator sizing (DIA-012 to DIA-015) -----------------------------------------------
 
@@ -792,7 +910,12 @@ class HouseRuntime:
                 target_c=state.decision.target_setpoint_c,
                 room_c=state.current_temperature_c,
                 feed_forward_pct=feed_forward_pct(
-                    net_demand_w(state.demand_w, state.heat_from_sources_w or 0.0),
+                    net_demand_w(
+                        state.demand_w * self._learned_factor(state)
+                        if state.demand_w is not None
+                        else None,
+                        state.heat_from_sources_w or 0.0,
+                    ),
                     state.rated_output_w,
                     flow,
                     # CTL-030: the position that holds the room at its target, so the output
@@ -846,6 +969,18 @@ class HouseRuntime:
                     for rid, s in self.rooms.items()
                     if s.full_open_hours
                 },
+            },
+            "learning": {
+                rid: {
+                    "key": self.learning_key(rid),
+                    "observations": [
+                        [o.hour.isoformat(), round(o.ratio, 4), o.night]
+                        for o in s.learn_observations
+                    ],
+                    "logged_pct": s.learned_logged_pct,
+                }
+                for rid, s in self.rooms.items()
+                if s.learn_observations
             },
         } | self.control.dump()
 

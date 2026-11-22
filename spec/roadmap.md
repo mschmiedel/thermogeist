@@ -74,7 +74,7 @@ Thermogeist controls Sonoff TRVZB thermostats.
 
 - Schedules and away mode (RUL-011, RUL-020 to RUL-022)
 - Groups and inheritance (RUL-001, RUL-002, ARC-005)
-- Learning and learning state (LRN-*)
+- Learning and learning state (LRN-*): stage 1, the learned demand factor per room with day/night (LRN-030 to LRN-037), done; open: heat loss and radiator strength separately (LRN-001, LRN-002), valve characteristic (LRN-003), learning state details (LRN-010 to LRN-013, LRN-020 to LRN-025), energy signature (LRN-006)
 - Radiator sizing diagnostics: static and operation check, learned heating curve (MDL-015, DIA-001 to DIA-005, DIA-010 to DIA-015, DIA-023) done; open: empirical extrapolation (DIA-006), DIA-020 to DIA-022
 - Calibration mode (CAL-*)
 - Bosch BTH-RA and Sonoff TRV-ZBT adapters (ACT-110, ACT-120 to ACT-124)

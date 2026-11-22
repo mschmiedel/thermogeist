@@ -4,10 +4,10 @@
 **Test:** `tests/ha/test_restart_and_migration.py::test_integral_is_restored_after_restart`
 
 ## Initial state
-Stored controller state of the room: integral −4 %, last plan 46 %, saved just now.
+The running controller of the room has integral −4 % and last plan 46 %.
 
 ## Steps
-1. The house is (re)loaded with a thermostat in the room.
+1. The house is reloaded (as after editing a room or restarting Home Assistant).
 
 ## Expected result
 - The planned valve position shows `integral: -4.0`.
