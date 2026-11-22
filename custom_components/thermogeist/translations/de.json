@@ -459,7 +459,7 @@
   "issues": {
     "sensor_stale": {
       "title": "Raumtemperatursensor von {room} meldet sich nicht",
-      "description": "Der Sensor {sensor} hat seit 60 Minuten keinen gültigen Wert gemeldet. Thermogeist hält das Ventil auf der Mindestöffnung, bis er sich wieder meldet. Prüf Batterie und Verbindung."
+      "description": "Der Sensor {sensor} ist nicht verfügbar oder hat lange keinen neuen Wert gemeldet. Thermogeist hält das Ventil auf der Mindestöffnung, bis er sich wieder meldet. Prüf Batterie und Verbindung."
     },
     "device_overrides_valve": {
       "title": "{thermostat} regelt immer wieder selbst",

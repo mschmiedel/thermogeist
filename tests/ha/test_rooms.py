@@ -11,7 +11,13 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
-from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, setup_house
+from .conftest import (
+    HOUSE_WITH_LOAD,
+    LIVING_ROOM,
+    ROOM_SENSOR,
+    report_room_temperature,
+    setup_house,
+)
 
 CLIMATE = "climate.living_room"
 REASON = "sensor.living_room_active_reason"
@@ -90,7 +96,14 @@ async def test_silent_sensor_is_reported(
     await setup_house(hass, HOUSE_WITH_LOAD, [LIVING_ROOM])
     assert state(hass, REASON) == "setpoint"
 
-    freezer.tick(timedelta(minutes=59))
+    # A sensor that only reports changes may stay quiet for hours.
+    freezer.tick(timedelta(hours=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert state(hass, REASON) == "setpoint"
+
+    hass.states.async_set(ROOM_SENSOR, "unavailable")
+    freezer.tick(timedelta(minutes=14))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert state(hass, REASON) == "setpoint"
@@ -99,6 +112,7 @@ async def test_silent_sensor_is_reported(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert state(hass, REASON) == "safety_sensor_stale"
+    assert hass.states.get(REASON).attributes["cause"] == "unavailable"
     assert hass.states.get(REASON).attributes["severity"] == "safety"
 
     report_room_temperature(hass, 19.6)

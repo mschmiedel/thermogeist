@@ -17,9 +17,16 @@ START = datetime(2026, 11, 20, 6, 0, tzinfo=UTC)
 
 
 def inputs(
-    mode: CentralMode = CentralMode.AUTO, valid_since: datetime | None = START
+    mode: CentralMode = CentralMode.AUTO,
+    valid_since: datetime | None = START,
+    unavailable_since: datetime | None = None,
 ) -> RoomInputs:
-    return RoomInputs(user_setpoint_c=21.0, central_mode=mode, temperature_valid_since=valid_since)
+    return RoomInputs(
+        user_setpoint_c=21.0,
+        central_mode=mode,
+        temperature_valid_since=valid_since,
+        temperature_unavailable_since=unavailable_since,
+    )
 
 
 def test_normal_operation_holds_setpoint() -> None:
@@ -48,17 +55,17 @@ def test_central_mode_overrides_setpoint() -> None:
     assert frost.target_setpoint_c == 7.0
 
 
-def test_sensor_becomes_stale_after_60_minutes() -> None:
+def test_silent_sensor_is_flagged_after_6_hours() -> None:
     """Scenario: SCN-DEC-003"""
     clock = FakeTimeProvider(START)
 
-    clock.advance(timedelta(minutes=59, seconds=59))
+    clock.advance(timedelta(hours=5, minutes=59, seconds=59))
     assert decide_room(inputs(), clock).code is ReasonCode.SETPOINT
 
     clock.advance(timedelta(seconds=1))
     stale = decide_room(inputs(), clock)
     assert stale.code is ReasonCode.SAFETY_SENSOR_STALE
-    assert stale.params == {"silent_minutes": 60, "limit_minutes": 60.0}
+    assert stale.params == {"cause": "silent", "silent_minutes": 360, "limit_minutes": 360.0}
     assert stale.target_setpoint_c == 21.0
     assert stale.severity is Severity.SAFETY
 
@@ -66,7 +73,7 @@ def test_sensor_becomes_stale_after_60_minutes() -> None:
 def test_safety_has_precedence_over_central_mode() -> None:
     """Scenario: SCN-DEC-004"""
     clock = FakeTimeProvider(START)
-    clock.advance(timedelta(hours=2))
+    clock.advance(timedelta(hours=7))
 
     assert decide_room(inputs(CentralMode.STOP), clock).code is ReasonCode.SAFETY_SENSOR_STALE
 
@@ -168,3 +175,17 @@ def test_frost_guard_heats_a_cold_room_with_open_window() -> None:
     assert "frost_guard" in decide(7.8, True).params  # hysteresis
     assert "frost_guard" not in decide(8.1, True).params
     assert is_closed_for_window(decide(7.5, False))
+
+
+def test_unavailable_sensor_is_flagged_after_15_minutes() -> None:
+    """Scenario: SCN-DEC-010"""
+    clock = FakeTimeProvider(START + timedelta(minutes=44, seconds=59))
+    gone = START + timedelta(minutes=30)
+
+    assert decide_room(inputs(unavailable_since=gone), clock).code is ReasonCode.SETPOINT
+
+    clock.advance(timedelta(seconds=1))
+    stale = decide_room(inputs(unavailable_since=gone), clock)
+    assert stale.code is ReasonCode.SAFETY_SENSOR_STALE
+    assert stale.params["cause"] == "unavailable"
+    assert stale.params["unavailable_minutes"] == 15

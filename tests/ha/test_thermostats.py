@@ -16,7 +16,13 @@ from pytest_homeassistant_custom_component.common import (
     mock_restore_cache,
 )
 
-from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, report_room_temperature, setup_house
+from .conftest import (
+    HOUSE_WITH_LOAD,
+    LIVING_ROOM,
+    ROOM_SENSOR,
+    report_room_temperature,
+    setup_house,
+)
 
 FLOW_SENSOR = "sensor.flow_temperature"
 RETURN_SENSOR = "sensor.return_temperature"
@@ -272,7 +278,8 @@ async def test_plan_follows_stop_and_safety(
         {"entity_id": "select.home_central_mode", "option": "auto"},
         blocking=True,
     )
-    freezer.tick(timedelta(minutes=61))
+    hass.states.async_set(ROOM_SENSOR, "unavailable")
+    freezer.tick(timedelta(minutes=16))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(PLANNED).state == "40.0"

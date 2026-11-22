@@ -116,6 +116,8 @@ class RoomState:
     share_pct: float
     heat_loss_w_per_k: float | None
     temperature_valid_since: datetime | None = None
+    temperature_unavailable_since: datetime | None = None
+    """RUL-013: since when the room sensor has had no valid value."""
     current_temperature_c: float | None = None
     decision: Decision | None = None
     demand_w: float | None = None
@@ -631,9 +633,14 @@ class HouseRuntime:
         state.current_temperature_c = value
         if value is not None and ha_state is not None:
             state.temperature_valid_since = ha_state.last_reported
-        elif initial:
-            # Give a sensor that is still starting up the full grace period.
-            state.temperature_valid_since = now
+            state.temperature_unavailable_since = None
+        else:
+            if state.temperature_unavailable_since is None:
+                # RUL-013: counted from the first time it is seen without a value, so a sensor
+                # still starting up gets the full grace period.
+                state.temperature_unavailable_since = now
+            if initial:
+                state.temperature_valid_since = now
 
     @callback
     def _reevaluate(self) -> None:
@@ -654,6 +661,7 @@ class HouseRuntime:
                     user_setpoint_c=state.user_setpoint_c,
                     central_mode=self.central_mode,
                     temperature_valid_since=state.temperature_valid_since,
+                    temperature_unavailable_since=state.temperature_unavailable_since,
                     window_open_since=self._window_open_since(state),
                     startup_hold=self.startup_hold() and self.control.is_enabled(room_id),
                     window_closed_since=self._window_closed_since(state),

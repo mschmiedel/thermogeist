@@ -459,7 +459,7 @@
   "issues": {
     "sensor_stale": {
       "title": "Room temperature sensor of {room} is silent",
-      "description": "The sensor {sensor} has not reported a valid value for 60 minutes. Thermogeist keeps the valve at its minimum opening until it reports again. Check its battery and connection."
+      "description": "The sensor {sensor} is unavailable or has not reported a new value for a long time. Thermogeist keeps the valve at its minimum opening until it reports again. Check its battery and connection."
     },
     "device_overrides_valve": {
       "title": "{thermostat} keeps regulating on its own",

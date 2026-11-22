@@ -4,7 +4,7 @@
 **Test:** `tests/core/test_decisions.py::test_safety_has_precedence_over_central_mode`
 
 ## Initial state
-Sensor silent for 2 hours, central mode stop.
+Sensor silent for 7 hours, central mode stop.
 
 ## Steps
 1. Decide.

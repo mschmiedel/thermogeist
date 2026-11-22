@@ -44,9 +44,12 @@ CATALOGUE: dict[ReasonCode, Severity] = {
     ReasonCode.DEVICE_OVERRIDES_VALVE: Severity.SAFETY,
 }
 
-# RUL-013: a room temperature older than this is not trusted. Zigbee sensors usually report at
-# least every few minutes; an hour of silence means a dead battery or lost connection.
-SENSOR_STALE_AFTER = timedelta(minutes=60)
+# RUL-013: an unavailable room sensor is not trusted after this long; a short gap (radio or
+# Zigbee2MQTT restart) does not count. A dead battery or lost radio shows up as unavailable.
+SENSOR_UNAVAILABLE_AFTER = timedelta(minutes=15)
+# RUL-013: many sensors report only on change (SwitchBot Meter Plus: up to 4.4 h silent in a
+# calm night); only this much silence of an otherwise available sensor counts as frozen.
+SENSOR_SILENT_AFTER = timedelta(hours=6)
 # RUL-014: a window counts as open after 30 s, so a quick airing of a few seconds is ignored.
 WINDOW_OPEN_AFTER = timedelta(seconds=30)
 # RUL-014: heating resumes only after all contacts were closed for 10 s; switching from fully
@@ -69,6 +72,8 @@ class RoomInputs:
     central_mode: CentralMode
     temperature_valid_since: datetime | None
     """Last time the room temperature sensor reported a valid value."""
+    temperature_unavailable_since: datetime | None = None
+    """Since when the sensor has been unavailable or not a number; None while it has a value."""
     window_open_since: datetime | None = None
     """Since when a window contact of the room is open, None if all are closed."""
     startup_hold: bool = False
@@ -102,13 +107,7 @@ class Decision:
 def decide_room(inputs: RoomInputs, clock: TimeProvider) -> Decision:
     """Apply the fixed precedence (RUL-030): safety, central mode, window, user setpoint."""
     now = clock.now()
-    age = now - inputs.temperature_valid_since if inputs.temperature_valid_since else None
-    if age is None or age >= SENSOR_STALE_AFTER:
-        params: dict[str, float | str] = {
-            "limit_minutes": SENSOR_STALE_AFTER.total_seconds() / 60,
-        }
-        if age is not None:
-            params["silent_minutes"] = round(age.total_seconds() / 60)
+    if (params := sensor_failure(inputs, now)) is not None:
         return Decision(ReasonCode.SAFETY_SENSOR_STALE, inputs.user_setpoint_c, now, params)
     if inputs.central_mode is CentralMode.STOP:
         return Decision(ReasonCode.CENTRAL_STOP, None, now)
@@ -131,6 +130,29 @@ def decide_room(inputs: RoomInputs, clock: TimeProvider) -> Decision:
     return Decision(
         ReasonCode.SETPOINT, inputs.user_setpoint_c, now, {"setpoint": inputs.user_setpoint_c}
     )
+
+
+def sensor_failure(inputs: RoomInputs, now: datetime) -> dict[str, float | str] | None:
+    """RUL-013: parameters of a sensor failure, None while the room temperature is trusted."""
+    age = now - inputs.temperature_valid_since if inputs.temperature_valid_since else None
+    gone = inputs.temperature_unavailable_since
+    if gone is not None and now - gone >= SENSOR_UNAVAILABLE_AFTER:
+        return {
+            "cause": "unavailable",
+            "unavailable_minutes": round((now - gone).total_seconds() / 60),
+            "limit_minutes": SENSOR_UNAVAILABLE_AFTER.total_seconds() / 60,
+        }
+    if age is not None and age < SENSOR_SILENT_AFTER:
+        return None
+    if age is None and gone is not None:
+        return None  # unavailable since start-up: within its grace period
+    params: dict[str, float | str] = {
+        "cause": "silent",
+        "limit_minutes": SENSOR_SILENT_AFTER.total_seconds() / 60,
+    }
+    if age is not None:
+        params["silent_minutes"] = round(age.total_seconds() / 60)
+    return params
 
 
 def window_active(inputs: RoomInputs, now: datetime) -> bool:
