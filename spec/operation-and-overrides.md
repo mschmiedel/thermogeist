@@ -25,3 +25,5 @@
 |---|---|---|
 | OVR-020 | Child lock configurable per room and inheritable via groups. | planned |
 | OVR-021 | Built-in schedules and built-in window detection on the devices are switched off so there is only one logic. | planned |
+| OVR-022 | **Smart child lock.** Per room a switch *Child lock* (all thermostats of the room with the `child_lock` role); while on, Thermogeist keeps the lock on like a device setting (ACT-049: set again after a firmware update or battery change). | planned |
+| OVR-023 | **Unlock for a while.** Per thermostat a button *Unlock for 30 min* for battery change or recalibration: the child lock goes off, a logbook entry says until when, and it goes on again by itself after the time, also across a restart (stored end time). Default 30 min (`CHILD_LOCK_UNLOCK_MINUTES`); whether the time should be changeable is open – the simplest is a fixed 30 min. Optionally the same button starts the calibration where the role `calibration_trigger` exists (open: combine or keep separate). | planned |
