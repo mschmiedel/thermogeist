@@ -528,6 +528,18 @@ async def test_reset_device_settings_are_set_again(
     assert Calls.values(calls.select, select, "option") == ["remote_temperature"]
     assert len(switches) == 1
 
+    # The write was lost (firmware update): the device reports its old value again. Retried,
+    # but not before 10 minutes have passed since the last write.
+    attributes = {"unit_of_measurement": "°C"}
+    hass.states.async_set(accuracy, "-1", attributes)
+    await tick(hass, freezer, 60)
+    assert Calls.values(calls.number, accuracy, "value") == [-0.2]
+    await tick(hass, freezer, 7 * 60)
+    hass.states.async_set(accuracy, "-1", attributes)
+    await tick(hass, freezer, 60)
+    assert Calls.values(calls.number, accuracy, "value") == [-0.2, -0.2]
+    hass.states.async_set(accuracy, "-0.2", attributes)  # now it took the value
+
     # The real device confirms our values ...
     hass.states.async_set(select, "remote_temperature")
     hass.states.async_set(external, "19.5", {"unit_of_measurement": "°C"})
@@ -541,5 +553,6 @@ async def test_reset_device_settings_are_set_again(
         "remote_temperature",
         "remote_temperature",
     ]
-    assert Calls.values(calls.number, external, "value") == [19.5, 19.5]
+    # Sent at the start, after the retried accuracy, and after the reset.
+    assert Calls.values(calls.number, external, "value") == [19.5, 19.5, 19.5]
     assert any("temperature_sensor_select" in e.data["message"] for e in logbook)

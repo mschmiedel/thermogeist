@@ -15,8 +15,9 @@ A controlled Sonoff TRVZB; Thermogeist has set `temperature_sensor_select: remot
 ## Expected result
 - `remote_temperature` is set again and the room temperature 19.5 °C is sent again at once.
 - The logbook says which setting was reset.
-- A device that never confirms a written value (it still shows the old value) is not
-  rewritten every minute.
+- A device that never reports anything is not rewritten every minute.
+- A device that reports its old value again after the write (the write was lost during the
+  update) gets the setting again, at most every 10 minutes.
 
 ## Why it matters
 After firmware updates three Sonoff fell back to their own sensor next to the radiator; Alex

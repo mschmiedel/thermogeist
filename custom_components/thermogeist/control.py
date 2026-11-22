@@ -14,7 +14,14 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
@@ -41,6 +48,8 @@ if TYPE_CHECKING:
 EXTERNAL_TEMPERATURE_REFRESH = timedelta(minutes=20)
 """ACT-041: Bosch falls back to its own sensor after 30 min without a value."""
 EXTERNAL_TEMPERATURE_STEP_K = 0.1
+SETTING_RETRY_AFTER = timedelta(minutes=10)
+"""ACT-049: a device that reported its old value again gets the setting again, this often."""
 LOST_EXTERNAL_K = 0.5
 """ACT-049: the device shows something else than the last value sent; send it again."""
 OVERRIDE_DEBOUNCE_S = 20
@@ -421,9 +430,9 @@ class ControlManager:
             if _same_setting(state.state, value):
                 continue
             written = control.settings_written_at
-            if written is not None and state.last_changed <= written:
-                # The device never confirmed our value; rewriting every minute would only cost
-                # battery. A reset shows up as a change after our write.
+            if written is not None and not _write_lost_or_reset(
+                state, written, self._runtime.now()
+            ):
                 continue
             await self._async_set_state(entity_id, value)
             control.settings_written_at = self._runtime.now()
@@ -608,3 +617,15 @@ def _same_setting(current: str, wanted: str) -> bool:
         return float(current) == float(wanted)
     except ValueError:
         return False
+
+
+def _write_lost_or_reset(state: State, written: datetime, now: datetime) -> bool:
+    """ACT-049: did the device reset a setting, or report its old value after our write?
+
+    A changed value after our write is a reset (firmware update): set it again at once. The old
+    value reported again means our write was lost (e.g. during an update): retry, but at most
+    every 10 minutes. A device that reports nothing is never rewritten, to spare its battery.
+    """
+    if state.last_changed > written:
+        return True
+    return state.last_reported > written and now - written >= SETTING_RETRY_AFTER
