@@ -18,6 +18,7 @@ from .test_thermostats import assign, house_with_room, sonoff
 DEVICE_LOCK = "switch.living_trv_child_lock"
 ROOM_LOCK = "switch.living_room_child_lock"
 UNLOCK = "button.living_room_child_lock_off_for_30_min"
+BACK_ON = "sensor.living_room_child_lock_back_on"
 
 
 class Device:
@@ -126,8 +127,8 @@ async def test_unlock_for_30_minutes_survives_a_restart(
     await hass.services.async_call("button", "press", {"entity_id": UNLOCK}, blocking=True)
     await hass.async_block_till_done()
     assert device.writes == ["off"]
-    assert hass.states.get(ROOM_LOCK).state == "on"
-    assert hass.states.get(ROOM_LOCK).attributes["unlocked_until"] is not None
+    assert hass.states.get(ROOM_LOCK).state == "off"
+    assert hass.states.get(BACK_ON).state not in ("unknown", "unavailable")
 
     await tick(hass, freezer, 10)
     assert await hass.config_entries.async_reload(entry.entry_id)
@@ -137,5 +138,21 @@ async def test_unlock_for_30_minutes_survives_a_restart(
 
     await tick(hass, freezer, 11)
     assert device.writes == ["off", "on"]
-    assert hass.states.get(ROOM_LOCK).attributes["unlocked_until"] is None
+    assert hass.states.get(ROOM_LOCK).state == "on"
+    assert hass.states.get(BACK_ON).state == "unknown"
     assert len(messages(logbook)) == 2
+
+
+async def test_switching_on_ends_the_30_minutes(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-LOCK-011"""
+    _, device = await room_with_sonoff(hass, lock="on")
+    await hass.services.async_call("button", "press", {"entity_id": UNLOCK}, blocking=True)
+    await hass.async_block_till_done()
+
+    await switch_room(hass, True)
+
+    assert device.writes == ["off", "on"]
+    assert hass.states.get(ROOM_LOCK).state == "on"
+    assert hass.states.get(BACK_ON).state == "unknown"

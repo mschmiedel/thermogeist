@@ -247,7 +247,7 @@ Rooms whose thermostats have a child lock get a switch **Child lock** and a butt
 | You switch *Child lock* on | All thermostats of the room are locked and stay locked. |
 | Someone locks a thermostat at the device or in Zigbee2MQTT | Taken over: the switch goes on, the other thermostats of the room follow. |
 | The lock of a thermostat goes off while the switch is on | It is switched on again, with a logbook entry. |
-| You press *off for 30 min* | The lock goes off; the logbook says until when. After 30 minutes it goes on again by itself, also after a restart. Locking a thermostat in between ends the time early. |
+| You press *off for 30 min* | The lock goes off and the switch shows off; *Child lock back on* shows "in 30 minutes" and the logbook says until when. Afterwards the lock and the switch go on again by itself, also after a restart. Switching *Child lock* on or locking a thermostat in between ends the time early. |
 | You switch *Child lock* off | All thermostats of the room are unlocked. |
 
 **Why does unlocking at the device not count?** Thermogeist cannot tell a person who unlocks the

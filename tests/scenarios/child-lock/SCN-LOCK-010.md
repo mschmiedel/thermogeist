@@ -12,9 +12,9 @@ Room child lock on, device locked.
 3. 20 and 31 minutes after pressing.
 
 ## Expected result
-- 1. unlocks the device; the room switch stays on and shows `unlocked_until`.
+- 1. unlocks the device; the room switch shows off and *Child lock back on* shows when it goes on again.
 - Nothing is locked before the 30 minutes are over, also not after the reload.
-- After 30 minutes the device is locked again; two logbook entries (off until, on again).
+- After 30 minutes the device is locked again, the switch shows on and *Child lock back on* is unknown; two logbook entries (off until, on again).
 
 ## Why it matters
 A battery change during a restart does not leave the lock off.

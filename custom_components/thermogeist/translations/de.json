@@ -329,6 +329,9 @@
       },
       "design_day_flow": {
         "name": "Vorlauf am Auslegungstag"
+      },
+      "child_lock_back_on": {
+        "name": "Kindersicherung wieder an"
       }
     },
     "number": {

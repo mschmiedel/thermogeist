@@ -259,7 +259,7 @@ geregelt wird.
 | Du schaltest *Kindersicherung* ein | Alle Thermostate im Raum werden gesperrt und bleiben gesperrt. |
 | Jemand sperrt ein Thermostat am Gerät oder in Zigbee2MQTT | Wird übernommen: Der Schalter geht an, die anderen Thermostate im Raum folgen. |
 | Die Sperre eines Thermostats geht aus, während der Schalter an ist | Sie wird wieder eingeschaltet, mit einem Eintrag im Logbuch. |
-| Du drückst *30 Min. aus* | Die Sperre geht aus, das Logbuch sagt, bis wann. Nach 30 Minuten geht sie von selbst wieder an, auch nach einem Neustart. Sperrst du vorher ein Thermostat, ist die Zeit vorzeitig vorbei. |
+| Du drückst *30 Min. aus* | Die Sperre geht aus und der Schalter zeigt aus; *Kindersicherung wieder an* zeigt „in 30 Minuten“, das Logbuch sagt, bis wann. Danach gehen Sperre und Schalter von selbst wieder an, auch nach einem Neustart. Schaltest du vorher *Kindersicherung* ein oder sperrst ein Thermostat, ist die Zeit vorzeitig vorbei. |
 | Du schaltest *Kindersicherung* aus | Alle Thermostate im Raum werden entsperrt. |
 
 **Warum zählt Entsperren am Gerät nicht?** Thermogeist kann nicht unterscheiden, ob jemand die

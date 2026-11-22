@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: MIT
 """Sensors of the house, each room and each thermostat (spec HAI-004 to HAI-006, ACT-014,
-ACT-015, MDL-010, MDL-011, MDL-035, RSN-002, CTL-035)."""
+ACT-015, MDL-010, MDL-011, MDL-035, RSN-002, CTL-035, OVR-023)."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -412,6 +413,8 @@ async def async_setup_entry(
             sensors.append(EstimatedOutputSensor(entry, room_id))
             sensors.append(RoomSensor(entry, room_id, RADIATOR_SIZING))
             sensors.append(RoomSensor(entry, room_id, LEARNED_DEMAND))
+        if room_id in entry.runtime_data.child_lock.rooms:
+            sensors.append(ChildLockBackOnSensor(entry, room_id))
         async_add_entities(sensors, config_subentry_id=room_id)
     for thermostat_id, thermostat in entry.runtime_data.thermostats.items():
         thermostat_sensors: list[SensorEntity] = [ThermostatKindSensor(entry, thermostat_id)]
@@ -438,6 +441,19 @@ class HouseSensor(HouseEntity, SensorEntity):
         if self.entity_description.attributes is None:
             return None
         return self.entity_description.attributes(self.runtime)
+
+
+class ChildLockBackOnSensor(RoomEntity, SensorEntity):
+    """OVR-023: when the child lock goes on again; unknown outside the 30 minutes."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
+        super().__init__(entry, room_id, "child_lock_back_on")
+
+    @property
+    def native_value(self) -> datetime | None:
+        return self.runtime.child_lock.unlocked_until(self._room_id)
 
 
 class RoomSensor(RoomEntity, SensorEntity):

@@ -50,23 +50,22 @@ class ControlSwitch(RoomEntity, SwitchEntity):
 
 
 class ChildLockSwitch(RoomEntity, SwitchEntity):
-    """OVR-022: the child lock of all thermostats of the room, kept on by Thermogeist."""
+    """OVR-022: the child lock of all thermostats of the room, kept on by Thermogeist.
+
+    Off while unlocked for 30 minutes (OVR-023): it shows what applies right now.
+    """
 
     def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
         super().__init__(entry, room_id, "child_lock")
 
     @property
     def is_on(self) -> bool:
-        return self.runtime.child_lock.is_on(self._room_id)
+        lock = self.runtime.child_lock
+        return lock.is_on(self._room_id) and lock.unlocked_until(self._room_id) is None
 
     @property
     def available(self) -> bool:
         return self.runtime.child_lock.available(self._room_id)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        until = self.runtime.child_lock.unlocked_until(self._room_id)
-        return {"unlocked_until": until.isoformat() if until else None}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.runtime.child_lock.async_set(self._room_id, True)

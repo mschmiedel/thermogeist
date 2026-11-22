@@ -329,6 +329,9 @@
       },
       "design_day_flow": {
         "name": "Flow on the design day"
+      },
+      "child_lock_back_on": {
+        "name": "Child lock back on"
       }
     },
     "number": {

@@ -141,6 +141,9 @@
       },
       "learned_demand": {
         "default": "mdi:school-outline"
+      },
+      "child_lock_back_on": {
+        "default": "mdi:lock-clock"
       }
     },
     "switch": {
