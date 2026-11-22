@@ -10,12 +10,12 @@
         "data": {
           "name": "Name",
           "heating_type": "Heizungsart",
-          "outdoor_temperature_entity": "Außentemperatursensor"
+          "outdoor_temperature_entity": "Außentemperatur"
         },
         "data_description": {
           "name": "Wird als Gerätename angezeigt, z. B. „Haus“ oder „Einliegerwohnung“.",
           "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
-          "outdoor_temperature_entity": "Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler der Wärmepumpe."
+          "outdoor_temperature_entity": "Ein Außenthermometer im Schatten, der Außenfühler der Wärmepumpe oder deine Wetter-Entität (z. B. Forecast Home). Mehrere Thermometer? Mit dem Helfer „Kombiniere den Zustand mehrerer Sensoren“, Typ Minimum, zusammenfassen – einer steht immer im Schatten."
         }
       },
       "details": {
@@ -75,14 +75,14 @@
         "description": "Ändere die Beschreibung deines Hauses. Thermogeist lädt danach neu.",
         "data": {
           "heating_type": "Heizungsart",
-          "outdoor_temperature_entity": "Außentemperatursensor",
+          "outdoor_temperature_entity": "Außentemperatur",
           "heat_load_known": "Kennst du die Heizlast?",
           "flow_measurement": "Wird die Wassertemperatur gemessen?",
           "living_area": "Beheizte Wohnfläche"
         },
         "data_description": {
           "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
-          "outdoor_temperature_entity": "Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler der Wärmepumpe.",
+          "outdoor_temperature_entity": "Ein Außenthermometer im Schatten, der Außenfühler der Wärmepumpe oder deine Wetter-Entität (z. B. Forecast Home). Mehrere Thermometer? Mit dem Helfer „Kombiniere den Zustand mehrerer Sensoren“, Typ Minimum, zusammenfassen – einer steht immer im Schatten.",
           "heat_load_known": "Ja, wenn es eine Heizlastberechnung gibt (Heizungsbauer oder Energieberater).",
           "flow_measurement": "Ein Sensor für das Wasser, das zu den Heizkörpern fließt (Vorlauf), und optional für das zurückfließende (Rücklauf).",
           "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %."

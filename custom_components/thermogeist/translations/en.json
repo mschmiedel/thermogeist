@@ -10,12 +10,12 @@
         "data": {
           "name": "Name",
           "heating_type": "Heating type",
-          "outdoor_temperature_entity": "Outdoor temperature sensor"
+          "outdoor_temperature_entity": "Outdoor temperature"
         },
         "data_description": {
           "name": "Shown as the device name, e.g. \"Home\" or \"Granny flat\".",
           "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
-          "outdoor_temperature_entity": "Any sensor measuring the outdoor temperature, e.g. a weather station or the heat pump's outdoor sensor."
+          "outdoor_temperature_entity": "An outdoor thermometer in the shade, the heat pump's outdoor sensor, or your weather entity (e.g. Forecast Home). Several thermometers? Combine them with the helper \"Combine the state of several sensors\", type minimum – one is always in the shade."
         }
       },
       "details": {
@@ -75,14 +75,14 @@
         "description": "Change your house description. Thermogeist reloads afterwards.",
         "data": {
           "heating_type": "Heating type",
-          "outdoor_temperature_entity": "Outdoor temperature sensor",
+          "outdoor_temperature_entity": "Outdoor temperature",
           "heat_load_known": "Do you know the heat load?",
           "flow_measurement": "Is the water temperature measured?",
           "living_area": "Heated living area"
         },
         "data_description": {
           "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
-          "outdoor_temperature_entity": "Any sensor measuring the outdoor temperature, e.g. a weather station or the heat pump's outdoor sensor.",
+          "outdoor_temperature_entity": "An outdoor thermometer in the shade, the heat pump's outdoor sensor, or your weather entity (e.g. Forecast Home). Several thermometers? Combine them with the helper \"Combine the state of several sensors\", type minimum – one is always in the shade.",
           "heat_load_known": "Yes, if you have a heat load calculation (heating installer or energy consultant).",
           "flow_measurement": "A sensor for the water going to the radiators (flow) and, optionally, coming back (return).",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %."

@@ -42,7 +42,7 @@ flowchart TD
     J -- "done" --> L["Room saved – observe mode"]
     L --> M["Switch Control on when you like the plan"]
 
-    P1["Outdoor sensor in Home Assistant"] -.-> A
+    P1["Outdoor sensor or weather entity"] -.-> A
     P2["Heat load calculation, if you have one"] -.-> C
     P3["Flow / return sensor in Home Assistant"] -.-> E
     P4["Room temperature sensor"] -.-> F
@@ -62,7 +62,7 @@ flowchart TD
 |---|---|
 | Name | How the house should appear, e.g. "Home" or "Granny flat". |
 | Heating type | Heat pump, boiler (gas, oil, pellets, district heating) or direct electric heating. This decides how calmly Thermogeist regulates. |
-| Outdoor temperature sensor | Any sensor that measures the outdoor temperature, e.g. a weather station or your heat pump's outdoor sensor. |
+| Outdoor temperature | An outdoor thermometer, your heat pump's outdoor sensor, or your **weather entity** (e.g. *Forecast Home* from Met.no, or OpenWeatherMap) – almost every Home Assistant has one. A weather entity is fine to start; a real sensor is more precise (see below). |
 
 ### Step 2: a few questions
 
@@ -85,6 +85,13 @@ The values in the follow-up steps:
 
 In the house settings the answers are pre-selected; answering *No* later removes the values that
 belong to it.
+
+> **Tip: a good outdoor sensor.** Direct sun makes a thermometer read far too warm, and
+> Thermogeist would then heat too little. Mount it in the shade (north side, under a roof
+> overhang). If that is not possible, use two or more sensors on different sides of the house
+> and combine them with Home Assistant's helper *Combine the state of several sensors*, type
+> **minimum** – one of them is always in the shade. A weather entity has no sun problem but
+> gives regional model values that are often 1–3 K off and update about once an hour.
 
 > **Tip: finding the design outdoor temperature.** It depends on where you live. Search the
 > web for "design outdoor temperature" together with your postcode – in Germany for

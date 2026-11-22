@@ -42,7 +42,7 @@ flowchart TD
     J -- "fertig" --> L["Raum gespeichert – Beobachten"]
     L --> M["Regeln einschalten, wenn dir die Planung passt"]
 
-    P1["Außensensor in Home Assistant"] -.-> A
+    P1["Außensensor oder Wetter-Entität"] -.-> A
     P2["Heizlastberechnung, falls vorhanden"] -.-> C
     P3["Vorlauf-/Rücklaufsensor in Home Assistant"] -.-> E
     P4["Raumtemperatursensor"] -.-> F
@@ -62,7 +62,7 @@ flowchart TD
 |---|---|
 | Name | So soll das Haus heißen, z. B. „Haus“ oder „Einliegerwohnung“. |
 | Heizungsart | Wärmepumpe, Kessel (Gas, Öl, Pellets, Fernwärme) oder Elektro-Direktheizung. Davon hängt ab, wie ruhig Thermogeist regelt. |
-| Außentemperatursensor | Ein beliebiger Sensor für die Außentemperatur, z. B. eine Wetterstation oder der Außenfühler deiner Wärmepumpe. |
+| Außentemperatur | Ein Außenthermometer, der Außenfühler deiner Wärmepumpe oder deine **Wetter-Entität** (z. B. *Forecast Home* von Met.no oder OpenWeatherMap) – fast jedes Home Assistant hat eine. Für den Anfang reicht die Wetter-Entität; ein echter Sensor ist genauer (siehe unten). |
 
 ### Schritt 2: ein paar Fragen
 
@@ -86,6 +86,13 @@ Die Werte in den folgenden Schritten:
 
 In den Haus-Einstellungen sind die Antworten vorausgewählt; wer später *Nein* antwortet,
 entfernt die zugehörigen Werte.
+
+> **Tipp: ein guter Außensensor.** Direkte Sonne lässt ein Thermometer viel zu warm messen, und
+> Thermogeist würde dann zu wenig heizen. Häng es in den Schatten (Nordseite, unter einen
+> Dachvorsprung). Geht das nicht, nimm zwei oder mehr Sensoren an verschiedenen Hausseiten und
+> fasse sie mit dem Home-Assistant-Helfer *Kombiniere den Zustand mehrerer Sensoren* zusammen,
+> Typ **Minimum** – einer steht immer im Schatten. Eine Wetter-Entität hat kein Sonnenproblem,
+> liefert aber regionale Modellwerte, die oft 1–3 K abweichen und etwa stündlich kommen.
 
 > **Tipp: die Normaußentemperatur finden.** Sie hängt von deinem Wohnort ab. Suche im Web nach
 > „Normaußentemperatur“ und deiner Postleitzahl. Hast du eine Heizlastberechnung, steht der

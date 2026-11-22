@@ -232,7 +232,17 @@ def _required_schema(
         vol.Required(
             CONF_OUTDOOR_TEMPERATURE_ENTITY,
             default=defaults.get(CONF_OUTDOOR_TEMPERATURE_ENTITY, vol.UNDEFINED),
-        ): _temperature_sensor(),
+        ): EntitySelector(
+            # MDL-008: an outdoor sensor, or the weather entity almost everyone has.
+            EntitySelectorConfig(
+                filter=[
+                    EntityFilterSelectorConfig(
+                        domain="sensor", device_class=SensorDeviceClass.TEMPERATURE
+                    ),
+                    EntityFilterSelectorConfig(domain="weather"),
+                ]
+            )
+        ),
     }
 
 

@@ -251,3 +251,22 @@ async def test_new_room_offers_thermostats(
     room = next(iter(entry.subentries.values()))
     assert len(room.data["thermostats"]) == 1
     assert hass.states.get("sensor.living_room_planned_valve_position") is not None
+
+
+async def test_weather_entity_as_outdoor_temperature(
+    hass: HomeAssistant, room_sensor: str, freezer: FrozenDateTimeFactory
+) -> None:
+    """Scenario: SCN-HOUSE-010"""
+    weather = "weather.forecast_home"
+    hass.states.async_set(weather, "cloudy", {"temperature": 5.0, "temperature_unit": "°C"})
+    await setup_house(
+        hass, {**HOUSE_WITH_LOAD, "outdoor_temperature_entity": weather}, [LIVING_ROOM]
+    )
+    mild = float(state(hass, DEMAND))
+    assert mild == pytest.approx(812.5 / 30.5 * 15)
+
+    hass.states.async_set(weather, "cloudy", {"temperature": 0.0, "temperature_unit": "°C"})
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert float(state(hass, DEMAND)) == pytest.approx(812.5 / 30.5 * 20)

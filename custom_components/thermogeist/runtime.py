@@ -396,7 +396,16 @@ class HouseRuntime:
         self._reevaluate()
 
     def outdoor_temperature_c(self) -> float | None:
-        return numeric_state(self._hass, self.house.outdoor_temperature_entity)
+        """MDL-008: a temperature sensor, or a weather entity's temperature attribute."""
+        entity_id = self.house.outdoor_temperature_entity
+        if entity_id.startswith("weather."):
+            state = self._hass.states.get(entity_id)
+            value = state.attributes.get("temperature") if state else None
+            try:
+                return float(value) if value is not None else None
+            except TypeError, ValueError:
+                return None
+        return numeric_state(self._hass, entity_id)
 
     def flow_temperature_c(self) -> float | None:
         """Flow temperature as a 30-minute moving average of plausible values (CTL-038/039)."""
