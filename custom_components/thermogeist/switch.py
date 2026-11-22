@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Per room: observe or control (spec ACT-040, ACT-044)."""
+"""Per room: observe or control, and the child lock (spec ACT-040, ACT-044, OVR-022)."""
 
 from __future__ import annotations
 
@@ -20,6 +20,8 @@ async def async_setup_entry(
 ) -> None:
     for room_id in entry.runtime_data.rooms:
         async_add_entities([ControlSwitch(entry, room_id)], config_subentry_id=room_id)
+        if room_id in entry.runtime_data.child_lock.rooms:
+            async_add_entities([ChildLockSwitch(entry, room_id)], config_subentry_id=room_id)
 
 
 class ControlSwitch(RoomEntity, SwitchEntity):
@@ -45,3 +47,29 @@ class ControlSwitch(RoomEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.runtime.control.async_set_enabled(self._room_id, False)
+
+
+class ChildLockSwitch(RoomEntity, SwitchEntity):
+    """OVR-022: the child lock of all thermostats of the room, kept on by Thermogeist."""
+
+    def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
+        super().__init__(entry, room_id, "child_lock")
+
+    @property
+    def is_on(self) -> bool:
+        return self.runtime.child_lock.is_on(self._room_id)
+
+    @property
+    def available(self) -> bool:
+        return self.runtime.child_lock.available(self._room_id)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        until = self.runtime.child_lock.unlocked_until(self._room_id)
+        return {"unlocked_until": until.isoformat() if until else None}
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.runtime.child_lock.async_set(self._room_id, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.runtime.child_lock.async_set(self._room_id, False)

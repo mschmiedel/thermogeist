@@ -237,6 +237,27 @@ that is set too high – and the room should not have to swing back first before
 With a boiler the dead band is 0.2 K and the minimum opening 0 %, so this stage practically never
 applies.
 
+## Child lock
+
+Rooms whose thermostats have a child lock get a switch **Child lock** and a button
+**Child lock: off for 30 min**. They work whether the room is observed or controlled.
+
+| What happens | What Thermogeist does |
+|---|---|
+| You switch *Child lock* on | All thermostats of the room are locked and stay locked. |
+| Someone locks a thermostat at the device or in Zigbee2MQTT | Taken over: the switch goes on, the other thermostats of the room follow. |
+| The lock of a thermostat goes off while the switch is on | It is switched on again, with a logbook entry. |
+| You press *off for 30 min* | The lock goes off; the logbook says until when. After 30 minutes it goes on again by itself, also after a restart. Locking a thermostat in between ends the time early. |
+| You switch *Child lock* off | All thermostats of the room are unlocked. |
+
+**Why does unlocking at the device not count?** Thermogeist cannot tell a person who unlocks the
+device from a firmware update or battery change that resets the lock – and protecting against
+exactly that is the point of the switch. To unlock for good, switch it off in Home Assistant; for
+a battery change, use the button.
+
+When you add a thermostat whose lock is already on, the switch starts on: Thermogeist never
+switches a lock off on its own.
+
 ## Flow temperature (optional)
 
 On the house (**Configure**) you can choose a **flow temperature sensor** – the temperature of

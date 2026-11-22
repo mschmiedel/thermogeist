@@ -89,4 +89,4 @@ Thermogeist controls Sonoff TRVZB thermostats.
 - Fan convectors (e.g. plinth heaters): output almost linear in the temperature difference (exponent ≈ 1.0 instead of 1.3) and driven by the fan stage more than by the valve; needs its own heater type with exponent and fan stages. Idea, not decided.
 - Generic on/off heaters with energy source and optional output/power entities (ACT-060 to ACT-065); idea for much later, not decided: let an on/off heater also choose between stages; wood stove as disturbance (MDL-050); hybrid heat generators (MDL-051, later)
 - Heat output of the heat generator: energy signature, measured heat load, house balance (MDL-017, LRN-006, DIA-040, DIA-041)
-- Smart child lock: lock kept on per room, one click unlocks a thermostat for 30 minutes for battery change or recalibration (OVR-022, OVR-023). Idea from the field.
+- Smart child lock per room, adopted from the device, set again after a reset, 30 minutes off for a battery change (OVR-022 to OVR-024) done; open: per group (OVR-020)

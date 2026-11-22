@@ -248,6 +248,28 @@ wird.
 Beim Kessel ist das Totband 0,2 K und die Mindestöffnung 0 %; diese Stufe greift dort praktisch
 nie.
 
+## Kindersicherung
+
+Räume, deren Thermostate eine Kindersicherung haben, bekommen einen Schalter **Kindersicherung**
+und eine Taste **Kindersicherung: 30 Min. aus**. Beide wirken, egal ob der Raum beobachtet oder
+geregelt wird.
+
+| Was passiert | Was Thermogeist tut |
+|---|---|
+| Du schaltest *Kindersicherung* ein | Alle Thermostate im Raum werden gesperrt und bleiben gesperrt. |
+| Jemand sperrt ein Thermostat am Gerät oder in Zigbee2MQTT | Wird übernommen: Der Schalter geht an, die anderen Thermostate im Raum folgen. |
+| Die Sperre eines Thermostats geht aus, während der Schalter an ist | Sie wird wieder eingeschaltet, mit einem Eintrag im Logbuch. |
+| Du drückst *30 Min. aus* | Die Sperre geht aus, das Logbuch sagt, bis wann. Nach 30 Minuten geht sie von selbst wieder an, auch nach einem Neustart. Sperrst du vorher ein Thermostat, ist die Zeit vorzeitig vorbei. |
+| Du schaltest *Kindersicherung* aus | Alle Thermostate im Raum werden entsperrt. |
+
+**Warum zählt Entsperren am Gerät nicht?** Thermogeist kann nicht unterscheiden, ob jemand die
+Sperre am Gerät ausschaltet oder ob ein Firmware-Update oder Batteriewechsel sie zurücksetzt –
+und genau davor soll der Schalter schützen. Dauerhaft entsperrst du in Home Assistant, für einen
+Batteriewechsel nimmst du die Taste.
+
+Fügst du ein Thermostat hinzu, dessen Sperre schon an ist, startet der Schalter eingeschaltet:
+Thermogeist schaltet eine Sperre nie von sich aus ab.
+
 ## Vorlauftemperatur (optional)
 
 Beim Haus (**Konfigurieren**) kannst du einen **Vorlauftemperatursensor** wählen – die

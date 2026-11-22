@@ -360,11 +360,17 @@
       },
       "reset_learning": {
         "name": "Learning: start again"
+      },
+      "unlock_child_lock": {
+        "name": "Child lock: off for 30 min"
       }
     },
     "switch": {
       "control": {
         "name": "Control"
+      },
+      "child_lock": {
+        "name": "Child lock"
       }
     },
     "binary_sensor": {
@@ -650,6 +656,24 @@
     },
     "logbook_frost_guard": {
       "message": "window open, but the room fell below {setpoint} °C: heating to frost protection"
+    },
+    "child_lock_off": {
+      "message": "The child lock of this room is off. Switch it on first."
+    },
+    "logbook_child_lock_adopted": {
+      "message": "Child lock switched on at {thermostat}; it now stays on for the whole room"
+    },
+    "logbook_child_lock_reset": {
+      "message": "Child lock of {thermostat} had gone off; switched on again"
+    },
+    "logbook_child_lock_pause_ended": {
+      "message": "Child lock switched on again at {thermostat}; the 30 minutes are over early"
+    },
+    "logbook_child_lock_unlocked": {
+      "message": "Child lock off until {until}"
+    },
+    "logbook_child_lock_relocked": {
+      "message": "Child lock on again"
     }
   },
   "issues": {

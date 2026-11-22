@@ -360,11 +360,17 @@
       },
       "reset_learning": {
         "name": "Lernen: neu beginnen"
+      },
+      "unlock_child_lock": {
+        "name": "Kindersicherung: 30 Min. aus"
       }
     },
     "switch": {
       "control": {
         "name": "Regeln"
+      },
+      "child_lock": {
+        "name": "Kindersicherung"
       }
     },
     "binary_sensor": {
@@ -650,6 +656,24 @@
     },
     "logbook_frost_guard": {
       "message": "Fenster offen, aber der Raum ist unter {setpoint} °C gefallen: Heizen auf Frostschutz"
+    },
+    "child_lock_off": {
+      "message": "Die Kindersicherung dieses Raums ist aus. Schalte sie zuerst ein."
+    },
+    "logbook_child_lock_adopted": {
+      "message": "Kindersicherung an {thermostat} eingeschaltet; sie bleibt jetzt im ganzen Raum an"
+    },
+    "logbook_child_lock_reset": {
+      "message": "Kindersicherung von {thermostat} war ausgegangen; wieder eingeschaltet"
+    },
+    "logbook_child_lock_pause_ended": {
+      "message": "Kindersicherung an {thermostat} wieder eingeschaltet; die 30 Minuten sind vorzeitig vorbei"
+    },
+    "logbook_child_lock_unlocked": {
+      "message": "Kindersicherung aus bis {until} Uhr"
+    },
+    "logbook_child_lock_relocked": {
+      "message": "Kindersicherung wieder an"
     }
   },
   "issues": {

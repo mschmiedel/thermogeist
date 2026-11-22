@@ -23,6 +23,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from .child_lock import ChildLockManager
 from .const import DOCS_URL, DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
 from .control import ControlManager
 from .core.actuator import (
@@ -219,6 +220,7 @@ class HouseRuntime:
         self.started_at: datetime | None = None
         self.docs_url = DOCS_URL
         self.control = ControlManager(hass, self, profiles or [])
+        self.child_lock = ChildLockManager(hass, self)
         self._flow_average = MovingAverage()
         self.flow_used_c: float | None = None
         self._return_average = MovingAverage()
@@ -262,6 +264,7 @@ class HouseRuntime:
             state.learned = learned_demand([], self._clock.now())
         self._load_learning(stored.get("learning", {}))
         self.control.load(stored)
+        self.child_lock.load(stored)
 
     def _load_sizing(self, stored: dict[str, Any]) -> None:
         now = self._clock.now()
@@ -303,6 +306,7 @@ class HouseRuntime:
             async_track_time_interval(self._hass, self._on_interval, REEVALUATE_EVERY)
         )
         self._unsubscribe += self.control.async_start()
+        self._unsubscribe += self.child_lock.async_start()
         self._unsubscribe.append(
             async_call_later(self._hass, STARTUP_HOLD.total_seconds() + 1, self._on_delayed)
         )
@@ -980,42 +984,48 @@ class HouseRuntime:
         self._store.async_delay_save(self._data, CONTROLLER_SAVE_DELAY_S)
 
     def _data(self) -> dict[str, Any]:
-        return {
-            "controller": {rid: s.controller.snapshot() for rid, s in self.rooms.items() if s.plan},
-            "controller_hardware": {
-                rid: self._hardware_key(rid) for rid, s in self.rooms.items() if s.plan
-            },
-            "saved_at": self._clock.now().isoformat(),
-            "overrides": {key.value: value for key, value in self.overrides.items()},
-            "room_overrides": {
-                rid: {key.value: value for key, value in values.items()}
-                for rid, values in self.room_overrides.items()
-            },
-            "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
-            "sizing": {
-                "curve": [
-                    [h.hour.isoformat(), round(h.outdoor_c, 2), round(h.flow_c, 2)]
-                    for h in self.curve_hours
-                ],
-                "full_open": {
-                    rid: [h.isoformat() for h in s.full_open_hours]
-                    for rid, s in self.rooms.items()
-                    if s.full_open_hours
+        return (
+            {
+                "controller": {
+                    rid: s.controller.snapshot() for rid, s in self.rooms.items() if s.plan
                 },
-            },
-            "learning": {
-                rid: {
-                    "key": self.learning_key(rid),
-                    "observations": [
-                        [o.hour.isoformat(), round(o.ratio, 4), o.night]
-                        for o in s.learn_observations
+                "controller_hardware": {
+                    rid: self._hardware_key(rid) for rid, s in self.rooms.items() if s.plan
+                },
+                "saved_at": self._clock.now().isoformat(),
+                "overrides": {key.value: value for key, value in self.overrides.items()},
+                "room_overrides": {
+                    rid: {key.value: value for key, value in values.items()}
+                    for rid, values in self.room_overrides.items()
+                },
+                "setpoints": {rid: s.user_setpoint_c for rid, s in self.rooms.items()},
+                "sizing": {
+                    "curve": [
+                        [h.hour.isoformat(), round(h.outdoor_c, 2), round(h.flow_c, 2)]
+                        for h in self.curve_hours
                     ],
-                    "logged_pct": s.learned_logged_pct,
-                }
-                for rid, s in self.rooms.items()
-                if s.learn_observations
-            },
-        } | self.control.dump()
+                    "full_open": {
+                        rid: [h.isoformat() for h in s.full_open_hours]
+                        for rid, s in self.rooms.items()
+                        if s.full_open_hours
+                    },
+                },
+                "learning": {
+                    rid: {
+                        "key": self.learning_key(rid),
+                        "observations": [
+                            [o.hour.isoformat(), round(o.ratio, 4), o.night]
+                            for o in s.learn_observations
+                        ],
+                        "logged_pct": s.learned_logged_pct,
+                    }
+                    for rid, s in self.rooms.items()
+                    if s.learn_observations
+                },
+            }
+            | self.control.dump()
+            | self.child_lock.dump()
+        )
 
 
 def numeric_state(hass: HomeAssistant, entity_id: str) -> float | None:

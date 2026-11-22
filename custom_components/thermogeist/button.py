@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Reset control settings to the profile, or room window delays (CTL-014, RUL-014)."""
+"""Reset buttons (CTL-014, RUL-014, LRN-036) and the short child lock unlock (OVR-023)."""
 
 from __future__ import annotations
 
@@ -23,6 +23,8 @@ async def async_setup_entry(
             async_add_entities([ResetRoomWindowButton(entry, room_id)], config_subentry_id=room_id)
         if state.thermostat_ids:
             async_add_entities([ResetLearningButton(entry, room_id)], config_subentry_id=room_id)
+        if room_id in entry.runtime_data.child_lock.rooms:
+            async_add_entities([UnlockChildLockButton(entry, room_id)], config_subentry_id=room_id)
 
 
 class ResetControlSettingsButton(HouseEntity, ButtonEntity):
@@ -57,3 +59,18 @@ class ResetLearningButton(RoomEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         await self.runtime.async_reset_learning(self._room_id)
+
+
+class UnlockChildLockButton(RoomEntity, ButtonEntity):
+    """OVR-023: child lock off for 30 minutes, e.g. for a battery change."""
+
+    def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
+        super().__init__(entry, room_id, "unlock_child_lock")
+
+    @property
+    def available(self) -> bool:
+        lock = self.runtime.child_lock
+        return lock.available(self._room_id) and lock.is_on(self._room_id)
+
+    async def async_press(self) -> None:
+        await self.runtime.child_lock.async_unlock_for_a_while(self._room_id)
