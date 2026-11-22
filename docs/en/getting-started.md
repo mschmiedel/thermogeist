@@ -8,13 +8,21 @@
 
 ## Install
 
+**Through HACS (custom repository)**
+
+1. HACS → ⋮ → *Custom repositories*: add `https://github.com/mschmiedel/thermogeist`, category
+   *Integration*.
+2. While Thermogeist is in alpha, enable *Show beta versions* for it.
+3. Install, then restart Home Assistant.
+
+HACS then shows new versions like any other integration.
+
 **Manually from the zip**
 
-1. Download `thermogeist.zip` from the latest release.
+1. Download `thermogeist.zip` from the latest
+   [release](https://github.com/mschmiedel/thermogeist/releases).
 2. Unpack it into `config/custom_components/thermogeist/` on your Home Assistant.
 3. Restart Home Assistant.
-
-Installation through HACS will be described once Thermogeist is published.
 
 ## Describe your house
 

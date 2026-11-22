@@ -7,13 +7,21 @@
 
 ## Installieren
 
+**Über HACS (benutzerdefiniertes Repository)**
+
+1. HACS → ⋮ → *Benutzerdefinierte Repositories*: `https://github.com/mschmiedel/thermogeist`
+   hinzufügen, Kategorie *Integration*.
+2. Solange Thermogeist Alpha ist, für das Repository *Beta-Versionen anzeigen* einschalten.
+3. Installieren, dann Home Assistant neu starten.
+
+HACS zeigt neue Versionen dann wie bei jeder anderen Integration an.
+
 **Von Hand aus dem Zip**
 
-1. Lade `thermogeist.zip` aus dem neuesten Release herunter.
+1. Lade `thermogeist.zip` aus dem neuesten
+   [Release](https://github.com/mschmiedel/thermogeist/releases) herunter.
 2. Entpacke es nach `config/custom_components/thermogeist/` in deinem Home Assistant.
 3. Starte Home Assistant neu.
-
-Die Installation über HACS beschreiben wir, sobald Thermogeist veröffentlicht ist.
 
 ## Dein Haus beschreiben
 

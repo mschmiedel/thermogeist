@@ -4,9 +4,10 @@
 
 **English** | [Deutsch](README.de.md)
 
-> **Status: alpha.** Describe your house and rooms, assign thermostats, watch what Thermogeist
-> would do (observe mode) and switch control on room by room – by valve position or by setpoint.
-> Start with [Getting started](docs/en/getting-started.md).
+> **Status: alpha, in daily use.** Describe your house and rooms, add thermostats, watch what
+> Thermogeist would do (observe mode) and switch control on room by room – by valve position or
+> by setpoint. Expect changes between versions. Start with
+> [Getting started](docs/en/getting-started.md).
 
 Calm, understandable radiator control for Home Assistant – for the whole house, not just one
 valve at a time.
@@ -14,32 +15,69 @@ valve at a time.
 ## Why
 
 Smart radiator valves usually act like isolated gadgets. They don't know your house, they react
-nervously, and when they switch off you rarely learn why. This integration adds the missing layer:
+nervously, and when they switch off you rarely learn why. Thermogeist adds the missing layer:
 
-- **One place for the whole house.** Heating type, schedules, window rules and groups are set once
-  and inherited by every room.
-- **It knows your rooms.** Give it your house's heat load and each room's share, optionally the
-  radiator size. It uses this to regulate smoothly and to tell you if a radiator is too big or too
-  small.
-- **Heat-pump friendly.** A dedicated heat-pump mode keeps valves open and moves them gently
-  instead of slamming them shut.
-- **Always explains itself.** Every throttle, shutdown or override comes with a plain-language
-  reason you can see in Home Assistant.
-- **Shows whether it is still learning.** No more guessing if your thermostat has settled in.
+- **It knows your house and rooms.** Heat load, each room's share and the radiator size give a
+  model of what every room needs – and Thermogeist learns from normal operation how much the
+  room really needs.
+- **Heat-pump friendly.** Valves keep a minimum opening and move slowly instead of slamming
+  shut; a restart or a window never makes them jump.
+- **Always explains itself.** Every reason – window, frost protection, a silent sensor – is
+  visible in Home Assistant, with a help page.
+- **Simple to set up.** A few questions instead of long forms; thermostats are recognised and
+  added right when you add a room.
 
-## Supported devices (planned)
+## What it does today
 
-| Device | Connection | Notes |
-|---|---|---|
-| Sonoff TRVZB | Zigbee2MQTT | Primary target, direct valve control |
-| Bosch Radiator Thermostat II | Zigbee2MQTT | Direct valve control, no device-side minimum opening |
-| Any `climate` entity | Home Assistant | Basic support via setpoint control |
+- **Room control** by valve position (Sonoff TRVZB, Bosch Radiator Thermostat II) or by
+  setpoint (any thermostat with a climate entity), with a calm controller that plans ahead from
+  the heat demand.
+- **Windows:** heating pauses 30 s after a contact opens and resumes at once when it closes;
+  thermostats' own window functions and schedules cannot change your room setpoints.
+- **Learning:** each room learns from quiet hours how much of its modelled demand it really
+  needs, by day and night.
+- **Heat from devices:** a gaming PC or an air conditioner in heating mode counts, with a factor
+  per device (also from a sensor, e.g. a COP template).
+- **Diagnostics:** radiator size per room (too small, right, much larger than needed), estimated
+  radiator output, the heat demand and supply of all rooms on the house, a learned heating curve.
+- **Reliable with real devices:** settings that a firmware update resets are set again, silent
+  sensors and stale values are recognised.
+
+Planned: schedules, connections between rooms (open doors), heating curve without a flow
+sensor, smart child lock – see [`spec/roadmap.md`](spec/roadmap.md).
+
+## Supported devices
+
+| Device | Connection | How | Tested |
+|---|---|---|---|
+| Sonoff TRVZB | Zigbee2MQTT | Valve position, room sensor sent to the thermostat | yes |
+| Bosch Radiator Thermostat II (BTH-RA) | Zigbee2MQTT | Valve position | yes |
+| Sonoff TRV-ZBT (Gen 2) | Zigbee2MQTT | Valve position | profile, not tested |
+| Other Zigbee2MQTT thermostats | Zigbee2MQTT + MQTT integration | Roles detected from Zigbee2MQTT | detected, not tested |
+| Any thermostat with a `climate` entity (e.g. Bosch Smart Home) | Home Assistant | Setpoint – with limits, see [Thermostats](docs/en/thermostats.md) | yes |
+
+## Installation
+
+**HACS (custom repository):** HACS → ⋮ → *Custom repositories* → add
+`https://github.com/mschmiedel/thermogeist`, category *Integration*. While Thermogeist is in
+alpha, enable *Show beta versions* for it. Then install, restart Home Assistant and add the
+integration.
+
+**Manually:** download `thermogeist.zip` from the latest
+[release](https://github.com/mschmiedel/thermogeist/releases), unpack it into
+`config/custom_components/thermogeist/` and restart Home Assistant.
+
+Requires Home Assistant 2026.10 or newer.
 
 ## Documentation
 
-User documentation lives in [`docs/en/`](docs/en/). The product specification lives in
-[`spec/`](spec/).
+- [Getting started](docs/en/getting-started.md) – install and describe your house
+- [Rooms](docs/en/rooms.md) and [Thermostats](docs/en/thermostats.md) – with flow diagrams
+- [All entities](docs/en/entities.md) – what each value means and when it is available
+- [FAQ](docs/en/faq/README.md) – every reason a room can show
+
+The product specification lives in [`spec/`](spec/).
 
 ## License
 
-[MIT](LICENSE). See [CREDITS.md](CREDITS.md) for projects that inspired this one.
+[MIT](LICENSE). See [CREDITS.md](CREDITS.md) for projects and sources this one builds on.
