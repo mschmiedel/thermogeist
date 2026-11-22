@@ -2,12 +2,59 @@
 
 **English** | [Deutsch](../de/rooms.md)
 
-> Rooms do not control thermostats yet. They show what each room needs and why – the basis for
-> the next versions.
+> A room shows what it needs and why. With thermostats Thermogeist also controls it – new rooms
+> start in observe mode until you switch **Control** on.
 
 ## Add a room
 
-Open the Thermogeist entry of your house and choose **Add room**.
+Open the Thermogeist entry of your house and choose **Add room**. The steps at a glance –
+**blue** dialog steps, **grey** your answers, **yellow** what to have ready, ▸ a collapsed
+section:
+
+```mermaid
+flowchart TD
+    S["Settings → Devices & services → Thermogeist → Add room"] --> A["Step 1: name, area, room sensor, share<br/>▸ Windows and devices ▸ More"]
+    A --> B{"Share of the heat load?"}
+    B -- "estimate" --> C["Step 2a: size and position<br/>▸ Sloped ceiling"]
+    B -- "known" --> D["Step 2b: share in %"]
+    C --> E{"Devices chosen in step 1?"}
+    D --> E
+    E -- "yes" --> F["Factor per device<br/>▸ Factor from a sensor"]
+    E -- "no" --> G
+    F --> G{"Add a thermostat?"}
+    G -- "yes" --> H["Thermostat: device and roles<br/>(see Thermostats)"]
+    H --> G
+    G -- "done" --> I["Room saved – observe mode"]
+
+    P1["Room temperature sensor"] -.-> A
+    P2["Floor area, ceiling height, exterior walls"] -.-> C
+    P3["Room value from a heat load calculation"] -.-> D
+    P4["Power sensors of devices in the room"] -.-> F
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class S,A,C,D,F,H,I step
+    class B,E,G ask
+    class P1,P2,P3,P4 prep
+```
+
+To change a room later, use the gear icon (⚙) next to it:
+
+```mermaid
+flowchart LR
+    S["Thermogeist entry → ⚙ next to the room"] --> M{"What to change?"}
+    M --> A["Edit room<br/>(steps 1 and 2 as above)"]
+    M --> T["Add thermostat"]
+    M --> E["Edit thermostat"]
+    M --> R["Remove thermostat<br/>(gets its own settings back)"]
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class S,A,T,E,R step
+    class M ask
+```
 
 ### Step 1: basics
 

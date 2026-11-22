@@ -16,6 +16,27 @@ Dasselbe Menü bietet **Raum bearbeiten**, **Thermostat bearbeiten** und **Therm
 Um ein Thermostat in einen anderen Raum zu verschieben, entferne es hier und füge es dort hinzu;
 beim Entfernen bekommt es seine eigenen Geräteeinstellungen zurück.
 
+```mermaid
+flowchart TD
+    N["Beim Anlegen eines Raums:<br/>Thermostat hinzufügen?"] --> A
+    G["Später: ⚙ neben dem Raum →<br/>Thermostat hinzufügen / bearbeiten"] --> A
+    A["Schritt 1: Thermostat-Gerät,<br/>Nennleistung des Heizkörpers"] --> B{"Kennt Thermogeist es?<br/>(Profil oder Zigbee2MQTT)"}
+    B -- "ja" --> C["Schritt 2: Wie regeln<br/>▸ Erkannte Rollen ▸ Mehr"]
+    B -- "nein" --> D["Schritt 2: Wie regeln,<br/>Rollen auswählen ▸ Mehr"]
+    C --> E["Gespeichert – der Raum beobachtet"]
+    D --> E
+    E --> F["Regeln einschalten: Geräte-Einstellungen werden gesetzt,<br/>die Planung jede Minute geschrieben"]
+
+    P1["Datenblatt des Heizkörpers oder Größe und Typ"] -.-> A
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class N,G,A,C,D,E,F step
+    class B ask
+    class P1 prep
+```
+
 ### Schritt 1: Gerät
 
 | Feld | Was du einträgst |

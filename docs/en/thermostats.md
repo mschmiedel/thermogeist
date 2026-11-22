@@ -16,6 +16,27 @@ The same menu offers **Edit room**, **Edit thermostat** and **Remove thermostat*
 thermostat to another room, remove it here and add it there; on removal it gets its own device
 settings back.
 
+```mermaid
+flowchart TD
+    N["While adding a room:<br/>Add a thermostat?"] --> A
+    G["Later: ⚙ next to the room →<br/>Add / Edit thermostat"] --> A
+    A["Step 1: thermostat device,<br/>radiator rated output"] --> B{"Known to Thermogeist?<br/>(profile or Zigbee2MQTT)"}
+    B -- "yes" --> C["Step 2: How to control<br/>▸ Detected roles ▸ More"]
+    B -- "no" --> D["Step 2: How to control,<br/>roles to choose ▸ More"]
+    C --> E["Saved – the room observes"]
+    D --> E
+    E --> F["Switch Control on: device settings are set,<br/>the plan is written every minute"]
+
+    P1["Radiator data sheet or size and type"] -.-> A
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class N,G,A,C,D,E,F step
+    class B ask
+    class P1 prep
+```
+
 ### Step 1: device
 
 | Field | What to enter |

@@ -2,12 +2,59 @@
 
 [English](../en/rooms.md) | **Deutsch**
 
-> Räume regeln noch keine Thermostate. Sie zeigen, was jeder Raum braucht und warum – die
-> Grundlage für die nächsten Versionen.
+> Ein Raum zeigt, was er braucht und warum. Mit Thermostaten regelt Thermogeist ihn auch – neue
+> Räume beginnen im Beobachten, bis du **Regeln** einschaltest.
 
 ## Raum hinzufügen
 
-Öffne den Thermogeist-Eintrag deines Hauses und wähle **Raum hinzufügen**.
+Öffne den Thermogeist-Eintrag deines Hauses und wähle **Raum hinzufügen**. Die Schritte auf
+einen Blick – **blau** Schritte im Dialog, **grau** deine Antworten, **gelb** was du
+bereitlegen solltest, ▸ ein zugeklappter Bereich:
+
+```mermaid
+flowchart TD
+    S["Einstellungen → Geräte & Dienste → Thermogeist → Raum hinzufügen"] --> A["Schritt 1: Name, Bereich, Raumsensor, Anteil<br/>▸ Fenster und Geräte ▸ Mehr"]
+    A --> B{"Anteil an der Heizlast?"}
+    B -- "schätzen" --> C["Schritt 2a: Größe und Lage<br/>▸ Dachschräge"]
+    B -- "bekannt" --> D["Schritt 2b: Anteil in %"]
+    C --> E{"Geräte in Schritt 1 gewählt?"}
+    D --> E
+    E -- "ja" --> F["Faktor pro Gerät<br/>▸ Faktor aus einem Sensor"]
+    E -- "nein" --> G
+    F --> G{"Thermostat hinzufügen?"}
+    G -- "ja" --> H["Thermostat: Gerät und Rollen<br/>(siehe Thermostate)"]
+    H --> G
+    G -- "fertig" --> I["Raum gespeichert – Beobachten"]
+
+    P1["Raumtemperatursensor"] -.-> A
+    P2["Fläche, Raumhöhe, Außenwände"] -.-> C
+    P3["Raumwert aus einer Heizlastberechnung"] -.-> D
+    P4["Leistungssensoren der Geräte im Raum"] -.-> F
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class S,A,C,D,F,H,I step
+    class B,E,G ask
+    class P1,P2,P3,P4 prep
+```
+
+Später änderst du einen Raum über das Zahnrad (⚙) daneben:
+
+```mermaid
+flowchart LR
+    S["Thermogeist-Eintrag → ⚙ neben dem Raum"] --> M{"Was ändern?"}
+    M --> A["Raum bearbeiten<br/>(Schritte 1 und 2 wie oben)"]
+    M --> T["Thermostat hinzufügen"]
+    M --> E["Thermostat bearbeiten"]
+    M --> R["Thermostat entfernen<br/>(bekommt seine Einstellungen zurück)"]
+
+    classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
+    classDef ask fill:#e6e6e6,stroke:#777,color:#000
+    classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
+    class S,A,T,E,R step
+    class M ask
+```
 
 ### Schritt 1: Grundangaben
 
