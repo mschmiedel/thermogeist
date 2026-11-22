@@ -31,9 +31,16 @@ The three sums cover the same rooms, so you can compare them directly. A room wh
 | Return temperature | The averaged return temperature. | return sensor chosen | the sensor gives no value |
 | Spread | Flow minus return, limited to 1–10 K; replaces the assumed 5 K. | flow and return sensor chosen | one of them has no value |
 | Flow on the design day | The flow your heating reaches on the coldest design day, from the heating curve Thermogeist learns ([FAQ](faq/radiator_sizing.md)). Attributes: `slope_k_per_k`, `hours`, `outdoor_min_c`, `outdoor_max_c`, `confidence`. With an entered heating curve it comes from that curve (`source`: `heating_curve` and the two points). Diagnostic. | flow sensor or heating curve entered | fewer than 48 heating hours over at least 5 K of outdoor temperature learned, or no design outdoor temperature |
-| Minimum valve opening, Dead band, Max. valve change per 30 min, Max. setback | Control settings, starting at the defaults of your heating type; attribute `source` is `profile` or `user` ([Getting started](getting-started.md#what-you-see-afterwards)). Configuration. | always | – |
+| Minimum valve opening | How far a valve stays open at least while controlled, in %. Heat pump 40 %: water should always be able to flow through the radiators, otherwise the heat pump keeps switching on and off. Only when a room is clearly too warm (more than dead band + 0.5 K above its target) may the valve go below ([When the room is too warm](thermostats.md#when-the-room-is-too-warm)). Boiler and electric: 0 %. Configuration. | always | – |
+| Dead band | How much warmer than its target a room may get before the controller closes the valve because of it, in K. Example heat pump 0.5 K, target 21 °C: up to 21.5 °C the valve stays calm – a bit of sun or cooking leaves it alone. If the room stays too warm for long, the slow correction still takes the valve back step by step. There is no dead band below the target: when it is too cold, the controller reacts at once. Configuration. | always | – |
+| Max. valve change per 30 min | How far a valve moves at most within 30 minutes, in percentage points. Heat pump 10: from 40 % to 70 % takes at least an hour and a half. So the water flow changes only slowly and the heat pump runs evenly. Exceptions: after a window closes or a safety shutdown ends the valve goes straight back to the plan, and a room that is too warm is never opened further. Configuration. | always | – |
+| Max. setback | For schedules and *Away*: how many kelvin cooler a room may get at most. Heat pump 2 K, because a deep setback costs more to heat up again than it saves. **No effect yet** – schedules are planned. Configuration. | always | – |
 | Window: close after, Window: resume heating after | House defaults for all rooms with window contacts, in seconds. Configuration. | always | – |
 | Reset control settings to profile | Button: all control settings back to the defaults of the heating type. Configuration. | always | – |
+
+The four control settings apply to all rooms of the house and start at the defaults of your
+heating type ([table](getting-started.md#what-you-see-afterwards)). The attribute `source` shows
+`profile` (default) or `user` (changed by you). Usually there is nothing to change.
 
 ## Room
 
@@ -63,7 +70,7 @@ Named after the thermostat, on the room device.
 | Entity | Meaning | When it exists | Unknown when |
 |---|---|---|---|
 | Kind *thermostat* | Valve-based or setpoint-based. Attributes: `strategy`, `profile`, `radiator_output_w`, `roles`, and what Thermogeist last wrote (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; by setpoint `setpoint_offset`). Diagnostic. | always | – |
-| Valve position *thermostat* | Where the valve really is – compare it with the planned one. `source: reported` when the thermostat reports it; `source: derived` for Sonoff thermostats: the set position while the thermostat heats, the minimum opening while it rests (`hvac_action`). | the role *Valve position (read)* is filled in, or a Sonoff with valve position (set) and minimum opening | the thermostat reports nothing, or a Sonoff reports neither heating nor resting |
+| Valve position *thermostat* | Where the valve really is – compare it with the planned one ([why they can differ](thermostats.md#planned-and-actual-valve-position)). `source: reported` when the thermostat reports it; `source: derived` for Sonoff thermostats: the set position while the thermostat heats, the minimum opening while it rests (`hvac_action`). | the role *Valve position (read)* is filled in, or a Sonoff with valve position (set) and minimum opening | the thermostat reports nothing, or a Sonoff reports neither heating nor resting |
 
 ## Estimated radiator output
 

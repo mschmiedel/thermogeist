@@ -323,6 +323,37 @@ Pro Raum:
 | Ventilstellung *Thermostat* | Die tatsächliche Ventilstellung. Leg sie in einem Verlaufsdiagramm neben die geplante. Attribut `source`: `reported` (das Thermostat meldet sie) oder `derived` (Sonoff: Das Thermostat wechselt mit seinem eigenen Regler zwischen zwei Stellungen – der von Thermogeist gesetzten, solange es heizt, und der Mindestöffnung, solange es ruht; `hvac_action` zeigt, welche). |
 | Art *Thermostat* | Über Ventilstellung oder über Sollwert, mit *strategy* (deine Auswahl), Profil und Rollen als Attribute. |
 
+### Geplante und tatsächliche Ventilstellung
+
+Die *geplante Ventilstellung* (am Raum) ist das, was Thermogeist will. Die *Ventilstellung* des
+Thermostats ist das, was das Gerät meldet. Leg beide in einem Verlaufsdiagramm übereinander. Sie
+sind selten genau gleich, und meistens ist das in Ordnung:
+
+| Was du siehst | Warum | Sorge? |
+|---|---|---|
+| Ganz verschieden, *Regeln* ist aus | Im Beobachten schreibt Thermogeist nichts, das Thermostat regelt selbst. | Nein |
+| Die tatsächliche folgt mit einigen Minuten Verspätung | Viele Thermostate melden ihre Stellung nur alle paar Minuten. | Nein |
+| Kleine Stufen fehlen, die tatsächliche hinkt bis zu 3 % hinterher | Thermogeist bündelt kleine Änderungen, um Motor und Batterie zu schonen: neu geschrieben wird ab 3 % Unterschied, höchstens alle 10 Minuten (ab 1 % nach 30 Minuten). | Nein |
+| Sonoff: Die tatsächliche springt zwischen der geplanten und einem niedrigeren Wert hin und her (Sägezahn) | Der Sonoff regelt selbst zwischen zwei Stellungen: der geplanten, solange er heizt, und der Ruhestellung (meist die Mindestöffnung), sobald der Raum seinen Sollwert erreicht. Das Attribut `hvac_action` zeigt, welche gerade gilt. | Nein, so arbeitet das Gerät |
+| Nach Batteriewechsel oder Firmware-Update fährt das Ventil einmal ganz auf und zu | Das Thermostat kalibriert sich. | Nein, wenn es danach wieder folgt |
+
+**Wann du nachsehen solltest:**
+
+- **Das Thermostat verstellt das Ventil selbst.** Weicht die gemeldete Stellung länger als
+  5 Minuten um mehr als 5 % vom geschriebenen Wert ab, schreibt Thermogeist erneut – höchstens
+  dreimal pro Stunde. Reicht das nicht, schaltet der Raum zurück auf Beobachten und eine Meldung
+  erscheint unter *Einstellungen → Reparaturen* ([FAQ](faq/device_overrides_valve.md)). Die
+  Attribute `rewrites_last_hour` und `last_confirmation` an der Art-Entität des Thermostats zeigen,
+  wie oft das passiert und wann das Gerät zuletzt bestätigt hat.
+- **Die Stellung passt, aber der Raum wird nicht warm**, obwohl der Vorlauf warm ist und kein
+  Fenster offen: Das Ventil öffnet mechanisch nicht. Häufig hat das Thermostat seine
+  Kalibrierung verloren (z. B. nach einem Firmware-Update) oder der Ventilstift klemmt. Thermostat
+  abnehmen, Stift gängig machen, neu kalibrieren. Thermogeist erkennt das noch nicht von selbst.
+- **Ein Sonoff bleibt dauerhaft in der Ruhestellung, obwohl der Raum zu kalt ist:** Der Sonoff
+  hält den Raum für warm genug, meist weil er seinen eigenen Fühler statt des Raumsensors nimmt.
+  Thermogeist setzt diese Einstellung jede Minute wieder, wenn das Gerät sie zurückstellt. Hilft
+  das nicht, prüfe in Zigbee2MQTT, ob der Sonoff erreichbar ist.
+
 ### Grenzen, die du sehen kannst
 
 | Grenze | Bedeutung |

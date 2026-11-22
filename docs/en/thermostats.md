@@ -309,6 +309,37 @@ On each room:
 | Valve position *thermostat* | The actual valve position. Put it next to the planned one in a history graph. Attribute `source`: `reported` (the thermostat reports it) or `derived` (Sonoff: the thermostat moves between two positions with its own controller – the position Thermogeist set while it heats, the minimum opening while it rests; `hvac_action` shows which). |
 | Kind *thermostat* | Valve-based or setpoint-based, with *strategy* (your choice), profile and roles as attributes. |
 
+### Planned and actual valve position
+
+The *planned valve position* (on the room) is what Thermogeist wants. The thermostat's *valve
+position* is what the device reports. Put both in one history graph. They are rarely exactly the
+same, and usually that is fine:
+
+| What you see | Why | Worry? |
+|---|---|---|
+| Completely different, *Control* is off | In observe mode Thermogeist writes nothing; the thermostat controls itself. | No |
+| The actual one follows a few minutes later | Many thermostats report their position only every few minutes. | No |
+| Small steps are missing, the actual one lags up to 3 % behind | Thermogeist bundles small changes to spare motor and battery: it writes again from a 3 % difference, at most every 10 minutes (from 1 % after 30 minutes). | No |
+| Sonoff: the actual one jumps between the planned one and a lower value (saw-tooth) | The Sonoff switches between two positions by itself: the planned one while it heats, and its rest position (usually the minimum opening) once the room reaches its setpoint. The attribute `hvac_action` shows which applies. | No, that is how the device works |
+| After a battery change or firmware update the valve opens and closes fully once | The thermostat calibrates itself. | No, if it follows again afterwards |
+
+**When to take a look:**
+
+- **The thermostat moves the valve itself.** If the reported position stays more than 5 % away
+  from the written one for over 5 minutes, Thermogeist writes again – at most three times an hour.
+  If that is not enough, the room switches back to observe mode and an issue appears under
+  *Settings → Repairs* ([FAQ](faq/device_overrides_valve.md)). The attributes `rewrites_last_hour`
+  and `last_confirmation` on the thermostat's kind entity show how often this happens and when the
+  device last confirmed.
+- **The position is right, but the room does not get warm**, although the flow is warm and no
+  window is open: the valve does not open mechanically. Often the thermostat lost its calibration
+  (e.g. after a firmware update) or the valve pin is stuck. Take the thermostat off, free the pin,
+  calibrate again. Thermogeist does not detect this by itself yet.
+- **A Sonoff stays in its rest position although the room is too cold:** the Sonoff thinks the
+  room is warm enough, usually because it uses its own sensor instead of the room sensor.
+  Thermogeist sets this setting again every minute when the device resets it. If that does not
+  help, check in Zigbee2MQTT that the Sonoff is reachable.
+
 ### Limits you may see
 
 | Limit | Meaning |

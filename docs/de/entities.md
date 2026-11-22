@@ -31,9 +31,16 @@ Die drei Summen umfassen dieselben Räume, du kannst sie also direkt vergleichen
 | Rücklauftemperatur | Der gemittelte Rücklauf. | Rücklauf-Sensor gewählt | der Sensor liefert keinen Wert |
 | Spreizung | Vorlauf minus Rücklauf, begrenzt auf 1–10 K; ersetzt die angenommenen 5 K. | Vorlauf- und Rücklauf-Sensor gewählt | einer davon liefert keinen Wert |
 | Vorlauf am Auslegungstag | Der Vorlauf, den deine Heizung am kältesten Auslegungstag erreicht, aus der Heizkurve, die Thermogeist lernt ([FAQ](faq/radiator_sizing.md)). Attribute: `slope_k_per_k`, `hours`, `outdoor_min_c`, `outdoor_max_c`, `confidence`. Mit eingegebener Heizkurve kommt er aus dieser Kurve (`source`: `heating_curve` und die beiden Punkte). Diagnose. | Vorlauf-Sensor gewählt oder Heizkurve eingegeben | weniger als 48 Heizstunden über mindestens 5 K Außentemperatur gelernt, oder keine Normaußentemperatur |
-| Mindestöffnung Ventil, Totband, Max. Ventiländerung pro 30 min, Max. Absenkung | Regelwerte, starten mit den Vorgaben deiner Heizungsart; Attribut `source` ist `profile` oder `user` ([Erste Schritte](getting-started.md#was-du-danach-siehst)). Konfiguration. | immer | – |
+| Mindestöffnung Ventil | Wie weit ein Ventil beim Regeln mindestens offen bleibt, in %. Wärmepumpe 40 %: Das Wasser soll immer durch die Heizkörper fließen können, sonst schaltet die Wärmepumpe ständig ein und aus. Nur wenn ein Raum deutlich zu warm ist (mehr als Totband + 0,5 K über dem Ziel), darf das Ventil darunter ([Wenn der Raum zu warm ist](thermostats.md#wenn-der-raum-zu-warm-ist)). Kessel und Elektro: 0 %. Konfiguration. | immer | – |
+| Totband | Wie viel wärmer als sein Ziel ein Raum werden darf, bevor die Regelung deswegen das Ventil zudreht, in K. Beispiel Wärmepumpe 0,5 K, Ziel 21 °C: Bis 21,5 °C bleibt das Ventil ruhig – etwas Sonne oder Kochen lässt es in Ruhe. Bleibt der Raum lange zu warm, nimmt die langsame Korrektur trotzdem nach und nach zurück. Unter dem Ziel gibt es kein Totband: Ist es zu kalt, reagiert die Regelung sofort. Konfiguration. | immer | – |
+| Max. Ventiländerung pro 30 min | Wie weit sich ein Ventil in 30 Minuten höchstens bewegt, in Prozentpunkten. Wärmepumpe 10: von 40 % auf 70 % dauert mindestens anderthalb Stunden. So ändert sich der Wasserdurchfluss nur langsam, und die Wärmepumpe läuft gleichmäßig. Ausnahmen: Nach einem geschlossenen Fenster oder einer Sicherheitsabschaltung geht es sofort zurück auf den Plan, und ein zu warmer Raum wird nie weiter geöffnet. Konfiguration. | immer | – |
+| Max. Absenkung | Für Zeitpläne und *Abwesend*: um wie viel Kelvin ein Raum dann höchstens kühler werden darf. Wärmepumpe 2 K, weil tiefes Absenken beim Wiederaufheizen mehr kostet, als es spart. **Wirkt noch nicht** – Zeitpläne sind geplant. Konfiguration. | immer | – |
 | Fenster: schließen nach, Fenster: wieder heizen nach | Hauswerte für alle Räume mit Fensterkontakten, in Sekunden. Konfiguration. | immer | – |
 | Regelwerte auf Profil zurücksetzen | Taste: alle Regelwerte zurück auf die Vorgaben der Heizungsart. Konfiguration. | immer | – |
+
+Die vier Regelwerte gelten für alle Räume des Hauses und starten mit den Vorgaben deiner
+Heizungsart ([Tabelle](getting-started.md#was-du-danach-siehst)). Das Attribut `source` zeigt
+`profile` (Vorgabe) oder `user` (von dir geändert). Meist musst du nichts ändern.
 
 ## Raum
 
@@ -63,7 +70,7 @@ Nach dem Thermostat benannt, am Raum-Gerät.
 | Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
 |---|---|---|---|
 | Art *Thermostat* | Über Ventilstellung oder über Sollwert. Attribute: `strategy`, `profile`, `radiator_output_w`, `roles` und was Thermogeist zuletzt geschrieben hat (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; über Sollwert `setpoint_offset`). Diagnose. | immer | – |
-| Ventilstellung *Thermostat* | Wo das Ventil wirklich steht – zum Vergleich mit der geplanten. `source: reported`, wenn das Thermostat sie meldet; `source: derived` bei Sonoff-Thermostaten: die gesetzte Stellung, solange das Thermostat heizt, die Mindestöffnung, solange es ruht (`hvac_action`). | die Rolle *Ventilstellung (lesen)* ist ausgefüllt, oder ein Sonoff mit Ventilstellung (setzen) und Mindestöffnung | das Thermostat meldet nichts, oder ein Sonoff meldet weder Heizen noch Ruhen |
+| Ventilstellung *Thermostat* | Wo das Ventil wirklich steht – zum Vergleich mit der geplanten ([warum sie abweichen kann](thermostats.md#geplante-und-tatsächliche-ventilstellung)). `source: reported`, wenn das Thermostat sie meldet; `source: derived` bei Sonoff-Thermostaten: die gesetzte Stellung, solange das Thermostat heizt, die Mindestöffnung, solange es ruht (`hvac_action`). | die Rolle *Ventilstellung (lesen)* ist ausgefüllt, oder ein Sonoff mit Ventilstellung (setzen) und Mindestöffnung | das Thermostat meldet nichts, oder ein Sonoff meldet weder Heizen noch Ruhen |
 
 ## Geschätzte Heizleistung
 
