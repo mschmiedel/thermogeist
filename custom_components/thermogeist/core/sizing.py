@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from statistics import median
 
+from .house import CurvePoints
 from .radiator import available_output_w
 
 # DIA-001 to DIA-004: load on the design day as a share of the radiator output.
@@ -96,6 +97,23 @@ class HeatingCurve:
         if distance <= CONFIDENCE_MEDIUM_UP_TO_K:
             return Confidence.MEDIUM
         return Confidence.LOW
+
+
+@dataclass(frozen=True, slots=True)
+class ConfiguredCurve:
+    """MDL-019: the heating curve set on the heat generator, entered as two points.
+
+    It is what the heat generator really does, so there is nothing to extrapolate and the
+    confidence is always high.
+    """
+
+    points: CurvePoints
+
+    def flow_at(self, outdoor_c: float) -> float:
+        return self.points.flow_at(outdoor_c)
+
+    def confidence_at(self, outdoor_c: float) -> Confidence:
+        return Confidence.HIGH
 
 
 def fit_heating_curve(hours: Sequence[CurveHour]) -> HeatingCurve | None:
@@ -224,7 +242,8 @@ class SizingInputs:
     design_outdoor_c: float | None
     rated_output_w: float | None
     has_flow_sensor: bool
-    curve: HeatingCurve | None
+    """A measured flow temperature, or a configured heating curve (MDL-019)."""
+    curve: HeatingCurve | ConfiguredCurve | None
     spread_k: float | None
     full_open_hours: int
     heat_pump: bool

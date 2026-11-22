@@ -39,12 +39,12 @@ nervously, and when they switch off you rarely learn why. Thermogeist adds the m
 - **Heat from devices:** a gaming PC or an air conditioner in heating mode counts, with a factor
   per device (also from a sensor, e.g. a COP template).
 - **Diagnostics:** radiator size per room (too small, right, much larger than needed), estimated
-  radiator output, the heat demand and supply of all rooms on the house, a learned heating curve.
+  radiator output, the heat demand and supply of all rooms on the house, a heating curve learned from the flow sensor – or entered as two points
+  when there is no sensor.
 - **Reliable with real devices:** settings that a firmware update resets are set again, silent
   sensors and stale values are recognised.
 
-Planned: schedules, connections between rooms (open doors), heating curve without a flow
-sensor, smart child lock – see [`spec/roadmap.md`](spec/roadmap.md).
+Planned: schedules, connections between rooms (open doors), smart child lock – see [`spec/roadmap.md`](spec/roadmap.md).
 
 ## Supported devices
 

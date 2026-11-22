@@ -27,10 +27,10 @@ The three sums cover the same rooms, so you can compare them directly. A room wh
 
 | Entity | Meaning | When it exists | Unknown when |
 |---|---|---|---|
-| Flow temperature | The averaged flow temperature the controller uses (`source`: your sensor). | flow sensor chosen | the sensor gives no plausible value |
+| Flow temperature | The averaged flow temperature the controller uses (`source`: your sensor, or `heating_curve` when it comes from the heating curve at the current outdoor temperature). | flow sensor or heating curve entered | the sensor gives no plausible value |
 | Return temperature | The averaged return temperature. | return sensor chosen | the sensor gives no value |
 | Spread | Flow minus return, limited to 1–10 K; replaces the assumed 5 K. | flow and return sensor chosen | one of them has no value |
-| Flow on the design day | The flow your heating reaches on the coldest design day, from the heating curve Thermogeist learns ([FAQ](faq/radiator_sizing.md)). Attributes: `slope_k_per_k`, `hours`, `outdoor_min_c`, `outdoor_max_c`, `confidence`. Diagnostic. | flow sensor chosen | fewer than 48 heating hours over at least 5 K of outdoor temperature learned, or no design outdoor temperature |
+| Flow on the design day | The flow your heating reaches on the coldest design day, from the heating curve Thermogeist learns ([FAQ](faq/radiator_sizing.md)). Attributes: `slope_k_per_k`, `hours`, `outdoor_min_c`, `outdoor_max_c`, `confidence`. With an entered heating curve it comes from that curve (`source`: `heating_curve` and the two points). Diagnostic. | flow sensor or heating curve entered | fewer than 48 heating hours over at least 5 K of outdoor temperature learned, or no design outdoor temperature |
 | Minimum valve opening, Dead band, Max. valve change per 30 min, Max. setback | Control settings, starting at the defaults of your heating type; attribute `source` is `profile` or `user` ([Getting started](getting-started.md#what-you-see-afterwards)). Configuration. | always | – |
 | Window: close after, Window: resume heating after | House defaults for all rooms with window contacts, in seconds. Configuration. | always | – |
 | Reset control settings to profile | Button: all control settings back to the defaults of the heating type. Configuration. | always | – |

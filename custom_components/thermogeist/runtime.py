@@ -88,6 +88,7 @@ from .core.profiles import (
 from .core.radiator import time_constant_h, usable_spread_k
 from .core.room import Room
 from .core.sizing import (
+    ConfiguredCurve,
     CurveHour,
     HeatingCurve,
     HourCollector,
@@ -408,9 +409,18 @@ class HouseRuntime:
         return numeric_state(self._hass, entity_id)
 
     def flow_temperature_c(self) -> float | None:
-        """Flow temperature as a 30-minute moving average of plausible values (CTL-038/039)."""
+        """Flow temperature as a 30-minute moving average of plausible values (CTL-038/039).
+
+        MDL-019: without a flow sensor, the configured heating curve at the current outdoor
+        temperature stands in.
+        """
         if not self.house.flow_temperature_entity:
-            return None
+            curve = self.house.heating_curve
+            outdoor = self.outdoor_temperature_c() if curve else None
+            self.flow_used_c = (
+                round(curve.flow_at(outdoor), 1) if curve and outdoor is not None else None
+            )
+            return self.flow_used_c
         now = self._clock.now()
         raw = numeric_state(self._hass, self.house.flow_temperature_entity)
         if plausible_flow(raw):
@@ -668,6 +678,20 @@ class HouseRuntime:
         self._save_later()
         self._notify()
 
+    def flow_known(self) -> bool:
+        """MDL-019: a flow sensor or a configured heating curve tells the flow temperature."""
+        return (
+            self.house.flow_temperature_entity is not None or self.house.heating_curve is not None
+        )
+
+    def design_curve(self) -> HeatingCurve | ConfiguredCurve | None:
+        """DIA-014: the learned curve with a flow sensor, otherwise the configured one."""
+        if self.house.flow_temperature_entity is not None:
+            return self.heating_curve
+        if self.house.heating_curve is not None:
+            return ConfiguredCurve(self.house.heating_curve)
+        return None
+
     def _update_sizing(self) -> None:
         heat_pump = self.house.heating_type is HeatingType.HEAT_PUMP
         for state in self.rooms.values():
@@ -679,8 +703,8 @@ class HouseRuntime:
                     setpoint_c=state.user_setpoint_c,
                     design_outdoor_c=self.house.design_outdoor_temperature_c,
                     rated_output_w=state.rated_output_w,
-                    has_flow_sensor=self.house.flow_temperature_entity is not None,
-                    curve=self.heating_curve,
+                    has_flow_sensor=self.flow_known(),
+                    curve=self.design_curve(),
                     spread_k=self.spread_used_k,
                     full_open_hours=len(state.full_open_hours),
                     heat_pump=heat_pump,

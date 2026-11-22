@@ -28,7 +28,7 @@
         },
         "data_description": {
           "heat_load_known": "Ja, wenn es eine Heizlastberechnung gibt (Heizungsbauer oder Energieberater).",
-          "flow_measurement": "Ein Sensor für das Wasser, das zu den Heizkörpern fließt (Vorlauf), und optional für das zurückfließende (Rücklauf).",
+          "flow_measurement": "Ein Sensor für das Wasser, das zu den Heizkörpern fließt (Vorlauf), und optional für das zurückfließende (Rücklauf). Ohne Sensor ist die an der Wärmepumpe oder dem Kessel eingestellte Heizkurve die nächstbeste Wahl.",
           "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %."
         }
       },
@@ -57,6 +57,22 @@
           "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen.",
           "return_temperature_entity": "Optional. Die Temperatur des Wassers, das von den Heizkörpern zurückkommt, gemessen an derselben Stelle wie der Vorlauf (z. B. Heizkreis-Rücklauf). Thermogeist nutzt dann den gemessenen Unterschied zwischen Vor- und Rücklauf, statt 5 K anzunehmen. Anlegefühler genauso kalibrieren wie den Vorlauf-Fühler."
         }
+      },
+      "heating_curve": {
+        "title": "Heizkurve",
+        "description": "Zwei Punkte der Heizkurve, die an deiner Wärmepumpe oder deinem Kessel eingestellt ist – du findest sie im Menü oder in der App, oft als Diagramm. Thermogeist zieht eine gerade Linie dazwischen und nutzt sie als Vorlauftemperatur.",
+        "data": {
+          "curve_cold_outdoor": "Kalte Außentemperatur",
+          "curve_cold_flow": "Vorlauftemperatur bei Kälte",
+          "curve_warm_outdoor": "Milde Außentemperatur",
+          "curve_warm_flow": "Vorlauftemperatur bei mildem Wetter"
+        },
+        "data_description": {
+          "curve_cold_outdoor": "Ein kalter Tag, z. B. −10 °C. Am besten der kälteste Punkt deiner Kurve.",
+          "curve_cold_flow": "Die Vorlauftemperatur, die deine Heizung bei dieser Außentemperatur einstellt, z. B. 45 °C.",
+          "curve_warm_outdoor": "Ein milder Tag, z. B. 15 °C. Am besten der wärmste Punkt deiner Kurve.",
+          "curve_warm_flow": "Die Vorlauftemperatur bei dieser Außentemperatur, z. B. 30 °C. Kälter und wärmer als die beiden Punkte behält Thermogeist deren Werte, wie die Heizung auch."
+        }
       }
     },
     "error": {
@@ -65,7 +81,13 @@
       "heat_load_out_of_range": "Die Heizlast muss zwischen 0,5 und 100 kW liegen.",
       "design_outdoor_temperature_out_of_range": "Die Normaußentemperatur muss zwischen −40 und +10 °C liegen.",
       "share_outside_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
-      "living_area_out_of_range": "Die Wohnfläche muss zwischen 10 und 10.000 m² liegen."
+      "living_area_out_of_range": "Die Wohnfläche muss zwischen 10 und 10.000 m² liegen.",
+      "curve_warm_not_above_cold": "Die milde Außentemperatur muss wärmer sein als die kalte.",
+      "curve_flow_rises_when_warmer": "Bei mildem Wetter darf der Vorlauf nicht wärmer sein als bei Kälte – sind die beiden Punkte vertauscht?",
+      "curve_cold_outdoor_out_of_range": "Außentemperatur zwischen −30 und 25 °C.",
+      "curve_warm_outdoor_out_of_range": "Außentemperatur zwischen −30 und 25 °C.",
+      "curve_cold_flow_out_of_range": "Vorlauftemperatur zwischen 20 und 80 °C.",
+      "curve_warm_flow_out_of_range": "Vorlauftemperatur zwischen 20 und 80 °C."
     }
   },
   "options": {
@@ -84,7 +106,7 @@
           "heating_type": "Womit das Haus beheizt wird. Davon hängt ab, wie ruhig Thermogeist regelt.",
           "outdoor_temperature_entity": "Ein Außenthermometer im Schatten, der Außenfühler der Wärmepumpe oder deine Wetter-Entität (z. B. Forecast Home). Mehrere Thermometer? Mit dem Helfer „Kombiniere den Zustand mehrerer Sensoren“, Typ Minimum, zusammenfassen – einer steht immer im Schatten.",
           "heat_load_known": "Ja, wenn es eine Heizlastberechnung gibt (Heizungsbauer oder Energieberater).",
-          "flow_measurement": "Ein Sensor für das Wasser, das zu den Heizkörpern fließt (Vorlauf), und optional für das zurückfließende (Rücklauf).",
+          "flow_measurement": "Ein Sensor für das Wasser, das zu den Heizkörpern fließt (Vorlauf), und optional für das zurückfließende (Rücklauf). Ohne Sensor ist die an der Wärmepumpe oder dem Kessel eingestellte Heizkurve die nächstbeste Wahl.",
           "living_area": "Gesamte beheizte Fläche des Hauses, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast aus seiner Größe, z. B. 20 m² von 160 m² ≈ 12,5 %."
         }
       },
@@ -113,6 +135,22 @@
           "flow_temperature_entity": "Optional. Die Temperatur des Wassers, das zu den Heizkörpern fließt. Am besten ein Fühler im Heizkreis (nach dem Pufferspeicher, falls vorhanden). Nicht den Vorlauffühler der Wärmepumpe selbst nehmen: Beim Warmwasserbereiten zeigt er 45–50 °C, und Thermogeist würde die Ventile schließen, obwohl die Heizkörper kühler werden. Anlegefühler messen oft 2–4 K zu wenig – kalibrieren. Mehr in der Doku: Thermostate → Den Vorlauf-Sensor wählen.",
           "return_temperature_entity": "Optional. Die Temperatur des Wassers, das von den Heizkörpern zurückkommt, gemessen an derselben Stelle wie der Vorlauf (z. B. Heizkreis-Rücklauf). Thermogeist nutzt dann den gemessenen Unterschied zwischen Vor- und Rücklauf, statt 5 K anzunehmen. Anlegefühler genauso kalibrieren wie den Vorlauf-Fühler."
         }
+      },
+      "heating_curve": {
+        "title": "Heizkurve",
+        "description": "Zwei Punkte der Heizkurve, die an deiner Wärmepumpe oder deinem Kessel eingestellt ist – du findest sie im Menü oder in der App, oft als Diagramm. Thermogeist zieht eine gerade Linie dazwischen und nutzt sie als Vorlauftemperatur.",
+        "data": {
+          "curve_cold_outdoor": "Kalte Außentemperatur",
+          "curve_cold_flow": "Vorlauftemperatur bei Kälte",
+          "curve_warm_outdoor": "Milde Außentemperatur",
+          "curve_warm_flow": "Vorlauftemperatur bei mildem Wetter"
+        },
+        "data_description": {
+          "curve_cold_outdoor": "Ein kalter Tag, z. B. −10 °C. Am besten der kälteste Punkt deiner Kurve.",
+          "curve_cold_flow": "Die Vorlauftemperatur, die deine Heizung bei dieser Außentemperatur einstellt, z. B. 45 °C.",
+          "curve_warm_outdoor": "Ein milder Tag, z. B. 15 °C. Am besten der wärmste Punkt deiner Kurve.",
+          "curve_warm_flow": "Die Vorlauftemperatur bei dieser Außentemperatur, z. B. 30 °C. Kälter und wärmer als die beiden Punkte behält Thermogeist deren Werte, wie die Heizung auch."
+        }
       }
     },
     "error": {
@@ -121,7 +159,13 @@
       "heat_load_out_of_range": "Die Heizlast muss zwischen 0,5 und 100 kW liegen.",
       "design_outdoor_temperature_out_of_range": "Die Normaußentemperatur muss zwischen −40 und +10 °C liegen.",
       "share_outside_out_of_range": "Der Anteil muss zwischen 0 und 100 % liegen.",
-      "living_area_out_of_range": "Die Wohnfläche muss zwischen 10 und 10.000 m² liegen."
+      "living_area_out_of_range": "Die Wohnfläche muss zwischen 10 und 10.000 m² liegen.",
+      "curve_warm_not_above_cold": "Die milde Außentemperatur muss wärmer sein als die kalte.",
+      "curve_flow_rises_when_warmer": "Bei mildem Wetter darf der Vorlauf nicht wärmer sein als bei Kälte – sind die beiden Punkte vertauscht?",
+      "curve_cold_outdoor_out_of_range": "Außentemperatur zwischen −30 und 25 °C.",
+      "curve_warm_outdoor_out_of_range": "Außentemperatur zwischen −30 und 25 °C.",
+      "curve_cold_flow_out_of_range": "Vorlauftemperatur zwischen 20 und 80 °C.",
+      "curve_warm_flow_out_of_range": "Vorlauftemperatur zwischen 20 und 80 °C."
     }
   },
   "selector": {
@@ -168,6 +212,7 @@
     "flow_measurement": {
       "options": {
         "none": "Nein",
+        "curve": "Nein, aber ich kenne die Heizkurve",
         "flow": "Nur Vorlauf",
         "flow_return": "Vorlauf und Rücklauf"
       }

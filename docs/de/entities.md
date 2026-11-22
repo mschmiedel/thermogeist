@@ -27,10 +27,10 @@ Die drei Summen umfassen dieselben Räume, du kannst sie also direkt vergleichen
 
 | Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
 |---|---|---|---|
-| Vorlauftemperatur | Der gemittelte Vorlauf, mit dem die Regelung rechnet (`source`: dein Sensor). | Vorlauf-Sensor gewählt | der Sensor liefert keinen plausiblen Wert |
+| Vorlauftemperatur | Der gemittelte Vorlauf, mit dem die Regelung rechnet (`source`: dein Sensor, oder `heating_curve`, wenn er aus der Heizkurve bei der aktuellen Außentemperatur kommt). | Vorlauf-Sensor gewählt oder Heizkurve eingegeben | der Sensor liefert keinen plausiblen Wert |
 | Rücklauftemperatur | Der gemittelte Rücklauf. | Rücklauf-Sensor gewählt | der Sensor liefert keinen Wert |
 | Spreizung | Vorlauf minus Rücklauf, begrenzt auf 1–10 K; ersetzt die angenommenen 5 K. | Vorlauf- und Rücklauf-Sensor gewählt | einer davon liefert keinen Wert |
-| Vorlauf am Auslegungstag | Der Vorlauf, den deine Heizung am kältesten Auslegungstag erreicht, aus der Heizkurve, die Thermogeist lernt ([FAQ](faq/radiator_sizing.md)). Attribute: `slope_k_per_k`, `hours`, `outdoor_min_c`, `outdoor_max_c`, `confidence`. Diagnose. | Vorlauf-Sensor gewählt | weniger als 48 Heizstunden über mindestens 5 K Außentemperatur gelernt, oder keine Normaußentemperatur |
+| Vorlauf am Auslegungstag | Der Vorlauf, den deine Heizung am kältesten Auslegungstag erreicht, aus der Heizkurve, die Thermogeist lernt ([FAQ](faq/radiator_sizing.md)). Attribute: `slope_k_per_k`, `hours`, `outdoor_min_c`, `outdoor_max_c`, `confidence`. Mit eingegebener Heizkurve kommt er aus dieser Kurve (`source`: `heating_curve` und die beiden Punkte). Diagnose. | Vorlauf-Sensor gewählt oder Heizkurve eingegeben | weniger als 48 Heizstunden über mindestens 5 K Außentemperatur gelernt, oder keine Normaußentemperatur |
 | Mindestöffnung Ventil, Totband, Max. Ventiländerung pro 30 min, Max. Absenkung | Regelwerte, starten mit den Vorgaben deiner Heizungsart; Attribut `source` ist `profile` oder `user` ([Erste Schritte](getting-started.md#was-du-danach-siehst)). Konfiguration. | immer | – |
 | Fenster: schließen nach, Fenster: wieder heizen nach | Hauswerte für alle Räume mit Fensterkontakten, in Sekunden. Konfiguration. | immer | – |
 | Regelwerte auf Profil zurücksetzen | Taste: alle Regelwerte zurück auf die Vorgaben der Heizungsart. Konfiguration. | immer | – |

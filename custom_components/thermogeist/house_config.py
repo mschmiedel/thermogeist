@@ -15,6 +15,10 @@ from .const import (
     CONF_BELOW,
     CONF_CEILING_HEIGHT,
     CONF_CEILING_LOW,
+    CONF_CURVE_COLD_FLOW,
+    CONF_CURVE_COLD_OUTDOOR,
+    CONF_CURVE_WARM_FLOW,
+    CONF_CURVE_WARM_OUTDOOR,
     CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
     CONF_DEVICE,
@@ -48,7 +52,7 @@ from .const import (
     SUBENTRY_ROOM,
 )
 from .core.actuator import Role, Strategy, Thermostat
-from .core.house import HeatingType, House
+from .core.house import CurvePoints, HeatingType, House
 from .core.room import (
     DEFAULT_CEILING_HEIGHT_M,
     DEFAULT_DESIGN_INDOOR_C,
@@ -74,7 +78,25 @@ def house_from_config(config: Mapping[str, Any]) -> House:
         living_area_m2=_optional_float(config.get(CONF_LIVING_AREA)),
         flow_temperature_entity=config.get(CONF_FLOW_TEMPERATURE_ENTITY) or None,
         return_temperature_entity=config.get(CONF_RETURN_TEMPERATURE_ENTITY) or None,
+        heating_curve=_curve(config),
     )
+
+
+def _curve(config: Mapping[str, Any]) -> CurvePoints | None:
+    """MDL-019: the heating curve points, only when all four are given."""
+    values = [
+        _optional_float(config.get(key))
+        for key in (
+            CONF_CURVE_COLD_OUTDOOR,
+            CONF_CURVE_COLD_FLOW,
+            CONF_CURVE_WARM_OUTDOOR,
+            CONF_CURVE_WARM_FLOW,
+        )
+    ]
+    if any(v is None for v in values):
+        return None
+    cold_out, cold_flow, warm_out, warm_flow = (float(v) for v in values if v is not None)
+    return CurvePoints(cold_out, cold_flow, warm_out, warm_flow)
 
 
 def house_from_entry(entry: ConfigEntry) -> House:

@@ -42,3 +42,27 @@ async def test_no_water_sensors_without_sources(
     assert hass.states.get("sensor.home_flow_temperature") is None
     assert hass.states.get("sensor.home_spread") is None
     assert hass.states.get("sensor.home_room_coverage") is not None
+
+
+async def test_flow_from_the_heating_curve(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-HOUSE-013"""
+    house = {
+        **HOUSE_WITH_LOAD,
+        "curve_cold_outdoor": -10.0,
+        "curve_cold_flow": 45.0,
+        "curve_warm_outdoor": 15.0,
+        "curve_warm_flow": 30.0,
+    }
+    await setup_house(hass, house, [LIVING_ROOM])
+
+    # 5 °C outside lies 15 K above the cold point: 45 - 15/25 x 15 = 36 °C.
+    flow = hass.states.get("sensor.home_flow_temperature")
+    assert float(flow.state) == 36.0
+    assert flow.attributes["source"] == "heating_curve"
+    # The design day (-10.5 °C) is colder than the cold point: the curve stays at 45 °C.
+    design = hass.states.get("sensor.home_flow_on_the_design_day")
+    assert float(design.state) == 45.0
+    assert design.attributes["source"] == "heating_curve"
+    assert hass.states.get("sensor.home_spread") is None

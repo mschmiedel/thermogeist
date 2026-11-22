@@ -261,6 +261,21 @@ kühler, und die Ventile öffnen etwas weiter. Der Haus-Rücklauf mischt alle He
 also den Durchschnitt, nicht einen einzelnen Heizkörper. Anlegefühler am Rücklauf genauso
 kalibrieren wie den Vorlauf-Fühler.
 
+### Heizkurve statt Sensor
+
+Kein Vorlauf-Sensor? Antworte **Nein, aber ich kenne die Heizkurve** und gib zwei Punkte der
+Heizkurve ein, die an deiner Wärmepumpe oder deinem Kessel eingestellt ist – du findest sie im
+Menü oder in der App, oft als Diagramm. Zum Beispiel: bei −10 °C draußen ist der Vorlauf 45 °C,
+bei 15 °C draußen 30 °C. Thermogeist zieht eine gerade Linie zwischen den beiden Punkten; kälter
+als der kalte Punkt bleibt er bei 45 °C, wärmer als der warme Punkt bei 30 °C – wie die Heizung
+selbst. Zusammen mit der Außentemperatur ergibt das den Vorlauf für die Start-Ventilstellung und
+für die Prüfung der Heizkörpergröße.
+
+Eine Kurve ist die Einstellung, keine Messung: Warmwasserbereitung, Abtauen oder eine
+Wärmepumpe, die die Kurve nicht schafft, sind nicht zu sehen. Ein echter Sensor ist besser, die
+Kurve ist viel besser als nichts. Mit Kurve gibt es keinen Rücklauf-Sensor, die Spreizung bleibt
+bei angenommenen 5 K.
+
 ## Den Vorlauf-Sensor wählen
 
 Der Vorlauf ist die empfindlichste Eingabe der Vorsteuerung. Bei Wärmepumpen-Temperaturen liegen

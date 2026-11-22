@@ -39,6 +39,8 @@ flowchart TD
     C --> D{"Wassertemperatur gemessen?"}
     D -- "ja" --> E["Vorlauf- (und Rücklauf-)sensor"]
     D -- "nein" --> F
+    D -- "nein, Heizkurve" --> E2["Zwei Punkte der Heizkurve"]
+    E2 --> F
     E --> F["Raum anlegen: Name, Raumsensor, Anteil"]
     F --> G{"Anteil bekannt?"}
     G -- "schätzen" --> H["Größe und Lage"]
@@ -53,15 +55,16 @@ flowchart TD
     P1["Außensensor oder Wetter-Entität"] -.-> A
     P2["Heizlastberechnung, falls vorhanden"] -.-> C
     P3["Vorlauf-/Rücklaufsensor in Home Assistant"] -.-> E
+    P6["Heizkurve aus dem Menü von Wärmepumpe oder Kessel"] -.-> E2
     P4["Raumtemperatursensor"] -.-> F
     P5["Datenblatt des Heizkörpers oder Größe und Typ"] -.-> K
 
     classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
     classDef ask fill:#e6e6e6,stroke:#777,color:#000
     classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
-    class A,C,E,F,H,I,K,L,M step
+    class A,C,E,E2,F,H,I,K,L,M step
     class B,D,G,J ask
-    class P1,P2,P3,P4,P5 prep
+    class P1,P2,P3,P4,P5,P6 prep
 ```
 
 ### Schritt 1: die drei wichtigsten Angaben
@@ -80,7 +83,7 @@ du ausfüllen musst.
 | Frage | Was folgt |
 |---|---|
 | Kennst du die Heizlast? | **Ja**, wenn es eine Heizlastberechnung gibt (Heizungsbauer oder Energieberater): Ein Schritt fragt Heizlast, Normaußentemperatur und, falls bekannt, den Anteil außerhalb von Thermogeist. **Nein**: nichts weiter. |
-| Wird die Wassertemperatur gemessen? | **Nein**, **nur Vorlauf** oder **Vorlauf und Rücklauf**: Ein Schritt fragt nach dem einen oder den beiden Sensoren – sorgfältig wählen, siehe [Den Vorlauf-Sensor wählen](thermostats.md#den-vorlauf-sensor-wählen). |
+| Wird die Wassertemperatur gemessen? | **Nein**, **Nein, aber ich kenne die Heizkurve**, **nur Vorlauf** oder **Vorlauf und Rücklauf**. Mit der Heizkurve fragt ein Schritt zwei ihrer Punkte (siehe [Heizkurve statt Sensor](thermostats.md#heizkurve-statt-sensor)); mit einer Messung fragt ein Schritt nach dem einen oder den beiden Sensoren – sorgfältig wählen, siehe [Den Vorlauf-Sensor wählen](thermostats.md#den-vorlauf-sensor-wählen). |
 | Beheizte Wohnfläche | Die gesamte beheizte Fläche, ohne Balkon und Terrasse. Damit schätzt Thermogeist den Anteil jedes Raums an der Heizlast: Ein Raum mit 20 m² in einem Haus mit 160 m² startet bei etwa 12,5 %. Empfohlen. |
 
 Die Werte in den folgenden Schritten:

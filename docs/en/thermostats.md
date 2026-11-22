@@ -250,6 +250,19 @@ average, limited to 1–10 K). With a large spread the radiators are cooler, and
 bit further. The house return mixes all radiators, so it tells the average, not one radiator.
 Calibrate strap-on return sensors the same way as the flow sensor.
 
+### Heating curve instead of a sensor
+
+No flow sensor? Answer **No, but I know the heating curve** and enter two points of the heating
+curve set on your heat pump or boiler – you find it in its menu or app, often as a chart. For
+example: at −10 °C outside the flow is 45 °C, at 15 °C outside it is 30 °C. Thermogeist draws a
+straight line between the two points; colder than the cold point it stays at 45 °C, warmer than
+the warm point at 30 °C – like the heating itself. Together with the outdoor temperature this
+gives the flow temperature for the starting valve position and for the radiator size check.
+
+A curve is the setting, not a measurement: hot-water charging, defrosting or a heat pump that
+cannot reach the curve are not visible. A real sensor is better, the curve is much better than
+nothing. With a curve there is no return sensor, so the spread stays at the assumed 5 K.
+
 ## Choosing the flow temperature sensor
 
 The flow temperature is the most sensitive input of the feed-forward. At heat-pump temperatures

@@ -126,8 +126,8 @@ HOUSE_SENSORS: tuple[HouseSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value=lambda r: r.flow_used_c,
-        attributes=lambda r: {"source": r.house.flow_temperature_entity},
-        exists=lambda r: r.house.flow_temperature_entity is not None,
+        attributes=lambda r: {"source": r.house.flow_temperature_entity or "heating_curve"},
+        exists=lambda r: r.flow_known(),
     ),
     HouseSensorDescription(
         key="return_temperature_used",
@@ -162,7 +162,7 @@ HOUSE_SENSORS: tuple[HouseSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda r: _design_day_flow(r),
         attributes=lambda r: _curve_attributes(r),
-        exists=lambda r: r.house.flow_temperature_entity is not None,
+        exists=lambda r: r.flow_known(),
     ),
 )
 """DIA-014: the learned heating curve, extended to the design day."""
@@ -178,7 +178,7 @@ def _balance_attributes(runtime: HouseRuntime) -> dict[str, Any]:
 
 
 def _design_day_flow(runtime: HouseRuntime) -> float | None:
-    curve = runtime.heating_curve
+    curve = runtime.design_curve()
     design = runtime.house.design_outdoor_temperature_c
     if curve is None or design is None:
         return None
@@ -186,8 +186,18 @@ def _design_day_flow(runtime: HouseRuntime) -> float | None:
 
 
 def _curve_attributes(runtime: HouseRuntime) -> dict[str, Any]:
-    curve = runtime.heating_curve
     design = runtime.house.design_outdoor_temperature_c
+    points = runtime.house.heating_curve
+    if runtime.house.flow_temperature_entity is None and points is not None:
+        # MDL-019: the curve entered in the house settings.
+        return {
+            "source": "heating_curve",
+            "cold_outdoor_c": points.cold_outdoor_c,
+            "cold_flow_c": points.cold_flow_c,
+            "warm_outdoor_c": points.warm_outdoor_c,
+            "warm_flow_c": points.warm_flow_c,
+        }
+    curve = runtime.heating_curve
     if curve is None:
         return {"hours": len(runtime.curve_hours)}
     return {

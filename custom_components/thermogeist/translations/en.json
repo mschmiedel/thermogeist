@@ -28,7 +28,7 @@
         },
         "data_description": {
           "heat_load_known": "Yes, if you have a heat load calculation (heating installer or energy consultant).",
-          "flow_measurement": "A sensor for the water going to the radiators (flow) and, optionally, coming back (return).",
+          "flow_measurement": "A sensor for the water going to the radiators (flow) and, optionally, coming back (return). Without a sensor, the heating curve set on your heat pump or boiler is the next best thing.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %."
         }
       },
@@ -57,6 +57,22 @@
           "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor.",
           "return_temperature_entity": "Optional. The temperature of the water coming back from the radiators, measured at the same place as the flow (e.g. heating circuit return). Thermogeist then uses the measured difference between flow and return instead of assuming 5 K. Calibrate strap-on sensors the same way as the flow sensor."
         }
+      },
+      "heating_curve": {
+        "title": "Heating curve",
+        "description": "Two points of the heating curve set on your heat pump or boiler – you find them in its menu or app, often as a chart. Thermogeist draws a straight line between them and uses it as the flow temperature.",
+        "data": {
+          "curve_cold_outdoor": "Cold outdoor temperature",
+          "curve_cold_flow": "Flow temperature when it is cold",
+          "curve_warm_outdoor": "Mild outdoor temperature",
+          "curve_warm_flow": "Flow temperature when it is mild"
+        },
+        "data_description": {
+          "curve_cold_outdoor": "A cold day, e.g. −10 °C. Best: the coldest point of your curve.",
+          "curve_cold_flow": "The flow temperature your heating sets at that outdoor temperature, e.g. 45 °C.",
+          "curve_warm_outdoor": "A mild day, e.g. 15 °C. Best: the warmest point of your curve.",
+          "curve_warm_flow": "The flow temperature at that outdoor temperature, e.g. 30 °C. Colder and warmer than the two points, Thermogeist keeps their values, like the heating does."
+        }
       }
     },
     "error": {
@@ -65,7 +81,13 @@
       "heat_load_out_of_range": "Heat load must be between 0.5 and 100 kW.",
       "design_outdoor_temperature_out_of_range": "Design outdoor temperature must be between −40 and +10 °C.",
       "share_outside_out_of_range": "Share must be between 0 and 100 %.",
-      "living_area_out_of_range": "Living area must be between 10 and 10,000 m²."
+      "living_area_out_of_range": "Living area must be between 10 and 10,000 m².",
+      "curve_warm_not_above_cold": "The mild outdoor temperature must be warmer than the cold one.",
+      "curve_flow_rises_when_warmer": "When it is mild, the flow must not be warmer than when it is cold – are the two points swapped?",
+      "curve_cold_outdoor_out_of_range": "Outdoor temperature between −30 and 25 °C.",
+      "curve_warm_outdoor_out_of_range": "Outdoor temperature between −30 and 25 °C.",
+      "curve_cold_flow_out_of_range": "Flow temperature between 20 and 80 °C.",
+      "curve_warm_flow_out_of_range": "Flow temperature between 20 and 80 °C."
     }
   },
   "options": {
@@ -84,7 +106,7 @@
           "heating_type": "What heats this house. It decides how calmly Thermogeist regulates.",
           "outdoor_temperature_entity": "An outdoor thermometer in the shade, the heat pump's outdoor sensor, or your weather entity (e.g. Forecast Home). Several thermometers? Combine them with the helper \"Combine the state of several sensors\", type minimum – one is always in the shade.",
           "heat_load_known": "Yes, if you have a heat load calculation (heating installer or energy consultant).",
-          "flow_measurement": "A sensor for the water going to the radiators (flow) and, optionally, coming back (return).",
+          "flow_measurement": "A sensor for the water going to the radiators (flow) and, optionally, coming back (return). Without a sensor, the heating curve set on your heat pump or boiler is the next best thing.",
           "living_area": "Total heated floor area of the house, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load from the room's size, e.g. 20 m² of 160 m² ≈ 12.5 %."
         }
       },
@@ -113,6 +135,22 @@
           "flow_temperature_entity": "Optional. The temperature of the water going to the radiators. Best: a sensor in the heating circuit (after a buffer tank, if you have one). Avoid the heat pump's own flow sensor: during hot-water charging it shows 45–50 °C and Thermogeist would close the valves although the radiators get cooler. Strap-on sensors often read 2–4 K too low – calibrate them. See the docs: Thermostats → Choosing the flow temperature sensor.",
           "return_temperature_entity": "Optional. The temperature of the water coming back from the radiators, measured at the same place as the flow (e.g. heating circuit return). Thermogeist then uses the measured difference between flow and return instead of assuming 5 K. Calibrate strap-on sensors the same way as the flow sensor."
         }
+      },
+      "heating_curve": {
+        "title": "Heating curve",
+        "description": "Two points of the heating curve set on your heat pump or boiler – you find them in its menu or app, often as a chart. Thermogeist draws a straight line between them and uses it as the flow temperature.",
+        "data": {
+          "curve_cold_outdoor": "Cold outdoor temperature",
+          "curve_cold_flow": "Flow temperature when it is cold",
+          "curve_warm_outdoor": "Mild outdoor temperature",
+          "curve_warm_flow": "Flow temperature when it is mild"
+        },
+        "data_description": {
+          "curve_cold_outdoor": "A cold day, e.g. −10 °C. Best: the coldest point of your curve.",
+          "curve_cold_flow": "The flow temperature your heating sets at that outdoor temperature, e.g. 45 °C.",
+          "curve_warm_outdoor": "A mild day, e.g. 15 °C. Best: the warmest point of your curve.",
+          "curve_warm_flow": "The flow temperature at that outdoor temperature, e.g. 30 °C. Colder and warmer than the two points, Thermogeist keeps their values, like the heating does."
+        }
       }
     },
     "error": {
@@ -121,7 +159,13 @@
       "heat_load_out_of_range": "Heat load must be between 0.5 and 100 kW.",
       "design_outdoor_temperature_out_of_range": "Design outdoor temperature must be between −40 and +10 °C.",
       "share_outside_out_of_range": "Share must be between 0 and 100 %.",
-      "living_area_out_of_range": "Living area must be between 10 and 10,000 m²."
+      "living_area_out_of_range": "Living area must be between 10 and 10,000 m².",
+      "curve_warm_not_above_cold": "The mild outdoor temperature must be warmer than the cold one.",
+      "curve_flow_rises_when_warmer": "When it is mild, the flow must not be warmer than when it is cold – are the two points swapped?",
+      "curve_cold_outdoor_out_of_range": "Outdoor temperature between −30 and 25 °C.",
+      "curve_warm_outdoor_out_of_range": "Outdoor temperature between −30 and 25 °C.",
+      "curve_cold_flow_out_of_range": "Flow temperature between 20 and 80 °C.",
+      "curve_warm_flow_out_of_range": "Flow temperature between 20 and 80 °C."
     }
   },
   "selector": {
@@ -168,6 +212,7 @@
     "flow_measurement": {
       "options": {
         "none": "No",
+        "curve": "No, but I know the heating curve",
         "flow": "Flow only",
         "flow_return": "Flow and return"
       }

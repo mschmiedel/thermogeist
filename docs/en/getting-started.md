@@ -39,6 +39,8 @@ flowchart TD
     C --> D{"Water temperature measured?"}
     D -- "yes" --> E["Flow (and return) sensor"]
     D -- "no" --> F
+    D -- "no, heating curve" --> E2["Two points of the heating curve"]
+    E2 --> F
     E --> F["Add a room: name, room sensor, share"]
     F --> G{"Share known?"}
     G -- "estimate" --> H["Size and position"]
@@ -53,15 +55,16 @@ flowchart TD
     P1["Outdoor sensor or weather entity"] -.-> A
     P2["Heat load calculation, if you have one"] -.-> C
     P3["Flow / return sensor in Home Assistant"] -.-> E
+    P6["Heating curve from the heat pump or boiler menu"] -.-> E2
     P4["Room temperature sensor"] -.-> F
     P5["Radiator data sheet or size and type"] -.-> K
 
     classDef step fill:#cfe3ff,stroke:#3b78c4,color:#000
     classDef ask fill:#e6e6e6,stroke:#777,color:#000
     classDef prep fill:#fff1b8,stroke:#c9a200,color:#000,stroke-dasharray: 4 3
-    class A,C,E,F,H,I,K,L,M step
+    class A,C,E,E2,F,H,I,K,L,M step
     class B,D,G,J ask
-    class P1,P2,P3,P4,P5 prep
+    class P1,P2,P3,P4,P5,P6 prep
 ```
 
 ### Step 1: the three essentials
@@ -79,7 +82,7 @@ Your answers decide what Thermogeist asks next – you only see the fields you n
 | Question | What follows |
 |---|---|
 | Do you know the heat load? | **Yes**, if you have a heat load calculation (heating installer or energy consultant): a step asks for the heat load, the design outdoor temperature and, if known, the share outside Thermogeist. **No**: nothing more. |
-| Is the water temperature measured? | **No**, **flow only** or **flow and return**: a step asks for the one or two sensors – choose them carefully, see [Choosing the flow temperature sensor](thermostats.md#choosing-the-flow-temperature-sensor). |
+| Is the water temperature measured? | **No**, **No, but I know the heating curve**, **flow only** or **flow and return**. With the heating curve a step asks two of its points (see [Heating curve instead of a sensor](thermostats.md#heating-curve-instead-of-a-sensor)); with a measurement a step asks for the one or two sensors – choose them carefully, see [Choosing the flow temperature sensor](thermostats.md#choosing-the-flow-temperature-sensor). |
 | Heated living area | Total heated floor area, without balconies and terraces. Thermogeist uses it to estimate each room's share of the heat load – a 20 m² room in a 160 m² house starts at about 12.5 %. Recommended. |
 
 The values in the follow-up steps:

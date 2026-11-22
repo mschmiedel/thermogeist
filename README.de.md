@@ -41,12 +41,12 @@ fehlende Ebene:
 - **Wärme aus Geräten:** Ein Gaming-PC oder eine heizende Klimaanlage zählt mit, mit einem Faktor
   pro Gerät (auch aus einem Sensor, z. B. einem COP-Template).
 - **Diagnose:** Heizkörpergröße pro Raum (zu klein, passend, viel größer als nötig), geschätzte
-  Heizleistung, Wärmebedarf und Heizleistung aller Räume am Haus, eine gelernte Heizkurve.
+  Heizleistung, Wärmebedarf und Heizleistung aller Räume am Haus, eine aus dem Vorlauf-Sensor gelernte Heizkurve – oder zwei eingegebene
+  Punkte, wenn es keinen Sensor gibt.
 - **Zuverlässig mit echten Geräten:** Einstellungen, die ein Firmware-Update zurücksetzt, werden
   wieder gesetzt; stumme Sensoren und veraltete Werte werden erkannt.
 
-Geplant: Zeitpläne, Verbindungen zwischen Räumen (offene Türen), Heizkurve ohne Vorlaufsensor,
-smarte Kindersicherung – siehe [`spec/roadmap.md`](spec/roadmap.md).
+Geplant: Zeitpläne, Verbindungen zwischen Räumen (offene Türen), smarte Kindersicherung – siehe [`spec/roadmap.md`](spec/roadmap.md).
 
 ## Unterstützte Geräte
 

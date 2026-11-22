@@ -134,3 +134,56 @@ async def test_questions_decide_the_details(hass: HomeAssistant, outdoor_sensor:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["flow_temperature_entity"] is None
     assert result["data"]["return_temperature_entity"] is None
+
+
+async def test_heating_curve_instead_of_a_flow_sensor(
+    hass: HomeAssistant, outdoor_sensor: str
+) -> None:
+    """Scenario: SCN-SETUP-009"""
+    result = await _start_with_required(hass, REQUIRED)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"heat_load_known": "no", "flow_measurement": "curve"}
+    )
+    assert result["step_id"] == "heating_curve"
+    assert {str(k) for k in result["data_schema"].schema} == {
+        "curve_cold_outdoor",
+        "curve_cold_flow",
+        "curve_warm_outdoor",
+        "curve_warm_flow",
+    }
+    curve = {
+        "curve_cold_outdoor": -10.0,
+        "curve_cold_flow": 45.0,
+        "curve_warm_outdoor": 15.0,
+        "curve_warm_flow": 30.0,
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**curve, "curve_warm_flow": 50.0}
+    )
+    assert result["errors"] == {"curve_warm_flow": "curve_flow_rises_when_warmer"}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], curve)
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+    assert {k: entry.data[k] for k in curve} == curve
+
+    # Options: "curve" is pre-selected; choosing a flow sensor instead clears the curve.
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    defaults = {str(k): k.default() for k in result["data_schema"].schema if callable(k.default)}
+    assert defaults["flow_measurement"] == "curve"
+    hass.states.async_set("sensor.flow", "35", {"device_class": "temperature"})
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "heating_type": "heat_pump",
+            "outdoor_temperature_entity": outdoor_sensor,
+            "heat_load_known": "no",
+            "flow_measurement": "flow",
+        },
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"flow_temperature_entity": "sensor.flow"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert all(result["data"][k] is None for k in curve)

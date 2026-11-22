@@ -45,6 +45,10 @@ from .const import (
     CONF_BELOW,
     CONF_CEILING_HEIGHT,
     CONF_CEILING_LOW,
+    CONF_CURVE_COLD_FLOW,
+    CONF_CURVE_COLD_OUTDOOR,
+    CONF_CURVE_WARM_FLOW,
+    CONF_CURVE_WARM_OUTDOOR,
     CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
     CONF_DEVICE,
@@ -93,6 +97,10 @@ from .core.actuator import (
 from .core.estimation import known_shares_exceed_total
 from .core.exposes import profile_from_exposes
 from .core.house import (
+    CURVE_FLOW_C_MAX,
+    CURVE_FLOW_C_MIN,
+    CURVE_OUTDOOR_C_MAX,
+    CURVE_OUTDOOR_C_MIN,
     DESIGN_TEMP_C_MAX,
     DESIGN_TEMP_C_MIN,
     HEAT_LOAD_KW_MAX,
@@ -176,14 +184,23 @@ FLOW_MEASUREMENT = "flow_measurement"
 """HAI-018: question which water temperatures are measured."""
 YES, NO = "yes", "no"
 FLOW_NONE, FLOW_ONLY, FLOW_AND_RETURN = "none", "flow", "flow_return"
+FLOW_CURVE = "curve"
+"""MDL-019: no flow sensor, but the heating curve is known."""
 HEAT_LOAD_KEYS = (CONF_HEAT_LOAD, CONF_DESIGN_TEMPERATURE, CONF_SHARE_OUTSIDE)
 FLOW_KEYS = (CONF_FLOW_TEMPERATURE_ENTITY, CONF_RETURN_TEMPERATURE_ENTITY)
+CURVE_KEYS = (
+    CONF_CURVE_COLD_OUTDOOR,
+    CONF_CURVE_COLD_FLOW,
+    CONF_CURVE_WARM_OUTDOOR,
+    CONF_CURVE_WARM_FLOW,
+)
 HOUSE_OPTION_KEYS = (
     CONF_HEATING_TYPE,
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
     CONF_LIVING_AREA,
     *HEAT_LOAD_KEYS,
     *FLOW_KEYS,
+    *CURVE_KEYS,
 )
 
 
@@ -249,7 +266,9 @@ def _required_schema(
 def _flow_answer(defaults: Mapping[str, Any]) -> str:
     if defaults.get(CONF_RETURN_TEMPERATURE_ENTITY):
         return FLOW_AND_RETURN
-    return FLOW_ONLY if defaults.get(CONF_FLOW_TEMPERATURE_ENTITY) else FLOW_NONE
+    if defaults.get(CONF_FLOW_TEMPERATURE_ENTITY):
+        return FLOW_ONLY
+    return FLOW_CURVE if defaults.get(CONF_CURVE_COLD_FLOW) is not None else FLOW_NONE
 
 
 def _question_schema(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
@@ -267,7 +286,7 @@ def _question_schema(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
             FLOW_MEASUREMENT, default=defaults.get(FLOW_MEASUREMENT, _flow_answer(defaults))
         ): SelectSelector(
             SelectSelectorConfig(
-                options=[FLOW_NONE, FLOW_ONLY, FLOW_AND_RETURN],
+                options=[FLOW_NONE, FLOW_CURVE, FLOW_ONLY, FLOW_AND_RETURN],
                 translation_key=FLOW_MEASUREMENT,
                 mode=SelectSelectorMode.LIST,
             )
@@ -309,6 +328,21 @@ def _flow_schema(defaults: Mapping[str, Any], *, with_return: bool) -> dict[vol.
     return schema
 
 
+def _curve_schema(defaults: Mapping[str, Any]) -> dict[vol.Marker, Any]:
+    """MDL-019: two points of the heating curve, as set on the heat generator."""
+    outdoor = _number(CURVE_OUTDOOR_C_MIN, CURVE_OUTDOOR_C_MAX, 0.5, UnitOfTemperature.CELSIUS)
+    flow = _number(CURVE_FLOW_C_MIN, CURVE_FLOW_C_MAX, 0.5, UnitOfTemperature.CELSIUS)
+    return {
+        vol.Required(key, default=defaults.get(key, vol.UNDEFINED)): selector
+        for key, selector in (
+            (CONF_CURVE_COLD_OUTDOOR, outdoor),
+            (CONF_CURVE_COLD_FLOW, flow),
+            (CONF_CURVE_WARM_OUTDOOR, outdoor),
+            (CONF_CURVE_WARM_FLOW, flow),
+        )
+    }
+
+
 def _errors(config: Mapping[str, Any]) -> dict[str, str]:
     """Validate with the core and map issues to form fields."""
     return {issue.field: issue.code for issue in validate_house(house_from_config(config))}
@@ -332,7 +366,10 @@ class HouseQuestions:
         if user_input[HEAT_LOAD_KNOWN] == NO:
             for key in HEAT_LOAD_KEYS:
                 self._data.pop(key, None)
-        if user_input[FLOW_MEASUREMENT] == FLOW_NONE:
+        if user_input[FLOW_MEASUREMENT] != FLOW_CURVE:
+            for key in CURVE_KEYS:
+                self._data.pop(key, None)
+        if user_input[FLOW_MEASUREMENT] in (FLOW_NONE, FLOW_CURVE):
             for key in FLOW_KEYS:
                 self._data.pop(key, None)
         elif user_input[FLOW_MEASUREMENT] == FLOW_ONLY:
@@ -344,7 +381,10 @@ class HouseQuestions:
         return await self._next_after_heat_load()
 
     async def _next_after_heat_load(self) -> Any:
-        if self._data[FLOW_MEASUREMENT] != FLOW_NONE:
+        answer = self._data[FLOW_MEASUREMENT]
+        if answer == FLOW_CURVE:
+            return await self.async_step_heating_curve()
+        if answer != FLOW_NONE:
             return await self.async_step_flow()
         return await self._finish_house()
 
@@ -374,6 +414,21 @@ class HouseQuestions:
         return self.async_show_form(
             step_id="flow",
             data_schema=vol.Schema(_flow_schema(self._data, with_return=with_return)),
+            last_step=True,
+        )
+
+    async def async_step_heating_curve(self, user_input: dict[str, Any] | None = None) -> Any:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            candidate = {**self._data, **user_input}
+            errors = _errors(candidate)
+            if not errors:
+                self._data = candidate
+                return await self._finish_house()
+        return self.async_show_form(
+            step_id="heating_curve",
+            data_schema=vol.Schema(_curve_schema(user_input or self._data)),
+            errors=errors,
             last_step=True,
         )
 
