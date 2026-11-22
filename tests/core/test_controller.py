@@ -244,3 +244,31 @@ def test_restart_continues_from_the_last_plan() -> None:
     resumed = after.step(inputs(feed_forward_pct=100.0), clock.now())
     assert resumed.output_pct == pytest.approx(planned.output_pct, abs=1)
     assert Limit.RATE_LIMIT in resumed.limits
+
+
+def test_window_does_not_lift_a_warm_room() -> None:
+    """Scenario: SCN-CTL-023"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    assert controller.step(inputs(feed_forward_pct=60.0), clock.now()).output_pct == 60.0
+
+    # The room gets warm while the feed-forward rises: the plan is held.
+    clock.advance(timedelta(minutes=1))
+    held = controller.step(inputs(room_c=20.6, feed_forward_pct=90.0), clock.now())
+    assert held.output_pct == 60.0
+
+    clock.advance(timedelta(minutes=1))
+    assert controller.step(inputs(window_open=True), clock.now()).output_pct == 0.0
+
+    # Window closed, room still too warm: back to the plan from before, not to 88 %.
+    clock.advance(timedelta(minutes=1))
+    after = controller.step(inputs(room_c=20.6, feed_forward_pct=90.0), clock.now())
+    assert after.output_pct == 60.0
+    assert Limit.HOLD_WHEN_WARM in after.limits
+
+    # Once the room is below its target again, the window is no reason to ramp slowly.
+    clock.advance(timedelta(minutes=1))
+    assert controller.step(inputs(window_open=True), clock.now()).output_pct == 0.0
+    clock.advance(timedelta(minutes=1))
+    cold = controller.step(inputs(room_c=19.5, feed_forward_pct=90.0), clock.now())
+    assert cold.output_pct > 90.0

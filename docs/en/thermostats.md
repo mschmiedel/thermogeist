@@ -162,7 +162,8 @@ later or set the room in Home Assistant. This works only if the window contact i
 the Thermogeist room.
 
 **After the window:** once all contacts are closed (10 seconds by default), the valve goes
-straight to the position needed now – no slow ramp-up, also with a heat pump. Thermostats
+straight to the position needed now – no slow ramp-up, also with a heat pump. A room that is
+still too warm goes back to its position from before the window at most, never higher. Thermostats
 controlled by setpoint get 5 °C while the window is open; some (Bosch Smart Home) switch
 themselves *off* at 5 °C. Thermogeist switches them back to *heat* and sends the setpoint
 again. The same straight return happens after a silent room sensor reports again: until then

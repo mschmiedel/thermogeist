@@ -479,7 +479,8 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
         plan = self.room_state.plan
         thermostats = [self.runtime.thermostats[t] for t in self.room_state.thermostat_ids]
         attributes: dict[str, Any] = {
-            "mode": "observe",
+            # ACT-014: whether the plan only shows (observe) or is written (control).
+            "mode": "control" if self.runtime.control.is_enabled(self._room_id) else "observe",
             "strategies": sorted({t.kind.value for t in thermostats}),
             "radiator_output_w": self.room_state.rated_output_w,
             "flow_temperature_used": _rounded(self.runtime.flow_used_c),

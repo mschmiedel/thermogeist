@@ -114,7 +114,9 @@ async def test_control_writes_after_startup_hold(
 
     assert hass.states.get(REASON).state == "setpoint"
     assert Calls.values(calls.select, MODE, "option") == ["manual"]
-    planned = float(hass.states.get("sensor.living_room_planned_valve_position").state)
+    planned_state = hass.states.get("sensor.living_room_planned_valve_position")
+    assert planned_state.attributes["mode"] == "control"
+    planned = float(planned_state.state)
     assert Calls.values(calls.number, VALVE, "value") == [planned]
     assert Calls.values(calls.number, REMOTE, "value") == [19.5]
     assert calls.climate == []  # device already shows 20 °C

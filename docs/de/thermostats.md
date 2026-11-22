@@ -168,7 +168,9 @@ wird ebenfalls ignoriert – später noch einmal drehen oder den Raum in Home As
 Das klappt nur, wenn der Fensterkontakt auch im Thermogeist-Raum ausgewählt ist.
 
 **Nach dem Fenster:** Sind alle Kontakte zu (standardmäßig 10 Sekunden), geht das Ventil sofort
-auf die Stellung, die jetzt nötig ist – ohne langsames Hochfahren, auch bei der Wärmepumpe.
+auf die Stellung, die jetzt nötig ist – ohne langsames Hochfahren, auch bei der Wärmepumpe. Ein
+Raum, der noch zu warm ist, geht höchstens auf seine Stellung von vor dem Fenster zurück, nie
+höher.
 Thermostate, die über den Sollwert geregelt werden, bekommen bei offenem Fenster 5 °C; manche
 (Bosch Smart Home) schalten sich bei 5 °C selbst *aus*. Thermogeist schaltet sie wieder auf
 *Heizen* und schickt den Sollwert erneut.

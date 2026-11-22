@@ -105,6 +105,11 @@ class ControllerState:
     rate-limited."""
     integral_has_start_bias: bool = False
     """True while the integral contains the start value used without feed-forward."""
+    last_plan_pct: float | None = None
+    """The last regulated output; a window or the safe position does not change it."""
+    hold_ceiling_pct: float | None = None
+    """CTL-043 after a window or the safe position: the plan from before is the upper limit
+    for a room that is too warm, although the step is not rate-limited."""
 
 
 def feed_forward_pct(
@@ -178,6 +183,7 @@ class RoomController:
         output = snapshot.get("output_pct")
         if output is not None:
             self.seed(float(output))
+            self.state.last_plan_pct = float(output)
         return True
 
     def step(self, inputs: ControllerInputs, now: datetime) -> ControllerResult:
@@ -198,6 +204,7 @@ class RoomController:
             self.state.last_output_pct = None
             self.state.last_reported_pct = None
             self.state.resume_at_once = False
+            self.state.hold_ceiling_pct = self.state.last_plan_pct
 
         if inputs.target_c is None:
             result = ControllerResult(
@@ -219,6 +226,8 @@ class RoomController:
             )
         else:
             result = self._regulate(inputs, elapsed_h)
+            self.state.last_plan_pct = result.output_pct
+        self.state.hold_ceiling_pct = None
 
         # Keep the unrounded value: rounding each minute would swallow small rate-limited steps.
         self.state.last_output_pct = result.output_pct
@@ -261,6 +270,8 @@ class RoomController:
                 output = settings.min_opening_pct
                 limits.append(Limit.MIN_OPENING)
         last = self.state.last_output_pct
+        if last is None:
+            last = self.state.hold_ceiling_pct
         if raw_error < 0 and last is not None and output > last:
             # CTL-043: a room above its target never gets more heat, whatever the feed-forward
             # says (field finding: a falling flow temperature pushed the plan up while the
