@@ -20,6 +20,27 @@ Installation through HACS will be described once Thermogeist is published.
 
 Go to **Settings → Devices & services → Add integration** and search for **Thermogeist**.
 
+The whole setup at a glance – each box is one dialog step:
+
+```mermaid
+flowchart TD
+    A["House: name, heating type, outdoor sensor"] --> B{"Heat load known?<br/>Water temperature measured?"}
+    B -- "heat load: yes" --> C["Heat load and design outdoor temperature"]
+    B -- "measured" --> D["Flow and return sensor"]
+    B -- "no / no" --> E
+    C --> E
+    D --> E["Add a room: name, room sensor, share"]
+    E --> F{"Share known?"}
+    F -- "estimate" --> G["Size and position"]
+    F -- "known" --> H["Share in %"]
+    G --> I{"Add a thermostat?"}
+    H --> I
+    I -- "yes" --> J["Device and radiator output,<br/>roles are detected"]
+    J --> I
+    I -- "done" --> K["Room saved – observe mode"]
+    K --> L["Switch Control on when you like the plan"]
+```
+
 ### Step 1: the three essentials
 
 | Field | What to enter |

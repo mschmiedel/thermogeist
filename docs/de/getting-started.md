@@ -20,6 +20,27 @@ Die Installation über HACS beschreiben wir, sobald Thermogeist veröffentlicht 
 Öffne **Einstellungen → Geräte & Dienste → Integration hinzufügen** und suche nach
 **Thermogeist**.
 
+Die ganze Einrichtung auf einen Blick – jeder Kasten ist ein Schritt im Dialog:
+
+```mermaid
+flowchart TD
+    A["Haus: Name, Heizungsart, Außensensor"] --> B{"Heizlast bekannt?<br/>Wassertemperatur gemessen?"}
+    B -- "Heizlast: ja" --> C["Heizlast und Normaußentemperatur"]
+    B -- "gemessen" --> D["Vorlauf- und Rücklaufsensor"]
+    B -- "nein / nein" --> E
+    C --> E
+    D --> E["Raum anlegen: Name, Raumsensor, Anteil"]
+    E --> F{"Anteil bekannt?"}
+    F -- "schätzen" --> G["Größe und Lage"]
+    F -- "bekannt" --> H["Anteil in %"]
+    G --> I{"Thermostat hinzufügen?"}
+    H --> I
+    I -- "ja" --> J["Gerät und Heizkörperleistung,<br/>Rollen werden erkannt"]
+    J --> I
+    I -- "fertig" --> K["Raum gespeichert – Beobachten"]
+    K --> L["Regeln einschalten, wenn dir die Planung passt"]
+```
+
 ### Schritt 1: die drei wichtigsten Angaben
 
 | Feld | Was du einträgst |

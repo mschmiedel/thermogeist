@@ -148,15 +148,41 @@ Das klappt nur, wenn der Fensterkontakt auch im Thermogeist-Raum ausgewählt ist
 
 **Nach dem Fenster:** Sind alle Kontakte zu (standardmäßig 10 Sekunden), geht das Ventil sofort
 auf die Stellung, die jetzt nötig ist – ohne langsames Hochfahren, auch bei der Wärmepumpe.
-Genauso, wenn ein stummer Raumsensor sich wieder meldet: Bis dahin bleibt das Ventil auf der
-sicheren Mindestöffnung, danach geht es sofort auf die berechnete Stellung.
+Thermostate, die über den Sollwert geregelt werden, bekommen bei offenem Fenster 5 °C; manche
+(Bosch Smart Home) schalten sich bei 5 °C selbst *aus*. Thermogeist schaltet sie wieder auf
+*Heizen* und schickt den Sollwert erneut.
+Genauso geht es sofort zurück, wenn ein stummer Raumsensor sich wieder meldet: Bis dahin bleibt
+das Ventil auf der sicheren Mindestöffnung.
+
+```mermaid
+sequenceDiagram
+    participant W as Fensterkontakt
+    participant T as Thermogeist
+    participant V as Thermostat
+    W->>T: geht auf
+    Note over T: 30 s – kurzes Lüften ändert nichts
+    T->>V: schließen (Ventil 0 %, über Sollwert 5 °C)
+    W->>T: geht zu (auch: gekippt → zu → offen)
+    Note over T: 10 s – Umstellen auf Kipp zählt nicht
+    T->>V: sofort auf die Stellung, die jetzt nötig ist
+    Note over V: selbst ausgeschaltet? wieder auf Heizen
+```
 
 **Nach einem Neustart** von Home Assistant macht jeder Raum bei seiner letzten geplanten
 Stellung weiter und bewegt sich von dort so ruhig wie vorher – ein Neustart lässt die Ventile
 nie springen.
-Thermostate, die über den Sollwert geregelt werden, bekommen bei offenem Fenster 5 °C; manche
-(Bosch Smart Home) schalten sich bei 5 °C selbst *aus*. Thermogeist schaltet sie wieder auf
-*Heizen* und schickt den Sollwert erneut.
+
+```mermaid
+sequenceDiagram
+    participant HA as Home Assistant
+    participant T as Thermogeist
+    participant V as Thermostat
+    HA->>T: Start
+    Note over T: letzte Planung, Korrektur und Gelerntes kommen zurück
+    Note over T: 90 s wird nichts geschrieben (Sensoren starten)
+    T->>V: Geräte-Einstellungen prüfen, zurückgesetzte neu setzen
+    T->>V: ruhig bei der letzten geplanten Stellung weitermachen
+```
 
 **Verstellt ein Thermostat sein Ventil immer wieder selbst**, schreibt Thermogeist bis zu dreimal
 pro Stunde neu, schaltet den Raum dann zurück auf Beobachten und zeigt einen Reparaturhinweis

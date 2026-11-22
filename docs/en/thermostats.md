@@ -141,15 +141,40 @@ later or set the room in Home Assistant. This works only if the window contact i
 the Thermogeist room.
 
 **After the window:** once all contacts are closed (10 seconds by default), the valve goes
-straight to the position needed now – no slow ramp-up, also with a heat pump. The same
-happens after a silent room sensor reports again: until then the valve stays at the safe
-minimum opening, then it goes straight to the computed position.
-
-**After a restart** of Home Assistant every room continues from its last planned position
-and moves on from there as calmly as before – a restart never makes the valves jump. Thermostats
+straight to the position needed now – no slow ramp-up, also with a heat pump. Thermostats
 controlled by setpoint get 5 °C while the window is open; some (Bosch Smart Home) switch
 themselves *off* at 5 °C. Thermogeist switches them back to *heat* and sends the setpoint
-again.
+again. The same straight return happens after a silent room sensor reports again: until then
+the valve stays at the safe minimum opening.
+
+```mermaid
+sequenceDiagram
+    participant W as Window contact
+    participant T as Thermogeist
+    participant V as Thermostat
+    W->>T: opens
+    Note over T: 30 s – airing briefly changes nothing
+    T->>V: close (valve 0 %, by setpoint 5 °C)
+    W->>T: closes (also: tilted → closed → open)
+    Note over T: 10 s – switching to tilted does not count
+    T->>V: straight to the position needed now
+    Note over V: switched off by itself? back to heat
+```
+
+**After a restart** of Home Assistant every room continues from its last planned position
+and moves on from there as calmly as before – a restart never makes the valves jump.
+
+```mermaid
+sequenceDiagram
+    participant HA as Home Assistant
+    participant T as Thermogeist
+    participant V as Thermostat
+    HA->>T: start
+    Note over T: last plan, correction and learned values come back
+    Note over T: 90 s nothing is written (sensors start up)
+    T->>V: check device settings, set again if reset
+    T->>V: continue from the last planned position, calmly
+```
 
 **If a thermostat keeps changing its valve on its own**, Thermogeist writes again up to three
 times per hour, then switches the room back to observe and shows a repair issue
