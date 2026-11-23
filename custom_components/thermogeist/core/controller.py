@@ -58,6 +58,7 @@ class Limit(StrEnum):
     MIN_OPENING = "min_opening"
     MIN_OPENING_RELAXED = "min_opening_relaxed"
     HOLD_WHEN_WARM = "hold_when_warm"
+    HOLD_WHEN_COLD = "hold_when_cold"
     RATE_LIMIT = "rate_limit"
 
 
@@ -278,6 +279,13 @@ class RoomController:
             # guest bathroom was already 0.3 K too warm).
             output = last
             limits.append(Limit.HOLD_WHEN_WARM)
+        elif raw_error > settings.dead_band_k and last is not None and output < last:
+            # CTL-046: the mirror image - a room clearly below its target never gets less heat.
+            # Only near the target (within the dead band) may the valve close early, so it does
+            # not overshoot (field finding: the bathroom 0.8 K too cold, the plan fell from 100
+            # to 89 % because flow and outdoor temperature rose at noon).
+            output = last
+            limits.append(Limit.HOLD_WHEN_COLD)
         output = self._rate_limited(output, settings, elapsed_h, limits)
         if not too_warm:
             # CTL-037: from the target down the minimum opening is guaranteed at once; ramping up

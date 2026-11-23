@@ -5,10 +5,12 @@
 Decided: **Thermogeist**, domain `thermogeist`. Tagline idea: "From poltergeist to thermogeist".
 No GitHub repositories with this name were found on 2026-11-20.
 
-Still to check before going public:
-- trademark registers (DPMA, EUIPO) for "Thermogeist"
-- HACS default repository list and HA brands repository
-- availability of web domains and social handles
+Quick check by the owner (2026-11-23): nothing found. No professional trademark search: a free,
+non-commercial project. Check again before the beta, because a rename is cheap now and a break
+for every user afterwards:
+- trademark registers (DPMA, TMview/EUIPO) for "Thermogeist", classes 9, 11, 42
+- HACS default repository list and HA brands repository (a second domain `thermogeist`)
+- a web search for a product of that name (heating, app, thermostat)
 
 Should a rename ever be needed, it affects: folder under `custom_components/`, `DOMAIN` in
 `const.py`, `manifest.json`, `hacs.json`, `pyproject.toml`, imports in tests,

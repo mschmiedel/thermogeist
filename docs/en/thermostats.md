@@ -213,11 +213,16 @@ changed it). Example: target 19.5 °C, dead band 0.5 K, minimum opening 30 %.
 
 | Room | What Thermogeist does | Limits you may see |
 |---|---|---|
-| below 19.5 °C | Regulates normally: feed-forward plus reaction to the difference. The valve may open, slowly. | – |
+| below 19.0 °C (more than the dead band too cold) | Regulates normally: feed-forward plus reaction to the difference. The valve may open, slowly, but **never closes further**, whatever the calculation says. | `hold_when_cold` |
+| 19.0–19.5 °C (close to the target) | The valve may close a little early, so the room does not overshoot. | – |
 | 19.5–20.0 °C (inside the dead band) | A little too warm, still fine. The quick reaction ignores it; the valve is not opened further and may close, but not below 30 %. | `hold_when_warm`, `min_opening` |
 | 20.0–20.5 °C | As before, but now the quick reaction also pulls down. Still not below 30 %. | `hold_when_warm`, `min_opening` |
 | above 20.5 °C (dead band + 0.5 K) | **Comfort comes first:** the minimum opening no longer applies. The valve may close below 30 %, slowly, towards what the calculation says. | `min_opening_relaxed` |
 | back at 19.5 °C (the target) | Only now does the minimum opening apply again – at once, not slowly. In between the previous state stays, so it does not switch on and off with every tenth of a degree. | `min_opening` |
+
+**A hard rule in both directions:** a room that is too warm never gets more heat, a room that
+is clearly too cold never gets less – even when a warmer afternoon or a higher flow temperature
+make the calculation expect less demand. Only close to the target may the valve close early.
 
 **Why:** a heat pump works most efficiently when water flows through every radiator. Thermogeist
 therefore accepts half a degree too much rather than closing a valve. Only when it gets
@@ -371,6 +376,7 @@ same, and usually that is fine:
 | `min_opening` | The valve stays at the minimum opening of your heating type (heat pump: 40 %). |
 | `min_opening_relaxed` | The room is more than the dead band + 0.5 K above its target, so the valve may close below the minimum opening ([when the room is too warm](#when-the-room-is-too-warm)). Typical for radiators that are too big for the room. |
 | `hold_when_warm` | The room is above its target, so the valve is not opened further, whatever the calculation says. |
+| `hold_when_cold` | The room is more than the dead band below its target, so the valve is not closed further, whatever the calculation says. |
 | `rate_limit` | The valve moves slowly on purpose (heat pump: max. 10 % per 30 minutes). |
 | `saturated` | The valve is fully open or at its lowest allowed position. |
 | `stopped` | Central mode *Stop*: 0 %. |

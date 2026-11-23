@@ -290,3 +290,20 @@ def test_minimum_opening_returns_at_the_target() -> None:
     back = controller.step(inputs(room_c=20.0, feed_forward_pct=30.0), clock.now())
     assert back.output_pct == HEAT_PUMP.min_opening_pct  # at once, not ramped
     assert Limit.MIN_OPENING in back.limits
+
+
+def test_room_below_target_never_gets_less_heat() -> None:
+    """Scenario: SCN-CTL-025"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    first = controller.step(inputs(room_c=19.2, feed_forward_pct=70.0), clock.now())
+
+    clock.advance(timedelta(minutes=15))
+    held = controller.step(inputs(room_c=19.2, feed_forward_pct=48.0), clock.now())
+    assert held.output_pct == first.output_pct  # 0.8 K too cold: no closing
+    assert Limit.HOLD_WHEN_COLD in held.limits
+
+    clock.advance(timedelta(minutes=15))
+    near = controller.step(inputs(room_c=19.7, feed_forward_pct=48.0), clock.now())
+    assert near.output_pct < held.output_pct  # near the target it may close early
+    assert Limit.HOLD_WHEN_COLD not in near.limits

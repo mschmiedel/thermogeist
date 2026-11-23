@@ -65,7 +65,8 @@ Project skills live in `.claude/skills/`. Use the matching skill for recurring w
 
 ## Still open
 
-- Product name is **Thermogeist** (domain `thermogeist`). Trademark and collision check still
-  pending (see `spec/open-questions.md`). The local folder is still named `ha-thermostat`.
+- Product name is **Thermogeist** (domain `thermogeist`). A quick name check found nothing;
+  check again before the beta (see `spec/open-questions.md`). The local folder is still named
+  `ha-thermostat`.
 - Repository: https://github.com/mschmiedel/thermogeist (public). Push and release only when the
   user asks.
