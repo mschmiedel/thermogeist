@@ -54,6 +54,8 @@ class RoleMapping:
     expose: str
     inverted: bool = False
     """For VALVE_MIN: the device stores the closing degree (min opening = 100 - value)."""
+    uncalibrated: tuple[str, ...] = ()
+    """For CALIBRATION_STATUS: values that mean the device lost its calibration (DIA-024)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,7 +94,9 @@ def parse_profile(data: Mapping[str, Any]) -> DeviceProfile:
     roles = {
         Source(source): {
             Role(role): RoleMapping(
-                expose=spec["expose"], inverted=bool(spec.get("inverted", False))
+                expose=spec["expose"],
+                inverted=bool(spec.get("inverted", False)),
+                uncalibrated=tuple(str(v) for v in spec.get("uncalibrated", ())),
             )
             for role, spec in mapping.items()
         }
@@ -174,6 +178,9 @@ class Thermostat:
     valve_refresh: timedelta | None = None
     """ACT-047: resend the unchanged valve position at this interval; None = off."""
     strategy: Strategy = Strategy.AUTOMATIC
+    uncalibrated: tuple[str, ...] | None = None
+    """DIA-024: values of the calibration status that mean "not calibrated", as set in the
+    dialog; None for thermostats saved before the field existed (the profile's values apply)."""
 
     @property
     def kind(self) -> Kind:

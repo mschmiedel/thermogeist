@@ -677,6 +677,12 @@
     },
     "logbook_child_lock_relocked": {
       "message": "Kindersicherung wieder an"
+    },
+    "logbook_not_calibrated": {
+      "message": "{thermostat} ist nicht kalibriert; sein Ventil steht vermutlich ganz offen"
+    },
+    "logbook_calibrated_again": {
+      "message": "{thermostat} ist wieder kalibriert"
     }
   },
   "issues": {
@@ -699,6 +705,10 @@
     "flow_higher_than_needed": {
       "title": "Vorlauf von {house} ist wahrscheinlich höher als nötig",
       "description": "Alle Räume von {house} brauchen selbst am kältesten Auslegungstag weniger als ein Drittel dessen, was ihre Heizkörper liefern. Eine niedrigere Heizkurve würde wahrscheinlich reichen und spart Energie, besonders mit einer Wärmepumpe. Thermogeist ändert nichts an der Heizung, siehe FAQ."
+    },
+    "thermostat_not_calibrated": {
+      "title": "{thermostat} ist nicht kalibriert",
+      "description": "{thermostat} in {room} meldet, dass es seine Kalibrierung verloren hat, z. B. nach einem Firmware-Update. Es bewegt sein Ventil nicht mehr; meist steht es in der Montageposition ganz offen. Thermogeist zeigt die Ventilstellung als unbekannt. Kalibriere das Thermostat neu (Sonoff: Taste kurz drücken; bei eingeschalteter Kindersicherung zuerst *Kindersicherung: 30 Min. aus*). Die Meldung verschwindet von selbst, sobald das Thermostat wieder kalibriert ist."
     }
   }
 }

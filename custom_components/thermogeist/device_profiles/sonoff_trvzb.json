@@ -24,6 +24,12 @@
       },
       "child_lock": {
         "expose": "child_lock"
+      },
+      "calibration_status": {
+        "expose": "closing_steps",
+        "uncalibrated": [
+          "0"
+        ]
       }
     }
   },
@@ -31,7 +37,8 @@
     "Firmware 1.1.4 or newer is needed for valve_opening_degree and valve_closing_degree.",
     "Set temperature_sensor_select to remote_temperature to use the external temperature.",
     "Switch off smart_temperature_control: it disables manual valve positions.",
-    "temperature_accuracy -0.2: the thermostat heats with the planned opening as soon as the room is 0.2 K below the setpoint (factory -1 K)."
+    "temperature_accuracy -0.2: the thermostat heats with the planned opening as soon as the room is 0.2 K below the setpoint (factory -1 K).",
+    "closing_steps 0: the valve lost its calibration (e.g. after a firmware update) and stays in the mounting position, fully open; a short press on the button recalibrates."
   ],
   "control_settings": {
     "z2m": [

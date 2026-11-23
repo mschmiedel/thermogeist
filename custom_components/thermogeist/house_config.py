@@ -46,6 +46,7 @@ from .const import (
     CONF_TEMPERATURE_ENTITY,
     CONF_THERMOSTAT_NAME,
     CONF_THERMOSTATS,
+    CONF_UNCALIBRATED_VALUES,
     CONF_VALVE_MIN_INVERTED,
     CONF_VALVE_REFRESH,
     CONF_WINDOWS,
@@ -163,6 +164,11 @@ def thermostat_from_config(config: Mapping[str, Any], name: str) -> Thermostat:
             else None
         ),
         strategy=_strategy(config.get(CONF_STRATEGY)),
+        uncalibrated=(
+            tuple(str(v) for v in config[CONF_UNCALIBRATED_VALUES])
+            if config.get(CONF_UNCALIBRATED_VALUES) is not None
+            else None
+        ),
     )
 
 

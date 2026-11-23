@@ -73,7 +73,7 @@ Nach dem Thermostat benannt, am Raum-Gerät.
 | Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
 |---|---|---|---|
 | Art *Thermostat* | Über Ventilstellung oder über Sollwert. Attribute: `strategy`, `profile`, `radiator_output_w`, `roles` und was Thermogeist zuletzt geschrieben hat (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; über Sollwert `setpoint_offset`). Diagnose. | immer | – |
-| Ventilstellung *Thermostat* | Wo das Ventil wirklich steht – zum Vergleich mit der geplanten ([warum sie abweichen kann](thermostats.md#geplante-und-tatsächliche-ventilstellung)). `source: reported`, wenn das Thermostat sie meldet; `source: derived` bei Sonoff-Thermostaten: die gesetzte Stellung, solange das Thermostat heizt, die Mindestöffnung, solange es ruht (`hvac_action`). | die Rolle *Ventilstellung (lesen)* ist ausgefüllt, oder ein Sonoff mit Ventilstellung (setzen) und Mindestöffnung | das Thermostat meldet nichts, oder ein Sonoff meldet weder Heizen noch Ruhen |
+| Ventilstellung *Thermostat* | Wo das Ventil wirklich steht – zum Vergleich mit der geplanten ([warum sie abweichen kann](thermostats.md#geplante-und-tatsächliche-ventilstellung)). `source: reported`, wenn das Thermostat sie meldet; `source: derived` bei Sonoff-Thermostaten: die gesetzte Stellung, solange das Thermostat heizt, die Mindestöffnung, solange es ruht (`hvac_action`). | die Rolle *Ventilstellung (lesen)* ist ausgefüllt, oder ein Sonoff mit Ventilstellung (setzen) und Mindestöffnung | das Thermostat meldet nichts, ein Sonoff meldet weder Heizen noch Ruhen, oder das Thermostat ist [nicht kalibriert](faq/thermostat_not_calibrated.md) |
 
 ## Geschätzte Heizleistung
 

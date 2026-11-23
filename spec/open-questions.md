@@ -65,3 +65,4 @@ Test setup: pipe probe (e.g. SNZB-02LD) on the flow pipe at the valve, values in
   Bosch HT II: flow is not guaranteed at 20 %, likely at 25 %, safe at 30 %. Replaced per
   thermostat by CTL-023 once measured.
 - Whether the heating curve is needed as an input at all when a flow sensor exists.
+- Suggested heating curve (DIA-050 to DIA-056): whether to also express it in the terms heat generators use (slope and level/parallel shift), which differ by manufacturer; whether a setpoint schedule (RUL-011) should use the highest setpoint of the day instead of the current one; whether 80 % reserve and the mild point at 10 °C fit heat pumps and boilers alike.

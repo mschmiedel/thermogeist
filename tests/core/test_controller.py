@@ -140,11 +140,11 @@ def test_seeded_controller_is_rate_limited_from_the_first_step() -> None:
     """Scenario: SCN-CTL-015"""
     clock = FakeTimeProvider(START)
     controller = RoomController()
-    controller.seed(30.0)
+    controller.seed(45.0)  # above the 40 % minimum opening, which is always reached at once
 
-    result = controller.step(inputs(feed_forward_pct=54.0), clock.now())
+    result = controller.step(inputs(feed_forward_pct=64.0), clock.now())
 
-    assert result.output_pct == 30.0
+    assert result.output_pct == pytest.approx(45.0, abs=0.5)
     assert Limit.RATE_LIMIT in result.limits
 
 
@@ -272,3 +272,21 @@ def test_window_does_not_lift_a_warm_room() -> None:
     clock.advance(timedelta(minutes=1))
     cold = controller.step(inputs(room_c=19.5, feed_forward_pct=90.0), clock.now())
     assert cold.output_pct > 90.0
+
+
+def test_minimum_opening_returns_at_the_target() -> None:
+    """Scenario: SCN-CTL-024"""
+    clock = FakeTimeProvider(START)
+    controller = RoomController()
+    relaxed = controller.step(inputs(room_c=21.2, feed_forward_pct=30.0), clock.now())
+    assert Limit.MIN_OPENING_RELAXED in relaxed.limits
+
+    for room_c in (20.8, 20.3, 20.1):  # inside the dead band, still above the target
+        clock.advance(timedelta(minutes=15))
+        held = controller.step(inputs(room_c=room_c, feed_forward_pct=30.0), clock.now())
+        assert held.output_pct < HEAT_PUMP.min_opening_pct
+
+    clock.advance(timedelta(minutes=15))
+    back = controller.step(inputs(room_c=20.0, feed_forward_pct=30.0), clock.now())
+    assert back.output_pct == HEAT_PUMP.min_opening_pct  # at once, not ramped
+    assert Limit.MIN_OPENING in back.limits

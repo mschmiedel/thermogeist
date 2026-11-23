@@ -23,6 +23,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from .calibration import CalibrationManager
 from .child_lock import ChildLockManager
 from .const import DOCS_URL, DOMAIN, ROOM_SETPOINT_DEFAULT_C, STORAGE_VERSION
 from .control import ControlManager
@@ -221,6 +222,7 @@ class HouseRuntime:
         self.docs_url = DOCS_URL
         self.control = ControlManager(hass, self, profiles or [])
         self.child_lock = ChildLockManager(hass, self)
+        self.calibration = CalibrationManager(hass, self, profiles or [])
         self._flow_average = MovingAverage()
         self.flow_used_c: float | None = None
         self._return_average = MovingAverage()
@@ -307,6 +309,7 @@ class HouseRuntime:
         )
         self._unsubscribe += self.control.async_start()
         self._unsubscribe += self.child_lock.async_start()
+        self._unsubscribe += self.calibration.async_start()
         self._unsubscribe.append(
             async_call_later(self._hass, STARTUP_HOLD.total_seconds() + 1, self._on_delayed)
         )
@@ -643,8 +646,14 @@ class HouseRuntime:
         )
 
     def valve_position(self, tid: str) -> tuple[float | None, ValveSource | None]:
-        """Where a thermostat's valve is: reported, or derived (ACT-016); None if unknown."""
+        """Where a thermostat's valve is: reported, or derived (ACT-016); None if unknown.
+
+        DIA-024: unknown while the thermostat is not calibrated; it shows our written values
+        then, but the valve stays where the motor left it.
+        """
         thermostat = self.thermostats[tid]
+        if self.calibration.lost(tid):
+            return None, None
         roles = thermostat.roles
         if (entity := roles.get(Role.VALVE_READ)) is not None:
             value = numeric_state(self._hass, entity)

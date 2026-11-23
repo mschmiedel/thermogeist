@@ -677,6 +677,12 @@
     },
     "logbook_child_lock_relocked": {
       "message": "Child lock on again"
+    },
+    "logbook_not_calibrated": {
+      "message": "{thermostat} is not calibrated; its valve probably stays fully open"
+    },
+    "logbook_calibrated_again": {
+      "message": "{thermostat} is calibrated again"
     }
   },
   "issues": {
@@ -699,6 +705,10 @@
     "flow_higher_than_needed": {
       "title": "Flow temperature of {house} is probably higher than needed",
       "description": "All rooms of {house} need less than a third of what their radiators deliver, even on the coldest design day. A lower heating curve would probably be enough and saves energy, especially with a heat pump. Thermogeist does not change the heating system; see the FAQ."
+    },
+    "thermostat_not_calibrated": {
+      "title": "{thermostat} is not calibrated",
+      "description": "{thermostat} in {room} reports that it lost its calibration, e.g. after a firmware update. It no longer moves its valve, which usually stays fully open in the mounting position. Thermogeist shows its valve position as unknown. Recalibrate the thermostat (Sonoff: press the button briefly; with child lock on, first use *Child lock: off for 30 min*). The issue disappears by itself once the thermostat is calibrated again."
     }
   }
 }

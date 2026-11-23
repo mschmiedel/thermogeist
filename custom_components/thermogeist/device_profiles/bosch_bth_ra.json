@@ -28,7 +28,12 @@
         "expose": "valve_adapt_process"
       },
       "calibration_status": {
-        "expose": "valve_adapt_status"
+        "expose": "valve_adapt_status",
+        "uncalibrated": [
+          "none",
+          "ready_to_calibrate",
+          "error"
+        ]
       }
     }
   },

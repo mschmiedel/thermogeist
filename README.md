@@ -43,8 +43,8 @@ nervously, and when they switch off you rarely learn why. Thermogeist adds the m
   when there is no sensor.
 - **Child lock** per room: kept on after firmware updates and battery changes, adopted when
   you lock a thermostat at the device, 30 minutes off with one button.
-- **Reliable with real devices:** settings that a firmware update resets are set again, silent
-  sensors and stale values are recognised.
+- **Reliable with real devices:** settings that a firmware update resets are set again, a
+  thermostat that lost its calibration is reported, silent sensors and stale values are recognised.
 
 Planned: schedules, connections between rooms (open doors) – see [`spec/roadmap.md`](spec/roadmap.md).
 

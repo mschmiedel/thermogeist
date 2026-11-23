@@ -70,6 +70,7 @@ CONF_PROFILE: Final = "profile"
 CONF_ROLES: Final = "roles"
 CONF_VALVE_MIN_INVERTED: Final = "valve_min_inverted"
 CONF_VALVE_REFRESH: Final = "valve_refresh_minutes"
+CONF_UNCALIBRATED_VALUES: Final = "uncalibrated_values"
 CONF_STRATEGY: Final = "strategy"
 # HAI-007: thermostats live inside their room sub-entry, keyed by thermostat id.
 CONF_THERMOSTATS: Final = "thermostats"

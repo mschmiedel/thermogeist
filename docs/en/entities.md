@@ -73,7 +73,7 @@ Named after the thermostat, on the room device.
 | Entity | Meaning | When it exists | Unknown when |
 |---|---|---|---|
 | Kind *thermostat* | Valve-based or setpoint-based. Attributes: `strategy`, `profile`, `radiator_output_w`, `roles`, and what Thermogeist last wrote (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; by setpoint `setpoint_offset`). Diagnostic. | always | – |
-| Valve position *thermostat* | Where the valve really is – compare it with the planned one ([why they can differ](thermostats.md#planned-and-actual-valve-position)). `source: reported` when the thermostat reports it; `source: derived` for Sonoff thermostats: the set position while the thermostat heats, the minimum opening while it rests (`hvac_action`). | the role *Valve position (read)* is filled in, or a Sonoff with valve position (set) and minimum opening | the thermostat reports nothing, or a Sonoff reports neither heating nor resting |
+| Valve position *thermostat* | Where the valve really is – compare it with the planned one ([why they can differ](thermostats.md#planned-and-actual-valve-position)). `source: reported` when the thermostat reports it; `source: derived` for Sonoff thermostats: the set position while the thermostat heats, the minimum opening while it rests (`hvac_action`). | the role *Valve position (read)* is filled in, or a Sonoff with valve position (set) and minimum opening | the thermostat reports nothing, a Sonoff reports neither heating nor resting, or the thermostat is [not calibrated](faq/thermostat_not_calibrated.md) |
 
 ## Estimated radiator output
 

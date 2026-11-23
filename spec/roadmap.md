@@ -75,7 +75,7 @@ Thermogeist controls Sonoff TRVZB thermostats.
 - Schedules and away mode (RUL-011, RUL-020 to RUL-022)
 - Groups and inheritance (RUL-001, RUL-002, ARC-005)
 - Learning and learning state (LRN-*): stage 1, the learned demand factor per room with day/night (LRN-030 to LRN-037), done; open: heat loss and radiator strength separately (LRN-001, LRN-002), valve characteristic (LRN-003), learning state details (LRN-010 to LRN-013, LRN-020 to LRN-025), energy signature (LRN-006)
-- Radiator sizing diagnostics: static and operation check, learned heating curve (MDL-015, DIA-001 to DIA-005, DIA-010 to DIA-015, DIA-023) done; open: empirical extrapolation (DIA-006), DIA-020 to DIA-022
+- Radiator sizing diagnostics: static and operation check, learned heating curve (MDL-015, DIA-001 to DIA-005, DIA-010 to DIA-015, DIA-023), lost calibration reported by the device (DIA-024) done; open: empirical extrapolation (DIA-006), DIA-020 to DIA-022, a valve that does not open without a device report (DIA-025)
 - Calibration mode (CAL-*)
 - Bosch BTH-RA and Sonoff TRV-ZBT adapters (ACT-110, ACT-120 to ACT-124)
 - Generic `climate` adapter (ACT-011, ACT-012, ACT-130)
@@ -89,4 +89,5 @@ Thermogeist controls Sonoff TRVZB thermostats.
 - Fan convectors (e.g. plinth heaters): output almost linear in the temperature difference (exponent ≈ 1.0 instead of 1.3) and driven by the fan stage more than by the valve; needs its own heater type with exponent and fan stages. Idea, not decided.
 - Generic on/off heaters with energy source and optional output/power entities (ACT-060 to ACT-065); idea for much later, not decided: let an on/off heater also choose between stages; wood stove as disturbance (MDL-050); hybrid heat generators (MDL-051, later)
 - Heat output of the heat generator: energy signature, measured heat load, house balance (MDL-017, LRN-006, DIA-040, DIA-041)
+- Suggested heating curve from the learned demand of the rooms, a suggestion only, never written to the heat generator (DIA-050 to DIA-056)
 - Smart child lock per room, adopted from the device, set again after a reset, 30 minutes off for a battery change (OVR-022 to OVR-024) done; open: per group (OVR-020)

@@ -75,6 +75,7 @@ from .const import (
     CONF_TEMPERATURE_ENTITY,
     CONF_THERMOSTAT_NAME,
     CONF_THERMOSTATS,
+    CONF_UNCALIBRATED_VALUES,
     CONF_VALVE_MIN_INVERTED,
     CONF_VALVE_REFRESH,
     CONF_WINDOWS,
@@ -614,6 +615,12 @@ class ThermostatSteps(ConfigSubentryFlow):
         self._strategy = str(
             defaults.get(CONF_STRATEGY, Strategy.AUTOMATIC) if same_device else Strategy.AUTOMATIC
         )
+        status = profile.roles.get(Source.Z2M, {}).get(Role.CALIBRATION_STATUS) if profile else None
+        if same_device and defaults.get(CONF_UNCALIBRATED_VALUES) is not None:
+            self._uncalibrated = list(defaults[CONF_UNCALIBRATED_VALUES])
+        else:
+            found = Role.CALIBRATION_STATUS.value in self._detected
+            self._uncalibrated = list(status.uncalibrated) if status and found else []
         self._tdata["_device_name"] = (device.name_by_user or device.name) if device else device_id
 
     async def async_step_roles(
@@ -624,7 +631,10 @@ class ThermostatSteps(ConfigSubentryFlow):
             user_input = _flatten(user_input)
             self._refresh = user_input.pop(CONF_VALVE_REFRESH, None)
             self._strategy = user_input.pop(CONF_STRATEGY, Strategy.AUTOMATIC)
+            self._uncalibrated = uncalibrated_values(user_input.pop(CONF_UNCALIBRATED_VALUES, ""))
             roles = {role: entity for role, entity in user_input.items() if entity}
+            if self._uncalibrated and Role.CALIBRATION_STATUS.value not in roles:
+                errors[CONF_UNCALIBRATED_VALUES] = "uncalibrated_needs_status"
             if Role.CLIMATE.value not in roles:
                 errors[Role.CLIMATE.value] = "climate_required"
             if self._strategy == Strategy.VALVE and Role.VALVE_WRITE.value not in roles:
@@ -642,6 +652,16 @@ class ThermostatSteps(ConfigSubentryFlow):
             target[marker(role.value, description=_suggested(self._detected, role.value))] = (
                 EntitySelector(EntitySelectorConfig(domain=domains))
             )
+        more[
+            vol.Optional(
+                CONF_UNCALIBRATED_VALUES,
+                description=(
+                    {"suggested_value": ", ".join(self._uncalibrated)}
+                    if self._uncalibrated
+                    else None
+                ),
+            )
+        ] = TextSelector()
         more[
             vol.Optional(
                 CONF_VALVE_REFRESH,
@@ -705,6 +725,7 @@ class ThermostatSteps(ConfigSubentryFlow):
             CONF_ROLES: roles,
             CONF_VALVE_REFRESH: self._refresh or None,
             CONF_STRATEGY: self._strategy,
+            CONF_UNCALIBRATED_VALUES: self._uncalibrated,
         }
         if self._tdata.get(CONF_RATED_OUTPUT) is not None:
             data[CONF_RATED_OUTPUT] = self._tdata[CONF_RATED_OUTPUT]
@@ -1084,6 +1105,11 @@ ROLE_DOMAINS: dict[Role, list[str]] = {
     Role.CALIBRATION_TRIGGER: ["button", "select", "switch"],
     Role.CALIBRATION_STATUS: ["sensor", "select"],
 }
+
+
+def uncalibrated_values(text: str | None) -> list[str]:
+    """DIA-024: "error, ready_to_calibrate" → the values; empty means: no check."""
+    return [v.strip() for v in (text or "").split(",") if v.strip()]
 
 
 def factor_entity_key(entity_id: str) -> str:

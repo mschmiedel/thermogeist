@@ -11,6 +11,7 @@ Each page explains one reason Thermogeist can show for a room.
 - [Window open](window_open.md) – `window_open`
 - [Waiting after restart](startup_hold.md) – `startup_hold`
 - [Thermostat regulates on its own](device_overrides_valve.md) – `device_overrides_valve`
+- [Thermostat not calibrated](thermostat_not_calibrated.md) – repair issue *… is not calibrated*
 
 Diagnoses:
 

@@ -226,7 +226,7 @@ hast du sie geändert). Beispiel: Ziel 19,5 °C, Totband 0,5 K, Mindestöffnung 
 | 19,5–20,0 °C (im Totband) | Etwas zu warm, aber noch im Rahmen. Die schnelle Reaktion ignoriert das; das Ventil wird nicht weiter geöffnet und darf schließen, aber nicht unter 30 %. | `hold_when_warm`, `min_opening` |
 | 20,0–20,5 °C | Wie eben, aber jetzt zieht auch die schnelle Reaktion nach unten. Trotzdem nicht unter 30 %. | `hold_when_warm`, `min_opening` |
 | über 20,5 °C (Totband + 0,5 K) | **Behaglichkeit geht vor:** Die Mindestöffnung gilt nicht mehr. Das Ventil darf unter 30 % schließen, langsam, Richtung dessen, was die Rechnung sagt. | `min_opening_relaxed` |
-| zurück unter 20,0 °C | Erst jetzt gilt die Mindestöffnung wieder. Dazwischen bleibt der vorherige Zustand, damit sie nicht bei jedem Zehntelgrad an- und ausgeht. | `min_opening` |
+| zurück bei 19,5 °C (Ziel) | Erst jetzt gilt die Mindestöffnung wieder – sofort, nicht langsam. Dazwischen bleibt der vorherige Zustand, damit sie nicht bei jedem Zehntelgrad an- und ausgeht. | `min_opening` |
 
 **Warum:** Eine Wärmepumpe arbeitet am effizientesten, wenn durch jeden Heizkörper Wasser fließt.
 Deshalb nimmt Thermogeist lieber ein halbes Grad zu viel in Kauf, als ein Ventil zu schließen.
@@ -372,7 +372,9 @@ sind selten genau gleich, und meistens ist das in Ordnung:
 - **Die Stellung passt, aber der Raum wird nicht warm**, obwohl der Vorlauf warm ist und kein
   Fenster offen: Das Ventil öffnet mechanisch nicht. Häufig hat das Thermostat seine
   Kalibrierung verloren (z. B. nach einem Firmware-Update) oder der Ventilstift klemmt. Thermostat
-  abnehmen, Stift gängig machen, neu kalibrieren. Thermogeist erkennt das noch nicht von selbst.
+  abnehmen, Stift gängig machen, neu kalibrieren. Meldet das Thermostat die verlorene Kalibrierung
+  selbst (Sonoff TRVZB, Bosch Heizkörperthermostat II), zeigt Thermogeist eine Reparaturmeldung
+  ([FAQ](faq/thermostat_not_calibrated.md)); einen klemmenden Stift erkennt es noch nicht.
 - **Ein Sonoff bleibt dauerhaft in der Ruhestellung, obwohl der Raum zu kalt ist:** Der Sonoff
   hält den Raum für warm genug, meist weil er seinen eigenen Fühler statt des Raumsensors nimmt.
   Thermogeist setzt diese Einstellung jede Minute wieder, wenn das Gerät sie zurückstellt. Hilft
@@ -393,5 +395,7 @@ sind selten genau gleich, und meistens ist das in Ordnung:
 Der Sensor *Art* jedes Thermostats zeigt, was Thermogeist damit getan hat: `last_write` und `last_write_value`, `last_confirmation`, `rewrites_last_hour` und `valve_refresh_minutes`. Über Sollwert: `last_write`, `last_write_value` (der geschickte Sollwert) und `setpoint_offset` (die Korrektur auf das Raumziel).
 
 Die geplante Ventilstellung zeigt außerdem `flow_temperature_used`, `return_temperature_used` und `spread_used`.
+
+**Werte für „nicht kalibriert“** (unter *Mehr*, neben *Kalibrierstatus*): Was der Kalibrierstatus zeigt, wenn das Thermostat seine Kalibrierung verloren hat, durch Kommas getrennt, z. B. `0` oder `error, ready_to_calibrate`. Aus dem Geräteprofil vorbelegt (Sonoff TRVZB: `closing_steps` `0`); bei anderen Thermostaten kannst du sie selbst eintragen. Hält ein Wert 10 Minuten an, erscheint eine Reparaturmeldung ([FAQ](faq/thermostat_not_calibrated.md)). Leer = keine Prüfung.
 
 **Ventilstellung bestätigen alle … Minuten** (in den Einstellungen des Thermostats): Manche Thermostate verwerfen eine von außen gesetzte Ventilstellung nach einer Weile – das Bosch Heizkörperthermostat II nach 15 Minuten. Thermogeist schickt den unveränderten Wert dann in diesem Abstand erneut (eine Funknachricht, keine Motorbewegung). Vorbelegt aus dem Geräteprofil (Bosch: 10), leer = aus.

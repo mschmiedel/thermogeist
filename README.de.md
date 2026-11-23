@@ -46,7 +46,8 @@ fehlende Ebene:
 - **Kindersicherung** pro Raum: bleibt nach Firmware-Updates und Batteriewechseln an, wird
   übernommen, wenn du ein Thermostat am Gerät sperrst, und geht per Taste 30 Minuten aus.
 - **Zuverlässig mit echten Geräten:** Einstellungen, die ein Firmware-Update zurücksetzt, werden
-  wieder gesetzt; stumme Sensoren und veraltete Werte werden erkannt.
+  wieder gesetzt, ein Thermostat ohne Kalibrierung wird gemeldet; stumme Sensoren und veraltete
+  Werte werden erkannt.
 
 Geplant: Zeitpläne, Verbindungen zwischen Räumen (offene Türen) – siehe [`spec/roadmap.md`](spec/roadmap.md).
 

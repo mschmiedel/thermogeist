@@ -217,7 +217,7 @@ changed it). Example: target 19.5 °C, dead band 0.5 K, minimum opening 30 %.
 | 19.5–20.0 °C (inside the dead band) | A little too warm, still fine. The quick reaction ignores it; the valve is not opened further and may close, but not below 30 %. | `hold_when_warm`, `min_opening` |
 | 20.0–20.5 °C | As before, but now the quick reaction also pulls down. Still not below 30 %. | `hold_when_warm`, `min_opening` |
 | above 20.5 °C (dead band + 0.5 K) | **Comfort comes first:** the minimum opening no longer applies. The valve may close below 30 %, slowly, towards what the calculation says. | `min_opening_relaxed` |
-| back below 20.0 °C | Only now does the minimum opening apply again. In between the previous state stays, so it does not switch on and off with every tenth of a degree. | `min_opening` |
+| back at 19.5 °C (the target) | Only now does the minimum opening apply again – at once, not slowly. In between the previous state stays, so it does not switch on and off with every tenth of a degree. | `min_opening` |
 
 **Why:** a heat pump works most efficiently when water flows through every radiator. Thermogeist
 therefore accepts half a degree too much rather than closing a valve. Only when it gets
@@ -356,7 +356,9 @@ same, and usually that is fine:
 - **The position is right, but the room does not get warm**, although the flow is warm and no
   window is open: the valve does not open mechanically. Often the thermostat lost its calibration
   (e.g. after a firmware update) or the valve pin is stuck. Take the thermostat off, free the pin,
-  calibrate again. Thermogeist does not detect this by itself yet.
+  calibrate again. When the thermostat itself reports the lost calibration (Sonoff TRVZB, Bosch
+  Radiator Thermostat II), Thermogeist shows a repair issue
+  ([FAQ](faq/thermostat_not_calibrated.md)); a stuck pin it does not detect yet.
 - **A Sonoff stays in its rest position although the room is too cold:** the Sonoff thinks the
   room is warm enough, usually because it uses its own sensor instead of the room sensor.
   Thermogeist sets this setting again every minute when the device resets it. If that does not
@@ -377,5 +379,7 @@ same, and usually that is fine:
 Each thermostat's *Kind* sensor shows what Thermogeist did with it: `last_write` and `last_write_value`, `last_confirmation`, `rewrites_last_hour` and `valve_refresh_minutes`. By setpoint: `last_write`, `last_write_value` (the setpoint sent) and `setpoint_offset` (the correction added to the room target).
 
 The planned valve position also shows `flow_temperature_used`, `return_temperature_used` and `spread_used`.
+
+**Values for “not calibrated”** (under *More*, next to *Calibration status*): what the calibration status shows when the thermostat lost its calibration, separated by commas, e.g. `0` or `error, ready_to_calibrate`. Pre-filled from the device profile (Sonoff TRVZB: `closing_steps` `0`); for other thermostats you can enter them yourself. Shown for 10 minutes, this raises a repair issue ([FAQ](faq/thermostat_not_calibrated.md)). Empty = no check.
 
 **Confirm valve position every … minutes** (in the thermostat's settings): some thermostats drop a valve position set from outside after a while – the Bosch Radiator Thermostat II after 15 minutes. Thermogeist then resends the unchanged value at this interval (a radio message, no motor movement). Pre-filled from the device profile (Bosch: 10), empty = off.

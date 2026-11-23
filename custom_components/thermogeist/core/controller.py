@@ -279,6 +279,10 @@ class RoomController:
             output = last
             limits.append(Limit.HOLD_WHEN_WARM)
         output = self._rate_limited(output, settings, elapsed_h, limits)
+        if not too_warm:
+            # CTL-037: from the target down the minimum opening is guaranteed at once; ramping up
+            # to it would leave the room below its target with less than the minimum.
+            output = max(output, settings.min_opening_pct)
         return ControllerResult(
             output_pct=output,
             feed_forward_pct=ff,
@@ -306,10 +310,16 @@ class RoomController:
             self.state.integral_has_start_bias = True
 
     def _update_relaxed(self, raw_error: float, settings: ControllerSettings) -> bool:
-        """Hysteresis: relax above dead band + 0.5 K, restore once back inside the dead band."""
+        """Hysteresis: relax above dead band + 0.5 K, restore once the room is back at its target.
+
+        Restoring at the end of the dead band let an oversized radiator keep the room between the
+        end of the dead band and the relax limit, always too warm (field finding: bedroom with
+        two people and a dog, 21.0 to 21.5 °C at a 20.5 °C target). Waiting for the target also
+        keeps CTL-043 out of the way: a room at its target is not held.
+        """
         if raw_error < -(settings.dead_band_k + MIN_OPENING_RELAX_K):
             self.state.min_opening_relaxed = True
-        elif raw_error > -settings.dead_band_k:
+        elif raw_error >= 0:
             self.state.min_opening_relaxed = False
         return self.state.min_opening_relaxed
 
