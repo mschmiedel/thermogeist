@@ -62,6 +62,7 @@ Initial profiles: Sonoff TRVZB, Sonoff TRV-ZBT (Gen2), Bosch BTH-RA.
 | ACT-053 | Setpoint writes are bundled like valve writes: only changes of at least 0.5 K, at most every 10 minutes; window, stop and safety at once (window/stop: 5 °C). | implemented |
 | ACT-054 | Limits of the setpoint strategy are explicit: no minimum opening and no calm valve movement – the device's own controller decides. Shown on the thermostat (`strategy: setpoint`). | implemented |
 | ACT-055 | While the room should heat, a thermostat whose climate entity is in mode `off` is switched back to `heat` before its setpoint is written, and the setpoint is written again. Bosch Smart Home switches its room climate to `off` when it gets 5 °C (window, stop); a later setpoint alone does not switch it back. | implemented |
+| ACT-056 | Setpoint strategy: correction for a lasting gap. A thermostat whose own controller has no integral part (Bosch Smart Home, first generation, TST-012) settles below the setpoint when the radiator is tight, with the valve not fully open: sending the room target cannot close the gap (SCN-DEV-006). When the room stays clearly below its target for hours while the device does not open fully, the device setpoint is raised step by step (and lowered again once the room is back), within the limits of ACT-053. Thresholds to be set with the device model. | planned |
 
 ## On/off heaters
 

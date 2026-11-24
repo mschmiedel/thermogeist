@@ -17,7 +17,8 @@ Domain logic never reads the clock directly. It receives a `TimeProvider`.
 |---|---|---|
 | TST-010 | Thermal room model (H, C, radiator per EN 442, outdoor temperature, disturbances such as window and sun), one-minute steps. Lives in `tests/sim/`. | implemented |
 | TST-011 | Valve model with opening point and a concave characteristic (heat output rises steeply after the opening point). Scatter and backlash later. | implemented |
-| TST-012 | Device models for the adapters (Sonoff, Bosch) including their behaviour on failure. | planned |
+| TST-012 | Device models of thermostats that regulate themselves, fitted to field data and kept in `tests/sim/devices.py`: Bosch Radiator Thermostat II (BTH-RA, integrating: opens 2.9 % per K and minute, closes 7.5 %, plus 5 % per K of error change) and Bosch Smart Home thermostat, first generation (proportional band 30 % per K around a valve that moves between days, never below 23 %, corrections of 10 % or more at most every 20 minutes, own window function closing at a 1 K drop). One or two recorded days per device live in `tests/fixtures/devices/` (relative time, no dates or room names); a test checks that each model reproduces them within 4 % on average. Sonoff valves are written directly (no own regulation to model); their failure behaviour is covered by DIA-024. | implemented |
+| TST-015 | Closed loop for the setpoint strategy (`tests/sim/setpoint_run.py`): simulated room, a device model and Thermogeist's setpoint logic (ACT-051 to ACT-053, offset average over 30 minutes), one-minute steps. | implemented |
 | TST-013 | Simulated weeks run in seconds, driven by `FakeTimeProvider`. | implemented |
 | TST-014 | Hydraulic network for balancing (DIA-033). | planned |
 
