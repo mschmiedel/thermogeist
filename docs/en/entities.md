@@ -47,21 +47,22 @@ heating type ([table](getting-started.md#what-you-see-afterwards)). The attribut
 | Entity | Meaning | When it exists | Unknown when |
 |---|---|---|---|
 | Climate (named like the room) | Room temperature and the setpoint you set (5–30 °C). Use it in dashboards and with voice assistants. | always | – (temperature unknown while the room sensor has no value) |
-| Control | Switch: off = Thermogeist only observes, on = it writes to the thermostats. Attribute `can_control`. | always | unavailable while the room has no thermostat |
+| Control | Switch: off = Thermogeist only observes, on = it writes to the thermostats or switches the heaters. Attribute `can_control`. | always | unavailable while the room has neither thermostat nor heater |
 | Active reason | Why the room aims for its current target, with an [FAQ page](faq/README.md) per reason. Attributes: `severity`, `since`, `faq` and the reason's numbers. | always | – |
 | Target temperature | What the room aims for right now, e.g. 7 °C while a window is open. | always | the room should not heat (central *Stop*) |
 | Heat demand | Watts the room needs right now to hold its target: heat loss coefficient × (target − outdoor). | always | no heat load or design outdoor temperature on the house, or no outdoor temperature |
-| Estimated radiator output | Watts the radiators give right now – put it next to *Heat demand* ([details below](#estimated-radiator-output)). Attributes: `max_output_w`, `radiators`, `valve_characteristic`, `missing`. | room has thermostats | see `missing`: a thermostat without rated output or valve position, no flow or room temperature |
+| Estimated radiator output | Watts the radiators give right now – put it next to *Heat demand* ([details below](#estimated-radiator-output)). Attributes: `max_output_w`, `radiators`, `valve_characteristic`, `missing`. | room has thermostats or heaters | see `missing`: a thermostat without rated output or valve position, no flow or room temperature |
 | Share of heat load | The room's share, estimated or entered. Attributes: `source` (`estimated` / `known`), `scaled_down`. Diagnostic. | always | – |
 | Heat loss coefficient | Watts per kelvin of difference to outside. Diagnostic. | always | no heat load or design outdoor temperature on the house |
 | Heat from devices | Watts your devices release into the room, after factors, averaged over 10 minutes ([Rooms](rooms.md#devices-that-heat-the-room)). Attributes: `sources`, `factor_entities`. | heat sources chosen | – |
 | Planned valve position | What Thermogeist would set (observe mode) or sets (control). Attributes: `mode` (`observe` / `control`), `feed_forward`, `feed_forward_missing`, `proportional`, `integral`, `limits` and the temperatures used ([Thermostats](thermostats.md#what-you-see)). | room has thermostats | right after start, before the first plan |
+| Planned heat share | Rooms with heaters instead of thermostats: the share of the heaters' top output Thermogeist plans, with the same attributes as *Planned valve position* plus `heaters` ([Heaters](heaters.md#how-thermogeist-switches)). | room has heaters | right after start, before the first plan |
 | Radiator size | Can the radiators hold the setpoint on the design day? Attributes with the numbers ([FAQ](faq/radiator_sizing.md)). Diagnostic. | room has thermostats | – (shows *not assessable yet* with `missing`) |
-| Learned demand | How much of the heat its inputs suggest the room really needs, learned from quiet hours ([FAQ](faq/learned_demand.md)). Used to plan the valve once `settled`. Attributes: `state`, `quiet_hours`, `days`, `day_pct`, `night_pct`, `spread_pct`. | room has thermostats | still `learning` (fewer than 24 quiet hours on 3 days) |
+| Learned demand | How much of the heat its inputs suggest the room really needs, learned from quiet hours ([FAQ](faq/learned_demand.md)). Used to plan the valve once `settled`. Attributes: `state`, `quiet_hours`, `days`, `day_pct`, `night_pct`, `spread_pct`. | room has thermostats or heaters | still `learning` (fewer than 24 quiet hours on 3 days) |
 | Child lock | Switch: on keeps the child lock of the room's thermostats on, also after a firmware update or battery change; off unlocks them. Locking a thermostat at the device switches it on. Works in observe mode too. Shows off during *off for 30 min* ([Thermostats](thermostats.md#child-lock)). | a thermostat of the room has a child lock | unavailable while no thermostat reports its lock |
 | Child lock: off for 30 min | Button: unlocks the room's thermostats for 30 minutes, e.g. for a battery change; then the lock goes on again by itself. | as *Child lock* | unavailable while the child lock is off for good |
 | Child lock back on | When the lock goes on again, shown as e.g. "in 27 minutes". Put it on your dashboard next to the switch. | as *Child lock* | outside the 30 minutes |
-| Learning: start again | Button: the room forgets what it learned and starts again. Configuration. | room has thermostats | – |
+| Learning: start again | Button: the room forgets what it learned and starts again. Configuration. | room has thermostats or heaters | – |
 | Windows | On while a contact of the room is open. Attributes: `contacts`, `heating_paused`, `frost_guard`, `close_after_s`, `resume_after_s`. | window contacts chosen | – |
 | Window: close after, Window: resume heating after | The room's own window times; house value until you change them (attribute `source`). Configuration. | window contacts chosen | – |
 | Window: reset times to house | Button: the room follows the house's window times again. Configuration. | window contacts chosen | – |
@@ -74,6 +75,15 @@ Named after the thermostat, on the room device.
 |---|---|---|---|
 | Kind *thermostat* | Valve-based or setpoint-based. Attributes: `strategy`, `profile`, `radiator_output_w`, `roles`, and what Thermogeist last wrote (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; by setpoint `setpoint_offset`). Diagnostic. | always | – |
 | Valve position *thermostat* | Where the valve really is – compare it with the planned one ([why they can differ](thermostats.md#planned-and-actual-valve-position)). `source: reported` when the thermostat reports it; `source: derived` for Sonoff thermostats: the set position while the thermostat heats, the minimum opening while it rests (`hvac_action`). | the role *Valve position (read)* is filled in, or a Sonoff with valve position (set) and minimum opening | the thermostat reports nothing, a Sonoff reports neither heating nor resting, or the thermostat is [not calibrated](faq/thermostat_not_calibrated.md) |
+
+## Heater
+
+Named after the heater, on the room device ([Heaters with stages](heaters.md)).
+
+| Entity | Meaning | When it exists | Unknown when |
+|---|---|---|---|
+| Stage *heater* | The stage that runs now: 0 = off. Attributes: `mode`, `planned_stage`, `lower_stage`, `upper_stage`, `upper_share_pct`, `cycle_started`, `on_since`, `off_since`, `heat_output_w`, `stage_source`, `energy_source`, `stage_outputs_w`, `off_output_w`, `exponent` and the entities used. | always | the switch is unavailable, or the stage sensor reports something other than 0 … N |
+| *heater* not running | Problem: switched on for 3 minutes, but the stage sensor reports 0 ([FAQ](faq/heater_not_running.md)). | a stage sensor is chosen | – |
 
 ## Estimated radiator output
 

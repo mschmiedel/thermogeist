@@ -24,14 +24,21 @@ def usable_spread_k(flow_c: float | None, return_c: float | None) -> float | Non
 
 
 def available_output_w(
-    rated_output_w: float, flow_c: float, room_c: float, spread_k: float | None = None
+    rated_output_w: float,
+    flow_c: float,
+    room_c: float,
+    spread_k: float | None = None,
+    exponent: float = RADIATOR_EXPONENT,
 ) -> float:
-    """What a fully open radiator delivers at the current flow and room temperature."""
+    """What a fully open radiator delivers at the current flow and room temperature.
+
+    ACT-062: heaters on the heating circuit use the same formula with their own exponent.
+    """
     half_spread = HALF_SPREAD_K if spread_k is None else spread_k / 2
     excess = flow_c - half_spread - room_c
     if excess <= 0 or rated_output_w <= 0:
         return 0.0
-    return rated_output_w * (excess / RATED_EXCESS_TEMPERATURE_K) ** RADIATOR_EXPONENT
+    return rated_output_w * (excess / RATED_EXCESS_TEMPERATURE_K) ** exponent
 
 
 def time_constant_h(floor_area_m2: float | None, heat_loss_w_per_k: float | None) -> float | None:

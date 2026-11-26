@@ -209,7 +209,8 @@ async def test_room_menu_offers_thermostat_actions(
             (entry.entry_id, "room"), context={"source": SOURCE_RECONFIGURE, "subentry_id": room_id}
         )
 
-    assert (await menu())["menu_options"] == ["edit_room", "add_thermostat"]
+    # ACT-060: an empty room may get thermostats or heaters.
+    assert (await menu())["menu_options"] == ["edit_room", "add_thermostat", "add_heater"]
     await assign(hass, entry.entry_id, room_id, sonoff(hass), None)
     assert (await menu())["menu_options"] == [
         "edit_room",

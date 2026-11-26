@@ -144,6 +144,15 @@
       },
       "child_lock_back_on": {
         "default": "mdi:lock-clock"
+      },
+      "heater_stage": {
+        "default": "mdi:radiator",
+        "state": {
+          "0": "mdi:radiator-off"
+        }
+      },
+      "planned_heat_share": {
+        "default": "mdi:fire"
       }
     },
     "switch": {
@@ -166,6 +175,12 @@
         "default": "mdi:window-closed-variant",
         "state": {
           "on": "mdi:window-open-variant"
+        }
+      },
+      "heater_not_running": {
+        "default": "mdi:radiator",
+        "state": {
+          "on": "mdi:radiator-disabled"
         }
       }
     }

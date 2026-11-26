@@ -34,6 +34,8 @@ class RadiatorOutput:
     max_output_w: float | None
     valve_pct: float | None
     valve_source: ValveSource | None
+    stage: int | None = None
+    """ACT-065: for heaters with stages, the stage the output belongs to."""
 
 
 @dataclass(frozen=True, slots=True)

@@ -3,6 +3,13 @@
 
 from typing import Final
 
+from .core.heater import (
+    FIELD_EXPONENT,
+    FIELD_OFF_OUTPUT,
+    FIELD_STAGE_OUTPUTS,
+    FIELD_STAGE_SENSOR,
+    FIELD_STAGES,
+)
 from .core.house import (
     FIELD_CURVE_COLD_FLOW,
     FIELD_CURVE_COLD_OUTDOOR,
@@ -75,6 +82,17 @@ CONF_STRATEGY: Final = "strategy"
 # HAI-007: thermostats live inside their room sub-entry, keyed by thermostat id.
 CONF_THERMOSTATS: Final = "thermostats"
 CONF_THERMOSTAT_NAME: Final = "name"
+# Heater keys (ACT-060 to ACT-067); heaters live inside their room sub-entry like thermostats.
+CONF_HEATERS: Final = "heaters"
+CONF_HEATER: Final = "heater"
+CONF_SWITCH: Final = "switch"
+CONF_ENERGY_SOURCE: Final = "energy_source"
+CONF_STAGES: Final = FIELD_STAGES
+CONF_STAGE_OUTPUTS: Final = FIELD_STAGE_OUTPUTS
+CONF_OFF_OUTPUT: Final = FIELD_OFF_OUTPUT
+CONF_EXPONENT: Final = FIELD_EXPONENT
+CONF_STAGE_SENSOR: Final = FIELD_STAGE_SENSOR
+CONF_STAGE_SETTER: Final = "stage_setter"
 RATED_OUTPUT_W_MIN: Final = 50.0
 RATED_OUTPUT_W_MAX: Final = 10_000.0
 

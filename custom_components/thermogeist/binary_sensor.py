@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import ThermogeistConfigEntry
 from .core.decisions import ReasonCode
 from .core.profiles import ControlSetting
-from .entity import RoomEntity
+from .entity import HeaterEntity, RoomEntity
 
 
 async def async_setup_entry(
@@ -24,6 +24,24 @@ async def async_setup_entry(
     for room_id, state in entry.runtime_data.rooms.items():
         if state.room.window_entities:
             async_add_entities([RoomWindowSensor(entry, room_id)], config_subentry_id=room_id)
+    for heater_id, heater in entry.runtime_data.heaters.items():
+        if heater.stage_sensor:
+            async_add_entities(
+                [HeaterProblemSensor(entry, heater_id)], config_subentry_id=heater.room_id
+            )
+
+
+class HeaterProblemSensor(HeaterEntity, BinarySensorEntity):
+    """ACT-064: on while the heater is switched on but its stage sensor says nothing runs."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, entry: ThermogeistConfigEntry, heater_id: str) -> None:
+        super().__init__(entry, heater_id, "heater_not_running")
+
+    @property
+    def is_on(self) -> bool:
+        return self.runtime.heater_live[self._heater_id].fault
 
 
 class RoomWindowSensor(RoomEntity, BinarySensorEntity):

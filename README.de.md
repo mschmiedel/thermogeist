@@ -33,6 +33,9 @@ fehlende Ebene:
 - **Raumregelung** über die Ventilstellung (Sonoff TRVZB, Bosch Heizkörperthermostat II) oder
   über den Sollwert (jedes Thermostat mit Klima-Entität), mit einer ruhigen Regelung, die aus dem
   Wärmebedarf vorausplant.
+- **Geschaltete Heizungen** mit 1 bis 5 Stufen (Gebläsekonvektoren, Infrarotpaneele, smarte
+  Steckdosen): Laufzeit auf zwei benachbarten Stufen pro Zyklus, Stufen über eigene Templates
+  gelesen und gesetzt.
 - **Fenster:** Das Heizen pausiert 30 s, nachdem ein Kontakt aufgeht, und geht beim Schließen
   sofort weiter; eigene Fensterfunktionen und Zeitpläne der Thermostate können deine
   Raum-Sollwerte nicht verstellen.
@@ -60,6 +63,7 @@ Geplant: Zeitpläne, Verbindungen zwischen Räumen (offene Türen) – siehe [`s
 | Sonoff TRV-ZBT (Gen 2) | Zigbee2MQTT | Ventilstellung | Profil, nicht getestet |
 | Andere Zigbee2MQTT-Thermostate | Zigbee2MQTT + MQTT-Integration | Rollen aus Zigbee2MQTT erkannt | erkannt, nicht getestet |
 | Jedes Thermostat mit `climate`-Entität (z. B. Bosch Smart Home) | Home Assistant | Sollwert – mit Grenzen, siehe [Thermostate](docs/de/thermostats.md) | ja |
+| Geschaltete Heizungen mit 1 bis 5 Stufen (smarte Steckdose, Relais, Template) | Home Assistant | Schalten, Stufen über eigene Templates, siehe [Heizungen mit Stufen](docs/de/heaters.md) | neu, im Alltag noch nicht erprobt |
 
 ## Installation
 
@@ -78,6 +82,7 @@ Benötigt Home Assistant 2026.10 oder neuer.
 
 - [Erste Schritte](docs/de/getting-started.md) – installieren und dein Haus beschreiben
 - [Räume](docs/de/rooms.md) und [Thermostate](docs/de/thermostats.md) – mit Ablauf-Diagrammen
+- [Heizungen mit Stufen](docs/de/heaters.md) – Gebläsekonvektoren, Infrarotpaneele, smarte Steckdosen
 - [Alle Entitäten](docs/de/entities.md) – was jeder Wert bedeutet und wann er da ist
 - [Häufige Fragen](docs/de/faq/README.md) – jeder Grund, den ein Raum anzeigen kann
 

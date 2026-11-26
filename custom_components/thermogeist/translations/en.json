@@ -216,6 +216,12 @@
         "flow": "Flow only",
         "flow_return": "Flow and return"
       }
+    },
+    "energy_source": {
+      "options": {
+        "heating_circuit": "Heating circuit (heating water)",
+        "direct": "Electric (direct)"
+      }
     }
   },
   "entity": {
@@ -332,6 +338,12 @@
       },
       "child_lock_back_on": {
         "name": "Child lock back on"
+      },
+      "heater_stage": {
+        "name": "Stage {heater}"
+      },
+      "planned_heat_share": {
+        "name": "Planned heat share"
       }
     },
     "number": {
@@ -379,6 +391,9 @@
     "binary_sensor": {
       "windows": {
         "name": "Windows"
+      },
+      "heater_not_running": {
+        "name": "{heater} not running"
       }
     }
   },
@@ -526,7 +541,10 @@
             "edit_room": "Edit room",
             "add_thermostat": "Add thermostat",
             "edit_thermostat": "Edit thermostat",
-            "remove_thermostat": "Remove thermostat"
+            "remove_thermostat": "Remove thermostat",
+            "add_heater": "Add heater",
+            "edit_heater": "Edit heater",
+            "remove_heater": "Remove heater"
           }
         },
         "thermostat": {
@@ -609,11 +627,59 @@
           }
         },
         "new_room_thermostats": {
-          "title": "Thermostats of {room}",
-          "description": "Add the thermostats of this room now ({count} so far), or finish.",
+          "title": "Thermostats and heaters of {room}",
+          "description": "Add the thermostats or heaters of this room now ({count} so far), or finish. A room has either thermostats or heaters.",
           "menu_options": {
             "add_new_room_thermostat": "Add a thermostat",
+            "add_new_room_heater": "Add a heater",
             "new_room_done": "Done – save the room"
+          }
+        },
+        "heater": {
+          "title": "Heater",
+          "description": "A heater that Thermogeist switches instead of moving a valve, e.g. a smart plug in front of a fan convector or an infrared panel. Thermogeist does not know your device: if it has several stages, a template sensor tells which stage runs, and optionally a template number sets it.",
+          "data": {
+            "name": "Name",
+            "switch": "Switch",
+            "energy_source": "Heat from",
+            "stages": "Number of stages",
+            "stage_outputs": "Heat output per stage (W)"
+          },
+          "data_description": {
+            "switch": "Switches the heater on and off.",
+            "energy_source": "Heating circuit: the heat comes from the heating water (plinth heater, fan convector), its output depends on the flow temperature. Electric: the heat is made by electricity (infrared, fan heater) and does not depend on the flow temperature.",
+            "stages": "1 for a plain on/off heater.",
+            "stage_outputs": "One value per stage, from low to high, separated by commas, e.g. \"1300, 1700\". Heating circuit: the rated output at 75/65/20 °C from the data sheet. Electric: the output itself. Not the power the fan draws."
+          },
+          "sections": {
+            "more": {
+              "name": "Stages and details",
+              "description": "Template entities for heaters with several stages, and details for an exact output.",
+              "data": {
+                "stage_sensor": "Stage sensor",
+                "stage_setter": "Stage setter",
+                "off_output": "Heat output while off (W)",
+                "exponent": "Exponent of the output curve"
+              },
+              "data_description": {
+                "stage_sensor": "An entity whose state is the running stage: 0 = not running, 1, 2 … Typically a template sensor, e.g. from the power of a smart plug. Also reports a heater that is switched on but does not run.",
+                "stage_setter": "A number entity that takes the stage 1, 2 … – typically a template number that switches your device. Without it Thermogeist only switches on and off, and the heater keeps its own stage.",
+                "off_output": "Heat the heater still gives while switched off, e.g. heating water flowing through a plinth heater with the fan off. From the data sheet; usually 0.",
+                "exponent": "Only for the heating circuit. Radiators 1.3 (default), fan convectors about 1.0 – see the data sheet."
+              }
+            }
+          }
+        },
+        "edit_heater": {
+          "title": "Edit heater",
+          "data": {
+            "heater": "Heater"
+          }
+        },
+        "remove_heater": {
+          "title": "Remove heater",
+          "data": {
+            "heater": "Heater"
           }
         }
       },
@@ -634,10 +700,18 @@
         "role_needs_percent": "This entity does not report a percentage. Choose the valve position entity (unit %).",
         "role_needs_temperature": "This entity is not a temperature input.",
         "valve_strategy_needs_valve_write": "The strategy “by valve position” needs the entity “Valve position (set)”. Choose it or pick another strategy.",
-        "valve_read_is_write": "This is the entity Thermogeist writes to; it only shows what Thermogeist set, not where the valve is. Leave the field empty if the thermostat does not report its valve position."
+        "valve_read_is_write": "This is the entity Thermogeist writes to; it only shows what Thermogeist set, not where the valve is. Leave the field empty if the thermostat does not report its valve position.",
+        "heater_stages_range": "Between 1 and 5 stages.",
+        "heater_outputs_count": "Enter exactly one output per stage.",
+        "heater_outputs_rising": "The outputs must rise from stage to stage, and the output while off must be below the first stage.",
+        "heater_outputs_unreadable": "Enter numbers separated by commas, e.g. \"1300, 1700\".",
+        "heater_exponent_range": "Between 0.8 and 2.0.",
+        "heater_needs_stage_entity": "With more than one stage Thermogeist needs to know which one runs: choose a stage sensor or a stage setter."
       },
       "abort": {
-        "reconfigure_successful": "Done."
+        "reconfigure_successful": "Done.",
+        "room_has_thermostats": "This room already has thermostats. A room has either thermostats or heaters; remove the thermostats first.",
+        "room_has_heaters": "This room already has heaters. A room has either thermostats or heaters; remove the heaters first."
       }
     }
   },
@@ -683,6 +757,9 @@
     },
     "logbook_calibrated_again": {
       "message": "{thermostat} is calibrated again"
+    },
+    "logbook_heater_not_running": {
+      "message": "{heater} is switched on but does not run"
     }
   },
   "issues": {
@@ -709,6 +786,10 @@
     "thermostat_not_calibrated": {
       "title": "{thermostat} is not calibrated",
       "description": "{thermostat} in {room} reports that it lost its calibration, e.g. after a firmware update. It no longer moves its valve, which usually stays fully open in the mounting position. Thermogeist shows its valve position as unknown. Recalibrate the thermostat (Sonoff: press the button briefly; with child lock on, first use *Child lock: off for 30 min*). The issue disappears by itself once the thermostat is calibrated again."
+    },
+    "heater_not_running": {
+      "title": "{heater} does not run",
+      "description": "{heater} in {room} is switched on, but its stage sensor says it does not run. Check the fuse, the device and the template of the stage sensor. While this lasts Thermogeist counts no heat from {heater}."
     }
   }
 }

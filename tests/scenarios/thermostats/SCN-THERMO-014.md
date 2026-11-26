@@ -11,7 +11,7 @@ A house with one room and no thermostat.
 2. Add a Sonoff TRVZB through *Add thermostat*; open the gear icon again.
 
 ## Expected result
-- First: *Edit room* and *Add thermostat* only.
+- First: *Edit room*, *Add thermostat* and *Add heater* only (ACT-060). Once the room has a thermostat, *Add heater* is no longer offered.
 - Then also *Edit thermostat* and *Remove thermostat*.
 - The house has only room sub-entries; no separate thermostat cards.
 

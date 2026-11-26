@@ -13,6 +13,7 @@ from homeassistant.helpers.entity import Entity
 from . import ThermogeistConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .core.actuator import Thermostat
+from .core.heater import Heater
 from .house_config import room_area_id
 from .runtime import HouseRuntime, RoomState, update_signal
 
@@ -101,3 +102,20 @@ class ThermostatEntity(RoomEntity):
     @property
     def thermostat(self) -> Thermostat:
         return self.runtime.thermostats[self._thermostat_id]
+
+
+class HeaterEntity(RoomEntity):
+    """Entity of one heater with stages, shown on the room device (ACT-065)."""
+
+    def __init__(self, entry: ThermogeistConfigEntry, heater_id: str, key: str) -> None:
+        heater = entry.runtime_data.heaters[heater_id]
+        super().__init__(entry, heater.room_id, key)
+        self._heater_id = heater_id
+        entry.runtime_data.created_unique_ids.discard(self._attr_unique_id)
+        self._attr_unique_id = f"{heater_id}_{key}"
+        entry.runtime_data.created_unique_ids.add(self._attr_unique_id)
+        self._attr_translation_placeholders = {"heater": heater.name}
+
+    @property
+    def heater(self) -> Heater:
+        return self.runtime.heaters[self._heater_id]

@@ -86,8 +86,8 @@ Thermogeist controls Sonoff TRVZB thermostats.
 - **Internal heat sources** (gaming PC, server, aquarium …) from power sensors (MDL-040, MDL-042 to MDL-044, MDL-048, MDL-049 done); open: pre-fill from the room's area (MDL-041, with HAI-007), learning (MDL-045), fixed-power switch (MDL-047)
 - Openings and neighbouring zones: doors to unheated halls, door sensors, separate learning (OPN-*)
 - Usability of the setup: dialogs that show only what is needed (HAI-016, HAI-018 to HAI-021: questions in the house dialog, collapsible sections, detected roles collapsed, thermostats offered when adding a room) done; open: diagrams in the docs; done before: room coverage (MDL-046), thermostats inside their room (HAI-007), flow/return/spread on the house (DIA-042)
-- Fan convectors (e.g. plinth heaters): output almost linear in the temperature difference (exponent ≈ 1.0 instead of 1.3) and driven by the fan stage more than by the valve; needs its own heater type with exponent and fan stages. Idea, not decided.
-- Generic on/off heaters with energy source and optional output/power entities (ACT-060 to ACT-065); idea for much later, not decided: let an on/off heater also choose between stages; wood stove as disturbance (MDL-050); hybrid heat generators (MDL-051, later)
+- Combination of heaters and thermostats in one room (ACT-068)
+- Heaters with stages (ACT-060 to ACT-067, ACT-069) done; wood stove as disturbance (MDL-050); hybrid heat generators (MDL-051, later)
 - Heat output of the heat generator: energy signature, measured heat load, house balance (MDL-017, LRN-006, DIA-040, DIA-041)
 - Suggested heating curve from the learned demand of the rooms, a suggestion only, never written to the heat generator (DIA-050 to DIA-056)
 - Smart child lock per room, adopted from the device, set again after a reset, 30 minutes off for a battery change (OVR-022 to OVR-024) done; open: per group (OVR-020)

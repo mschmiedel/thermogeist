@@ -16,6 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from .const import DOMAIN, MANUFACTURER, SUBENTRY_ROOM, SUBENTRY_THERMOSTAT
 from .device_profiles import async_get_profiles
 from .house_config import (
+    heaters_from_entry,
     house_from_entry,
     migrate_thermostat_subentries,
     rooms_from_entry,
@@ -67,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermogeistConfigEntry) 
         rooms_from_entry(entry),
         thermostats_from_entry(entry),
         profiles=await async_get_profiles(hass),
+        heaters=heaters_from_entry(entry),
     )
     await async_track_devices(hass)
     await runtime.async_load()

@@ -21,7 +21,7 @@ async def async_setup_entry(
     for room_id, state in entry.runtime_data.rooms.items():
         if state.room.window_entities:
             async_add_entities([ResetRoomWindowButton(entry, room_id)], config_subentry_id=room_id)
-        if state.thermostat_ids:
+        if state.has_actuators:
             async_add_entities([ResetLearningButton(entry, room_id)], config_subentry_id=room_id)
         if room_id in entry.runtime_data.child_lock.rooms:
             async_add_entities([UnlockChildLockButton(entry, room_id)], config_subentry_id=room_id)

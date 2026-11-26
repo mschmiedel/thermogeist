@@ -216,6 +216,12 @@
         "flow": "Nur Vorlauf",
         "flow_return": "Vorlauf und Rücklauf"
       }
+    },
+    "energy_source": {
+      "options": {
+        "heating_circuit": "Heizkreis (Heizwasser)",
+        "direct": "Elektrisch (direkt)"
+      }
     }
   },
   "entity": {
@@ -332,6 +338,12 @@
       },
       "child_lock_back_on": {
         "name": "Kindersicherung wieder an"
+      },
+      "heater_stage": {
+        "name": "Stufe {heater}"
+      },
+      "planned_heat_share": {
+        "name": "Geplanter Wärmeanteil"
       }
     },
     "number": {
@@ -379,6 +391,9 @@
     "binary_sensor": {
       "windows": {
         "name": "Fenster"
+      },
+      "heater_not_running": {
+        "name": "{heater} läuft nicht"
       }
     }
   },
@@ -526,7 +541,10 @@
             "edit_room": "Raum bearbeiten",
             "add_thermostat": "Thermostat hinzufügen",
             "edit_thermostat": "Thermostat bearbeiten",
-            "remove_thermostat": "Thermostat entfernen"
+            "remove_thermostat": "Thermostat entfernen",
+            "add_heater": "Heizung hinzufügen",
+            "edit_heater": "Heizung bearbeiten",
+            "remove_heater": "Heizung entfernen"
           }
         },
         "thermostat": {
@@ -609,11 +627,59 @@
           }
         },
         "new_room_thermostats": {
-          "title": "Thermostate von {room}",
-          "description": "Füge die Thermostate dieses Raums gleich hinzu (bisher {count}) oder schließe ab.",
+          "title": "Thermostate und Heizungen von {room}",
+          "description": "Füge jetzt die Thermostate oder Heizungen dieses Raums hinzu (bisher {count}) oder schließe ab. Ein Raum hat entweder Thermostate oder Heizungen.",
           "menu_options": {
             "add_new_room_thermostat": "Thermostat hinzufügen",
+            "add_new_room_heater": "Eine Heizung hinzufügen",
             "new_room_done": "Fertig – Raum speichern"
+          }
+        },
+        "heater": {
+          "title": "Heizung",
+          "description": "Eine Heizung, die Thermogeist schaltet, statt ein Ventil zu bewegen, z. B. eine smarte Steckdose vor einem Gebläsekonvektor oder ein Infrarotpaneel. Thermogeist kennt dein Gerät nicht: Hat es mehrere Stufen, sagt ein Template-Sensor, welche Stufe läuft, und optional stellt eine Template-Number sie ein.",
+          "data": {
+            "name": "Name",
+            "switch": "Schalter",
+            "energy_source": "Wärme aus",
+            "stages": "Anzahl Stufen",
+            "stage_outputs": "Wärmeleistung pro Stufe (W)"
+          },
+          "data_description": {
+            "switch": "Schaltet die Heizung ein und aus.",
+            "energy_source": "Heizkreis: Die Wärme kommt aus dem Heizwasser (Sockelheizung, Gebläsekonvektor), ihre Leistung hängt von der Vorlauftemperatur ab. Elektrisch: Die Wärme entsteht aus Strom (Infrarot, Heizlüfter) und hängt nicht von der Vorlauftemperatur ab.",
+            "stages": "1 für eine einfache An/Aus-Heizung.",
+            "stage_outputs": "Ein Wert pro Stufe, von niedrig nach hoch, durch Kommas getrennt, z. B. „1300, 1700“. Heizkreis: die Normleistung bei 75/65/20 °C aus dem Datenblatt. Elektrisch: die Leistung selbst. Nicht die Leistung, die das Gebläse aufnimmt."
+          },
+          "sections": {
+            "more": {
+              "name": "Stufen und Details",
+              "description": "Template-Entitäten für Heizungen mit mehreren Stufen und Details für eine genaue Leistung.",
+              "data": {
+                "stage_sensor": "Stufen-Sensor",
+                "stage_setter": "Stufen-Setzer",
+                "off_output": "Wärmeleistung im ausgeschalteten Zustand (W)",
+                "exponent": "Exponent der Leistungskurve"
+              },
+              "data_description": {
+                "stage_sensor": "Eine Entität, deren Zustand die laufende Stufe ist: 0 = läuft nicht, 1, 2 … Meist ein Template-Sensor, z. B. aus der Leistung einer smarten Steckdose. Meldet auch eine Heizung, die eingeschaltet ist, aber nicht läuft.",
+                "stage_setter": "Eine Number-Entität, die die Stufe 1, 2 … annimmt – meist eine Template-Number, die dein Gerät schaltet. Ohne sie schaltet Thermogeist nur ein und aus, und die Heizung behält ihre eigene Stufe.",
+                "off_output": "Wärme, die die Heizung auch ausgeschaltet noch abgibt, z. B. Heizwasser, das bei stehendem Gebläse durch eine Sockelheizung fließt. Aus dem Datenblatt; meist 0.",
+                "exponent": "Nur für den Heizkreis. Heizkörper 1,3 (Vorgabe), Gebläsekonvektoren etwa 1,0 – siehe Datenblatt."
+              }
+            }
+          }
+        },
+        "edit_heater": {
+          "title": "Heizung bearbeiten",
+          "data": {
+            "heater": "Heizung"
+          }
+        },
+        "remove_heater": {
+          "title": "Heizung entfernen",
+          "data": {
+            "heater": "Heizung"
           }
         }
       },
@@ -634,10 +700,18 @@
         "role_needs_percent": "Diese Entität meldet keinen Prozentwert. Wähle die Ventilstellung (Einheit %).",
         "role_needs_temperature": "Diese Entität ist kein Temperatureingang.",
         "valve_strategy_needs_valve_write": "Die Strategie „Über Ventilstellung“ braucht die Entität „Ventilstellung (setzen)“. Wähle sie oder eine andere Strategie.",
-        "valve_read_is_write": "Das ist die Entität, auf die Thermogeist schreibt; sie zeigt nur, was Thermogeist gesetzt hat, nicht, wo das Ventil steht. Lass das Feld leer, wenn das Thermostat seine Ventilstellung nicht meldet."
+        "valve_read_is_write": "Das ist die Entität, auf die Thermogeist schreibt; sie zeigt nur, was Thermogeist gesetzt hat, nicht, wo das Ventil steht. Lass das Feld leer, wenn das Thermostat seine Ventilstellung nicht meldet.",
+        "heater_stages_range": "Zwischen 1 und 5 Stufen.",
+        "heater_outputs_count": "Gib genau eine Leistung pro Stufe ein.",
+        "heater_outputs_rising": "Die Leistungen müssen von Stufe zu Stufe steigen, und die Leistung im ausgeschalteten Zustand muss unter der ersten Stufe liegen.",
+        "heater_outputs_unreadable": "Gib Zahlen durch Kommas getrennt ein, z. B. „1300, 1700“.",
+        "heater_exponent_range": "Zwischen 0,8 und 2,0.",
+        "heater_needs_stage_entity": "Bei mehr als einer Stufe muss Thermogeist wissen, welche läuft: Wähle einen Stufen-Sensor oder einen Stufen-Setzer."
       },
       "abort": {
-        "reconfigure_successful": "Erledigt."
+        "reconfigure_successful": "Erledigt.",
+        "room_has_thermostats": "Dieser Raum hat bereits Thermostate. Ein Raum hat entweder Thermostate oder Heizungen; entferne zuerst die Thermostate.",
+        "room_has_heaters": "Dieser Raum hat bereits Heizungen. Ein Raum hat entweder Thermostate oder Heizungen; entferne zuerst die Heizungen."
       }
     }
   },
@@ -683,6 +757,9 @@
     },
     "logbook_calibrated_again": {
       "message": "{thermostat} ist wieder kalibriert"
+    },
+    "logbook_heater_not_running": {
+      "message": "{heater} ist eingeschaltet, läuft aber nicht"
     }
   },
   "issues": {
@@ -709,6 +786,10 @@
     "thermostat_not_calibrated": {
       "title": "{thermostat} ist nicht kalibriert",
       "description": "{thermostat} in {room} meldet, dass es seine Kalibrierung verloren hat, z. B. nach einem Firmware-Update. Es bewegt sein Ventil nicht mehr; meist steht es in der Montageposition ganz offen. Thermogeist zeigt die Ventilstellung als unbekannt. Kalibriere das Thermostat neu (Sonoff: Taste kurz drücken; bei eingeschalteter Kindersicherung zuerst *Kindersicherung: 30 Min. aus*). Die Meldung verschwindet von selbst, sobald das Thermostat wieder kalibriert ist."
+    },
+    "heater_not_running": {
+      "title": "{heater} läuft nicht",
+      "description": "{heater} in {room} ist eingeschaltet, aber sein Stufen-Sensor sagt, dass es nicht läuft. Prüfe Sicherung, Gerät und das Template des Stufen-Sensors. Solange das so ist, rechnet Thermogeist keine Wärme von {heater}."
     }
   }
 }

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
-"""Control mode: write plans to thermostats (spec ACT-040 to ACT-054, OVR-001, OVR-004, OVR-005,
-RSN-003, RSN-004).
+"""Control mode: write plans to thermostats and heaters (spec ACT-040 to ACT-054, ACT-069,
+OVR-001, OVR-004, OVR-005, RSN-003, RSN-004).
 
 This is HA glue. What to write is decided in ``core`` (controller, decisions, supervision);
 this module only talks to the devices, remembers what it changed and puts it back.
@@ -122,8 +122,8 @@ class ControlManager:
         return self.enabled.get(room_id, False)
 
     def can_control(self, room_id: str) -> bool:
-        """ACT-044: every thermostat can be controlled, by valve or by setpoint."""
-        return bool(self._rooms[room_id].thermostat_ids)
+        """ACT-044, ACT-069: thermostats by valve or setpoint, heaters by switching."""
+        return self._rooms[room_id].has_actuators
 
     @property
     def _rooms(self) -> dict[str, RoomState]:
@@ -151,6 +151,8 @@ class ControlManager:
             for tid in self._rooms[room_id].thermostat_ids:
                 await self._async_restore(tid)
                 await self._async_hand_back_setpoint(room_id, tid)
+            for hid in self._rooms[room_id].heater_ids:
+                await self._async_restore(hid)
         await self._runtime.async_save()
         self._runtime.reevaluate()
 
@@ -212,7 +214,24 @@ class ControlManager:
             await self._async_min_opening(tid, thermostat, state.plan)
             await self._async_external_temperature(thermostat, control, state)
             await self._async_setpoint(thermostat, control, target)
+        for hid in state.heater_ids:
+            await self._async_heater(hid)
         self._runtime.notify()
+
+    async def _async_heater(self, hid: str) -> None:
+        """ACT-069: set the planned stage, then the switch; a relay has no battery to spare."""
+        heater = self._runtime.heaters[hid]
+        desired = self._runtime.heater_live[hid].desired_stage
+        if desired is None:
+            return
+        if heater.stage_setter and desired > 0 and self._number(heater.stage_setter) != desired:
+            self._remember(hid, heater.stage_setter)
+            await self._async_set_state(heater.stage_setter, str(desired))
+        wanted = "on" if desired > 0 else "off"
+        current = self._hass.states.get(heater.switch_entity)
+        if current is None or current.state != wanted:
+            self._remember(hid, heater.switch_entity)
+            await self._async_set_state(heater.switch_entity, wanted)
 
     async def _async_device_setpoint(
         self, thermostat: Thermostat, control: ThermostatControl, state: RoomState
@@ -478,11 +497,11 @@ class ControlManager:
 
     async def _async_set_state(self, entity_id: str, value: str) -> None:
         domain = entity_id.split(".", 1)[0]
-        if domain == "number":
-            await self._async_call("number", "set_value", entity_id, value=float(value))
+        if domain in ("number", "input_number"):
+            await self._async_call(domain, "set_value", entity_id, value=float(value))
         elif domain == "select":
             await self._async_call("select", "select_option", entity_id, option=value)
-        elif domain in ("switch", "lock"):
+        elif domain in ("switch", "lock", "input_boolean"):
             service = "turn_on" if value == "on" else "turn_off"
             await self._async_call(domain, service, entity_id)
 

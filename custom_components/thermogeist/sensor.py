@@ -24,10 +24,11 @@ from . import ThermogeistConfigEntry
 from .const import DOCS_URL
 from .core.actuator import Kind, Role, derives_valve
 from .core.decisions import ReasonCode
+from .core.heater import available_w
 from .core.house import HeatingType
 from .core.room import ShareMode
 from .core.sizing import Sizing, SizingResult
-from .entity import HouseEntity, RoomEntity, ThermostatEntity
+from .entity import HeaterEntity, HouseEntity, RoomEntity, ThermostatEntity
 from .runtime import HouseRuntime, RoomState
 
 WATT_PER_KELVIN = "W/K"
@@ -383,6 +384,7 @@ class EstimatedOutputSensor(RoomEntity, SensorEntity):
                     "valve_pct": _round_or_none(r.valve_pct, 0),
                     "valve_source": r.valve_source.value if r.valve_source else None,
                 }
+                | ({"stage": r.stage} if r.stage is not None else {})
                 for r in estimate.radiators
             },
             "valve_characteristic": "assumed",
@@ -410,8 +412,12 @@ async def async_setup_entry(
             sensors.append(RoomSensor(entry, room_id, HEAT_FROM_DEVICES))
         if state.thermostat_ids:
             sensors.append(PlannedValveSensor(entry, room_id))
-            sensors.append(EstimatedOutputSensor(entry, room_id))
             sensors.append(RoomSensor(entry, room_id, RADIATOR_SIZING))
+        elif state.heater_ids:
+            # ACT-063: heaters get a share of their output, not a valve position.
+            sensors.append(PlannedValveSensor(entry, room_id, "planned_heat_share"))
+        if state.has_actuators:
+            sensors.append(EstimatedOutputSensor(entry, room_id))
             sensors.append(RoomSensor(entry, room_id, LEARNED_DEMAND))
         if room_id in entry.runtime_data.child_lock.rooms:
             sensors.append(ChildLockBackOnSensor(entry, room_id))
@@ -423,6 +429,8 @@ async def async_setup_entry(
         # A device belongs to one sub-entry: thermostat sensors live on the room device, so they
         # are registered under the room's sub-entry. Removed thermostats are cleaned up on setup.
         async_add_entities(thermostat_sensors, config_subentry_id=thermostat.room_id)
+    for heater_id, heater in entry.runtime_data.heaters.items():
+        async_add_entities([HeaterStageSensor(entry, heater_id)], config_subentry_id=heater.room_id)
 
 
 class HouseSensor(HouseEntity, SensorEntity):
@@ -482,8 +490,10 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, entry: ThermogeistConfigEntry, room_id: str) -> None:
-        super().__init__(entry, room_id, "planned_valve_position")
+    def __init__(
+        self, entry: ThermogeistConfigEntry, room_id: str, key: str = "planned_valve_position"
+    ) -> None:
+        super().__init__(entry, room_id, key)
 
     @property
     def native_value(self) -> float | None:
@@ -497,8 +507,17 @@ class PlannedValveSensor(RoomEntity, SensorEntity):
         attributes: dict[str, Any] = {
             # ACT-014: whether the plan only shows (observe) or is written (control).
             "mode": "control" if self.runtime.control.is_enabled(self._room_id) else "observe",
-            "strategies": sorted({t.kind.value for t in thermostats}),
-            "radiator_output_w": self.room_state.rated_output_w,
+        }
+        if thermostats:
+            attributes |= {
+                "strategies": sorted({t.kind.value for t in thermostats}),
+                "radiator_output_w": self.room_state.rated_output_w,
+            }
+        else:
+            attributes["heaters"] = [
+                self.runtime.heaters[h].name for h in self.room_state.heater_ids
+            ]
+        attributes |= {
             "flow_temperature_used": _rounded(self.runtime.flow_used_c),
             "return_temperature_used": _rounded(self.runtime.return_used_c),
             "spread_used": _rounded(self.runtime.spread_used_k),
@@ -599,3 +618,50 @@ class ThermostatValveSensor(ThermostatEntity, SensorEntity):
     @callback
     def _source_changed(self, _event: Event[EventStateChangedData]) -> None:
         self.async_write_ha_state()
+
+
+class HeaterStageSensor(HeaterEntity, SensorEntity):
+    """ACT-065: the stage a heater runs on, with its plan and output."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, entry: ThermogeistConfigEntry, heater_id: str) -> None:
+        super().__init__(entry, heater_id, "heater_stage")
+
+    @property
+    def native_value(self) -> int | None:
+        return self.runtime.heater_live[self._heater_id].stage
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        heater = self.heater
+        live = self.runtime.heater_live[self._heater_id]
+        plan = live.plan
+        room_c = self.room_state.current_temperature_c
+        flow, spread = self.runtime.flow_used_c, self.runtime.spread_used_k
+        output = (
+            available_w(heater, live.stage, flow, room_c, spread)
+            if live.stage is not None
+            else None
+        )
+        return {
+            "mode": "control" if self.runtime.control.is_enabled(self._room_id) else "observe",
+            "planned_stage": live.desired_stage,
+            "lower_stage": plan.lower if plan else None,
+            "upper_stage": plan.upper if plan else None,
+            "upper_share_pct": round(plan.upper_share * 100) if plan else None,
+            "cycle_started": (
+                live.cycler.cycle_start.isoformat() if live.cycler.cycle_start else None
+            ),
+            "on_since": live.on_since.isoformat() if live.on_since else None,
+            "off_since": live.off_since.isoformat() if live.off_since else None,
+            "heat_output_w": _round_or_none(output, 0),
+            "stage_source": live.stage_source.value,
+            "energy_source": heater.energy_source.value,
+            "stage_outputs_w": list(heater.stage_outputs_w),
+            "off_output_w": heater.off_output_w,
+            "exponent": heater.exponent,
+            "switch": heater.switch_entity,
+            "stage_sensor": heater.stage_sensor,
+            "stage_setter": heater.stage_setter,
+        }

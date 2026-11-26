@@ -32,6 +32,8 @@ nervously, and when they switch off you rarely learn why. Thermogeist adds the m
 - **Room control** by valve position (Sonoff TRVZB, Bosch Radiator Thermostat II) or by
   setpoint (any thermostat with a climate entity), with a calm controller that plans ahead from
   the heat demand.
+- **Switched heaters** with 1 to 5 stages (fan convectors, infrared panels, smart plugs): time on
+  two neighbouring stages per cycle, stages read and set through your own templates.
 - **Windows:** heating pauses 30 s after a contact opens and resumes at once when it closes;
   thermostats' own window functions and schedules cannot change your room setpoints.
 - **Learning:** each room learns from quiet hours how much of its modelled demand it really
@@ -57,6 +59,7 @@ Planned: schedules, connections between rooms (open doors) – see [`spec/roadma
 | Sonoff TRV-ZBT (Gen 2) | Zigbee2MQTT | Valve position | profile, not tested |
 | Other Zigbee2MQTT thermostats | Zigbee2MQTT + MQTT integration | Roles detected from Zigbee2MQTT | detected, not tested |
 | Any thermostat with a `climate` entity (e.g. Bosch Smart Home) | Home Assistant | Setpoint – with limits, see [Thermostats](docs/en/thermostats.md) | yes |
+| Switched heaters with 1 to 5 stages (smart plug, relay, template) | Home Assistant | Switching, stages via your own templates, see [Heaters with stages](docs/en/heaters.md) | new, not field-tested |
 
 ## Installation
 
@@ -75,6 +78,7 @@ Requires Home Assistant 2026.10 or newer.
 
 - [Getting started](docs/en/getting-started.md) – install and describe your house
 - [Rooms](docs/en/rooms.md) and [Thermostats](docs/en/thermostats.md) – with flow diagrams
+- [Heaters with stages](docs/en/heaters.md) – fan convectors, infrared panels, smart plugs
 - [All entities](docs/en/entities.md) – what each value means and when it is available
 - [FAQ](docs/en/faq/README.md) – every reason a room can show
 

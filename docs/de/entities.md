@@ -47,21 +47,22 @@ Heizungsart ([Tabelle](getting-started.md#was-du-danach-siehst)). Das Attribut `
 | Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
 |---|---|---|---|
 | Klima (heißt wie der Raum) | Raumtemperatur und der Sollwert, den du einstellst (5–30 °C). Für Dashboards und Sprachassistenten. | immer | – (Temperatur unbekannt, solange der Raumsensor keinen Wert hat) |
-| Regeln | Schalter: aus = Thermogeist beobachtet nur, an = es schreibt auf die Thermostate. Attribut `can_control`. | immer | nicht verfügbar, solange der Raum kein Thermostat hat |
+| Regeln | Schalter: aus = Thermogeist beobachtet nur, an = es schreibt auf die Thermostate oder schaltet die Heizungen. Attribut `can_control`. | immer | nicht verfügbar, solange der Raum weder Thermostat noch Heizung hat |
 | Aktueller Grund | Warum der Raum sein aktuelles Ziel hat, mit einer [FAQ-Seite](faq/README.md) je Grund. Attribute: `severity`, `since`, `faq` und die Zahlen zum Grund. | immer | – |
 | Zieltemperatur | Was der Raum gerade anstrebt, z. B. 7 °C bei offenem Fenster. | immer | der Raum soll nicht heizen (Zentralmodus *Aus*) |
 | Wärmebedarf | Watt, die der Raum gerade braucht, um sein Ziel zu halten: Wärmeverlustkoeffizient × (Ziel − außen). | immer | keine Heizlast oder Normaußentemperatur am Haus, oder keine Außentemperatur |
-| Geschätzte Heizleistung | Watt, die die Heizkörper gerade abgeben – zum Vergleich neben dem *Wärmebedarf* ([Details unten](#geschätzte-heizleistung)). Attribute: `max_output_w`, `radiators`, `valve_characteristic`, `missing`. | Raum hat Thermostate | siehe `missing`: ein Thermostat ohne Nennleistung oder Ventilstellung, kein Vorlauf oder keine Raumtemperatur |
+| Geschätzte Heizleistung | Watt, die die Heizkörper gerade abgeben – zum Vergleich neben dem *Wärmebedarf* ([Details unten](#geschätzte-heizleistung)). Attribute: `max_output_w`, `radiators`, `valve_characteristic`, `missing`. | Raum hat Thermostate oder Heizungen | siehe `missing`: ein Thermostat ohne Nennleistung oder Ventilstellung, kein Vorlauf oder keine Raumtemperatur |
 | Anteil an der Heizlast | Der Anteil des Raums, geschätzt oder eingetragen. Attribute: `source` (`estimated` / `known`), `scaled_down`. Diagnose. | immer | – |
 | Wärmeverlustkoeffizient | Watt pro Kelvin Unterschied nach draußen. Diagnose. | immer | keine Heizlast oder Normaußentemperatur am Haus |
 | Wärme aus Geräten | Watt, die deine Geräte in den Raum abgeben, nach Faktoren, über 10 Minuten gemittelt ([Räume](rooms.md#geräte-die-den-raum-heizen)). Attribute: `sources`, `factor_entities`. | Wärmequellen gewählt | – |
 | Geplante Ventilstellung | Was Thermogeist stellen würde (Beobachten) oder stellt (Regeln). Attribute: `mode` (`observe` / `control`), `feed_forward`, `feed_forward_missing`, `proportional`, `integral`, `limits` und die verwendeten Temperaturen ([Thermostate](thermostats.md#was-du-siehst)). | Raum hat Thermostate | direkt nach dem Start, vor dem ersten Plan |
+| Geplanter Wärmeanteil | Räume mit Heizungen statt Thermostaten: der Anteil an der höchsten Leistung der Heizungen, den Thermogeist plant, mit denselben Attributen wie *Geplante Ventilstellung* und zusätzlich `heaters` ([Heizungen](heaters.md#wie-thermogeist-schaltet)). | Raum hat Heizungen | direkt nach dem Start, vor dem ersten Plan |
 | Heizkörpergröße | Schaffen die Heizkörper den Sollwert am Auslegungstag? Attribute mit den Zahlen ([FAQ](faq/radiator_sizing.md)). Diagnose. | Raum hat Thermostate | – (zeigt *Noch nicht bewertbar* mit `missing`) |
-| Gelernter Bedarf | Wie viel der Wärme, die seine Angaben erwarten lassen, der Raum wirklich braucht, gelernt aus ruhigen Stunden ([FAQ](faq/learned_demand.md)). Plant das Ventil mit, sobald `settled`. Attribute: `state`, `quiet_hours`, `days`, `day_pct`, `night_pct`, `spread_pct`. | Raum hat Thermostate | noch `learning` (weniger als 24 ruhige Stunden an 3 Tagen) |
+| Gelernter Bedarf | Wie viel der Wärme, die seine Angaben erwarten lassen, der Raum wirklich braucht, gelernt aus ruhigen Stunden ([FAQ](faq/learned_demand.md)). Plant das Ventil mit, sobald `settled`. Attribute: `state`, `quiet_hours`, `days`, `day_pct`, `night_pct`, `spread_pct`. | Raum hat Thermostate oder Heizungen | noch `learning` (weniger als 24 ruhige Stunden an 3 Tagen) |
 | Kindersicherung | Schalter: an hält die Kindersicherung der Thermostate im Raum an, auch nach einem Firmware-Update oder Batteriewechsel; aus entsperrt sie. Sperrst du ein Thermostat am Gerät, geht der Schalter an. Wirkt auch beim Beobachten. Zeigt aus während *30 Min. aus* ([Thermostate](thermostats.md#kindersicherung)). | ein Thermostat im Raum hat eine Kindersicherung | nicht verfügbar, solange kein Thermostat seine Sperre meldet |
 | Kindersicherung: 30 Min. aus | Taste: entsperrt die Thermostate des Raums für 30 Minuten, z. B. für einen Batteriewechsel; danach geht die Sperre von selbst wieder an. | wie *Kindersicherung* | nicht verfügbar, solange die Kindersicherung dauerhaft aus ist |
 | Kindersicherung wieder an | Wann die Sperre wieder angeht, angezeigt z. B. als „in 27 Minuten“. Leg sie im Dashboard neben den Schalter. | wie *Kindersicherung* | außerhalb der 30 Minuten |
-| Lernen: neu beginnen | Taste: Der Raum vergisst das Gelernte und beginnt neu. Konfiguration. | Raum hat Thermostate | – |
+| Lernen: neu beginnen | Taste: Der Raum vergisst das Gelernte und beginnt neu. Konfiguration. | Raum hat Thermostate oder Heizungen | – |
 | Fenster | An, solange ein Kontakt des Raums offen ist. Attribute: `contacts`, `heating_paused`, `frost_guard`, `close_after_s`, `resume_after_s`. | Fensterkontakte gewählt | – |
 | Fenster: schließen nach, Fenster: wieder heizen nach | Die eigenen Fensterzeiten des Raums; Hauswert, bis du sie änderst (Attribut `source`). Konfiguration. | Fensterkontakte gewählt | – |
 | Fenster: Zeiten auf Haus zurücksetzen | Taste: der Raum folgt wieder den Fensterzeiten des Hauses. Konfiguration. | Fensterkontakte gewählt | – |
@@ -74,6 +75,15 @@ Nach dem Thermostat benannt, am Raum-Gerät.
 |---|---|---|---|
 | Art *Thermostat* | Über Ventilstellung oder über Sollwert. Attribute: `strategy`, `profile`, `radiator_output_w`, `roles` und was Thermogeist zuletzt geschrieben hat (`last_write`, `last_write_value`, `last_confirmation`, `rewrites_last_hour`; über Sollwert `setpoint_offset`). Diagnose. | immer | – |
 | Ventilstellung *Thermostat* | Wo das Ventil wirklich steht – zum Vergleich mit der geplanten ([warum sie abweichen kann](thermostats.md#geplante-und-tatsächliche-ventilstellung)). `source: reported`, wenn das Thermostat sie meldet; `source: derived` bei Sonoff-Thermostaten: die gesetzte Stellung, solange das Thermostat heizt, die Mindestöffnung, solange es ruht (`hvac_action`). | die Rolle *Ventilstellung (lesen)* ist ausgefüllt, oder ein Sonoff mit Ventilstellung (setzen) und Mindestöffnung | das Thermostat meldet nichts, ein Sonoff meldet weder Heizen noch Ruhen, oder das Thermostat ist [nicht kalibriert](faq/thermostat_not_calibrated.md) |
+
+## Heizung
+
+Nach der Heizung benannt, am Raumgerät ([Heizungen mit Stufen](heaters.md)).
+
+| Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
+|---|---|---|---|
+| Stufe *Heizung* | Die Stufe, die gerade läuft: 0 = aus. Attribute: `mode`, `planned_stage`, `lower_stage`, `upper_stage`, `upper_share_pct`, `cycle_started`, `on_since`, `off_since`, `heat_output_w`, `stage_source`, `energy_source`, `stage_outputs_w`, `off_output_w`, `exponent` und die verwendeten Entitäten. | immer | der Schalter ist nicht verfügbar, oder der Stufen-Sensor meldet etwas anderes als 0 … N |
+| *Heizung* läuft nicht | Problem: seit 3 Minuten eingeschaltet, aber der Stufen-Sensor meldet 0 ([FAQ](faq/heater_not_running.md)). | ein Stufen-Sensor ist gewählt | – |
 
 ## Geschätzte Heizleistung
 

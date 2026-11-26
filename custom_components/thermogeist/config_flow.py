@@ -52,15 +52,20 @@ from .const import (
     CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
     CONF_DEVICE,
+    CONF_ENERGY_SOURCE,
+    CONF_EXPONENT,
     CONF_EXTERIOR_WALLS,
     CONF_FLOOR_AREA,
     CONF_FLOW_TEMPERATURE_ENTITY,
     CONF_HEAT_LOAD,
     CONF_HEAT_SOURCES,
+    CONF_HEATER,
+    CONF_HEATERS,
     CONF_HEATING_TYPE,
     CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
     CONF_NAME,
+    CONF_OFF_OUTPUT,
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
     CONF_PROFILE,
     CONF_RATED_OUTPUT,
@@ -71,7 +76,12 @@ from .const import (
     CONF_SOURCE_ENTITY,
     CONF_SOURCE_FACTOR,
     CONF_SOURCE_FACTOR_ENTITY,
+    CONF_STAGE_OUTPUTS,
+    CONF_STAGE_SENSOR,
+    CONF_STAGE_SETTER,
+    CONF_STAGES,
     CONF_STRATEGY,
+    CONF_SWITCH,
     CONF_TEMPERATURE_ENTITY,
     CONF_THERMOSTAT_NAME,
     CONF_THERMOSTATS,
@@ -97,6 +107,15 @@ from .core.actuator import (
 )
 from .core.estimation import known_shares_exceed_total
 from .core.exposes import profile_from_exposes
+from .core.heater import (
+    HEATER_EXPONENT_DEFAULT,
+    HEATER_EXPONENT_MAX,
+    HEATER_EXPONENT_MIN,
+    HEATER_STAGES_MAX,
+    EnergySource,
+    parse_outputs,
+    validate_heater,
+)
 from .core.house import (
     CURVE_FLOW_C_MAX,
     CURVE_FLOW_C_MIN,
@@ -744,6 +763,8 @@ class RoomSubentryFlow(ThermostatSteps):
         self._source_ids: list[str] = []
         self._factors: dict[str, float] = {}
         self._factor_entities: dict[str, str] = {}
+        self._heater_id: str | None = None
+        self._heater_defaults: dict[str, Any] = {}
         self._init_thermostat()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
@@ -752,9 +773,17 @@ class RoomSubentryFlow(ThermostatSteps):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        options = ["edit_room", "add_thermostat"]
-        if self._room_thermostats():
+        options = ["edit_room"]
+        thermostats, heaters = self._room_thermostats(), self._room_heaters()
+        # ACT-060: a room has either thermostats or heaters.
+        if not heaters:
+            options.append("add_thermostat")
+        if thermostats:
             options += ["edit_thermostat", "remove_thermostat"]
+        if not thermostats:
+            options.append("add_heater")
+        if heaters:
+            options += ["edit_heater", "remove_heater"]
         return self.async_show_menu(step_id="reconfigure", menu_options=options)
 
     async def async_step_edit_room(
@@ -765,6 +794,8 @@ class RoomSubentryFlow(ThermostatSteps):
     async def async_step_add_thermostat(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
+        if self._room_heaters():
+            return self.async_abort(reason="room_has_heaters")
         self._thermostat_id = ulid_now()
         self._thermostat_defaults = {}
         return await self.async_step_thermostat()
@@ -822,13 +853,21 @@ class RoomSubentryFlow(ThermostatSteps):
     async def async_step_new_room_thermostats(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """HAI-021: add a thermostat right away, or save the room."""
+        """HAI-021: add a thermostat or heater right away, or save the room."""
+        options = []
+        if not self._data.get(CONF_HEATERS):
+            options.append("add_new_room_thermostat")
+        if not self._data.get(CONF_THERMOSTATS):
+            options.append("add_new_room_heater")
         return self.async_show_menu(
             step_id="new_room_thermostats",
-            menu_options=["add_new_room_thermostat", "new_room_done"],
+            menu_options=[*options, "new_room_done"],
             description_placeholders={
                 "room": str(self._data.get(CONF_NAME, "")).strip(),
-                "count": str(len(self._data.get(CONF_THERMOSTATS) or {})),
+                "count": str(
+                    len(self._data.get(CONF_THERMOSTATS) or {})
+                    + len(self._data.get(CONF_HEATERS) or {})
+                ),
             },
         )
 
@@ -838,6 +877,93 @@ class RoomSubentryFlow(ThermostatSteps):
         self._thermostat_id = ulid_now()
         self._thermostat_defaults = {}
         return await self.async_step_thermostat()
+
+    async def async_step_add_new_room_heater(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        self._heater_id = ulid_now()
+        self._heater_defaults = {}
+        return await self.async_step_heater()
+
+    # ----- heaters with stages (ACT-060 to ACT-067) ---------------------------------------
+
+    def _room_heaters(self) -> dict[str, dict[str, Any]]:
+        if self.source != SOURCE_RECONFIGURE:
+            return dict(self._data.get(CONF_HEATERS) or {})
+        stored = self._get_reconfigure_subentry().data.get(CONF_HEATERS) or {}
+        return {hid: dict(data) for hid, data in stored.items()}
+
+    async def async_step_add_heater(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        if self._room_thermostats():
+            return self.async_abort(reason="room_has_thermostats")
+        self._heater_id = ulid_now()
+        self._heater_defaults = {}
+        return await self.async_step_heater()
+
+    async def async_step_edit_heater(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        if user_input is not None:
+            self._heater_id = user_input[CONF_HEATER]
+            self._heater_defaults = self._room_heaters()[self._heater_id]
+            return await self.async_step_heater()
+        return self.async_show_form(
+            step_id="edit_heater", data_schema=self._heater_pick_schema(), last_step=False
+        )
+
+    async def async_step_remove_heater(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """The switch gets its state back on the next start (ACT-069)."""
+        if user_input is not None:
+            heaters = self._room_heaters()
+            heaters.pop(user_input[CONF_HEATER], None)
+            return self._update_room({CONF_HEATERS: heaters})
+        return self.async_show_form(
+            step_id="remove_heater", data_schema=self._heater_pick_schema(), last_step=True
+        )
+
+    def _heater_pick_schema(self) -> vol.Schema:
+        options = [
+            {"value": hid, "label": str(data.get(CONF_THERMOSTAT_NAME, hid))}
+            for hid, data in self._room_heaters().items()
+        ]
+        return vol.Schema(
+            {
+                vol.Required(CONF_HEATER): SelectSelector(
+                    SelectSelectorConfig(options=options, mode=SelectSelectorMode.LIST)
+                )
+            }
+        )
+
+    async def async_step_heater(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """ACT-060 to ACT-067: switch, stages, outputs and the optional template entities."""
+        values = self._heater_defaults
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            values = _flatten(user_input)
+            data, errors = heater_input(values)
+            if not errors:
+                return await self._save_heater(data)
+        return self.async_show_form(
+            step_id="heater",
+            data_schema=vol.Schema(heater_schema(values, open_more=bool(errors))),
+            errors=errors,
+            last_step=True,
+        )
+
+    async def _save_heater(self, heater: dict[str, Any]) -> SubentryFlowResult:
+        assert self._heater_id is not None
+        if self.source != SOURCE_RECONFIGURE:
+            self._data.setdefault(CONF_HEATERS, {})[self._heater_id] = heater
+            return await self.async_step_new_room_thermostats()
+        heaters = self._room_heaters()
+        heaters[self._heater_id] = heater
+        return self._update_room({CONF_HEATERS: heaters})
 
     async def async_step_new_room_done(
         self, user_input: dict[str, Any] | None = None
@@ -1125,3 +1251,81 @@ def _heat_source(entity_id: str, user_input: Mapping[str, Any]) -> dict[str, Any
     if factor_entity := user_input.get(factor_entity_key(entity_id)):
         source[CONF_SOURCE_FACTOR_ENTITY] = factor_entity
     return source
+
+
+def heater_schema(values: Mapping[str, Any], *, open_more: bool) -> dict[vol.Marker, Any]:
+    """ACT-060 to ACT-067: the heater form; template entities and curve details collapsed."""
+    outputs = values.get(CONF_STAGE_OUTPUTS)
+    if isinstance(outputs, list | tuple):
+        outputs = ", ".join(f"{v:g}" for v in outputs)
+    more = {
+        _optional(values, CONF_STAGE_SENSOR): EntitySelector(
+            EntitySelectorConfig(domain=["sensor", "input_number", "number"])
+        ),
+        _optional(values, CONF_STAGE_SETTER): EntitySelector(
+            EntitySelectorConfig(domain=["number", "input_number"])
+        ),
+        _optional(values, CONF_OFF_OUTPUT): _number(0, RATED_OUTPUT_W_MAX, 1, "W"),
+        _optional(values, CONF_EXPONENT): _number(
+            HEATER_EXPONENT_MIN, HEATER_EXPONENT_MAX, 0.01, ""
+        ),
+    }
+    return {
+        vol.Required(CONF_NAME, default=values.get(CONF_THERMOSTAT_NAME, vol.UNDEFINED)): (
+            TextSelector()
+        ),
+        vol.Required(CONF_SWITCH, default=values.get(CONF_SWITCH, vol.UNDEFINED)): EntitySelector(
+            EntitySelectorConfig(domain=["switch", "input_boolean"])
+        ),
+        vol.Required(
+            CONF_ENERGY_SOURCE, default=values.get(CONF_ENERGY_SOURCE, EnergySource.DIRECT)
+        ): _select([s.value for s in EnergySource], "energy_source"),
+        vol.Required(CONF_STAGES, default=values.get(CONF_STAGES, 1)): _number(
+            1, HEATER_STAGES_MAX, 1, ""
+        ),
+        vol.Required(CONF_STAGE_OUTPUTS, default=outputs or vol.UNDEFINED): TextSelector(),
+        vol.Required(SECTION_MORE): _section(
+            more,
+            open_=open_more
+            or any(values.get(k) for k in (CONF_STAGE_SENSOR, CONF_STAGE_SETTER, CONF_OFF_OUTPUT)),
+        ),
+    }
+
+
+def heater_input(values: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
+    """Turn the heater form into stored data, or field errors (ACT-060, ACT-062, ACT-067)."""
+    errors: dict[str, str] = {}
+    name = str(values.get(CONF_NAME, "")).strip()
+    if not name:
+        errors[CONF_NAME] = "name_empty"
+    stages = int(values.get(CONF_STAGES) or 1)
+    outputs = parse_outputs(str(values.get(CONF_STAGE_OUTPUTS) or ""))
+    off_output = float(values.get(CONF_OFF_OUTPUT) or 0.0)
+    source = EnergySource(values.get(CONF_ENERGY_SOURCE, EnergySource.DIRECT))
+    exponent = values.get(CONF_EXPONENT)
+    exponent = float(exponent) if exponent else HEATER_EXPONENT_DEFAULT
+    sensor = values.get(CONF_STAGE_SENSOR) or None
+    setter = values.get(CONF_STAGE_SETTER) or None
+    if outputs is None:
+        errors[CONF_STAGE_OUTPUTS] = "heater_outputs_unreadable"
+    else:
+        errors |= validate_heater(
+            stages,
+            outputs,
+            off_output,
+            exponent,
+            has_stage_sensor=sensor is not None,
+            has_stage_setter=setter is not None,
+        )
+    data = {
+        CONF_THERMOSTAT_NAME: name,
+        CONF_SWITCH: values.get(CONF_SWITCH),
+        CONF_ENERGY_SOURCE: source.value,
+        CONF_STAGES: stages,
+        CONF_STAGE_OUTPUTS: outputs or [],
+        CONF_OFF_OUTPUT: off_output,
+        CONF_EXPONENT: exponent if source is EnergySource.HEATING_CIRCUIT else None,
+        CONF_STAGE_SENSOR: sensor,
+        CONF_STAGE_SETTER: setter,
+    }
+    return data, errors

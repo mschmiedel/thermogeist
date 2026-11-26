@@ -22,15 +22,19 @@ from .const import (
     CONF_DESIGN_INDOOR,
     CONF_DESIGN_TEMPERATURE,
     CONF_DEVICE,
+    CONF_ENERGY_SOURCE,
+    CONF_EXPONENT,
     CONF_EXTERIOR_WALLS,
     CONF_FLOOR_AREA,
     CONF_FLOW_TEMPERATURE_ENTITY,
     CONF_HEAT_LOAD,
     CONF_HEAT_SOURCES,
+    CONF_HEATERS,
     CONF_HEATING_TYPE,
     CONF_KNOWN_SHARE,
     CONF_LIVING_AREA,
     CONF_NAME,
+    CONF_OFF_OUTPUT,
     CONF_OUTDOOR_TEMPERATURE_ENTITY,
     CONF_PROFILE,
     CONF_RATED_OUTPUT,
@@ -42,7 +46,11 @@ from .const import (
     CONF_SOURCE_ENTITY,
     CONF_SOURCE_FACTOR,
     CONF_SOURCE_FACTOR_ENTITY,
+    CONF_STAGE_OUTPUTS,
+    CONF_STAGE_SENSOR,
+    CONF_STAGE_SETTER,
     CONF_STRATEGY,
+    CONF_SWITCH,
     CONF_TEMPERATURE_ENTITY,
     CONF_THERMOSTAT_NAME,
     CONF_THERMOSTATS,
@@ -53,6 +61,7 @@ from .const import (
     SUBENTRY_ROOM,
 )
 from .core.actuator import Role, Strategy, Thermostat
+from .core.heater import HEATER_EXPONENT_DEFAULT, EnergySource, Heater
 from .core.house import CurvePoints, HeatingType, House
 from .core.room import (
     DEFAULT_CEILING_HEIGHT_M,
@@ -188,6 +197,31 @@ def thermostats_from_entry(entry: ConfigEntry) -> dict[str, Thermostat]:
         for room_id, subentry in entry.subentries.items()
         if subentry.subentry_type == SUBENTRY_ROOM
         for thermostat_id, data in (subentry.data.get(CONF_THERMOSTATS) or {}).items()
+    }
+
+
+def heater_from_config(config: Mapping[str, Any], room_id: str, name: str) -> Heater:
+    """ACT-060: a heater as stored inside its room."""
+    return Heater(
+        room_id=room_id,
+        name=name,
+        switch_entity=str(config[CONF_SWITCH]),
+        energy_source=EnergySource(config.get(CONF_ENERGY_SOURCE, EnergySource.DIRECT)),
+        stage_outputs_w=tuple(float(v) for v in config.get(CONF_STAGE_OUTPUTS) or ()),
+        off_output_w=_optional_float(config.get(CONF_OFF_OUTPUT)) or 0.0,
+        exponent=_optional_float(config.get(CONF_EXPONENT)) or HEATER_EXPONENT_DEFAULT,
+        stage_sensor=config.get(CONF_STAGE_SENSOR) or None,
+        stage_setter=config.get(CONF_STAGE_SETTER) or None,
+    )
+
+
+def heaters_from_entry(entry: ConfigEntry) -> dict[str, Heater]:
+    """All heaters of a house, keyed by heater id; they live in their room like thermostats."""
+    return {
+        heater_id: heater_from_config(data, room_id, str(data.get(CONF_THERMOSTAT_NAME, heater_id)))
+        for room_id, subentry in entry.subentries.items()
+        if subentry.subentry_type == SUBENTRY_ROOM
+        for heater_id, data in (subentry.data.get(CONF_HEATERS) or {}).items()
     }
 
 

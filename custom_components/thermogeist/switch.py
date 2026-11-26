@@ -36,7 +36,7 @@ class ControlSwitch(RoomEntity, SwitchEntity):
 
     @property
     def available(self) -> bool:
-        return bool(self.room_state.thermostat_ids)
+        return self.room_state.has_actuators
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

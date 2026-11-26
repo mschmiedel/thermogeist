@@ -7,7 +7,7 @@ tells the entities to refresh. The decisions themselves are made in ``core``.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -40,6 +40,7 @@ from .core.controller import (
     ControllerInputs,
     ControllerResult,
     ControllerSettings,
+    Limit,
     RoomController,
     feed_forward_pct,
 )
@@ -58,6 +59,21 @@ from .core.heat import (
     heat_from_sources_w,
     net_demand_w,
     room_heat_loss_w_per_k,
+)
+from .core.heater import (
+    EnergySource,
+    Heater,
+    HeaterReading,
+    StageCycler,
+    StagePlan,
+    StageSource,
+    current_stage,
+    estimate_heaters_output,
+    heater_fault,
+    heater_feed_forward_pct,
+    heater_key,
+    parse_stage,
+    stage_plan,
 )
 from .core.house import FROST_PROTECTION_SETPOINT_C, CentralMode, HeatingType, House
 from .core.learning import (
@@ -123,6 +139,24 @@ def update_signal(entry_id: str) -> str:
 
 
 @dataclass(slots=True)
+class HeaterLive:
+    """What a heater with stages does right now (ACT-063 to ACT-066)."""
+
+    cycler: StageCycler = field(default_factory=StageCycler)
+    plan: StagePlan | None = None
+    desired_stage: int | None = None
+    """ACT-063: the stage the cycle asks for now; written only in control mode."""
+    stage: int | None = None
+    stage_source: StageSource = StageSource.SWITCH
+    switch_on: bool | None = None
+    on_since: datetime | None = None
+    off_since: datetime | None = None
+    last_running_stage: int | None = None
+    """ACT-067: without a setter, the heater runs on the stage it was last seen on."""
+    fault: bool = False
+
+
+@dataclass(slots=True)
 class RoomState:
     """Live values of one room."""
 
@@ -137,6 +171,8 @@ class RoomState:
     decision: Decision | None = None
     demand_w: float | None = None
     thermostat_ids: list[str] = field(default_factory=list)
+    heater_ids: list[str] = field(default_factory=list)
+    """ACT-060: a room has either thermostats or heaters."""
     controller: RoomController = field(default_factory=RoomController)
     plan: ControllerResult | None = None
     """Planned valve position (observe mode, ACT-014)."""
@@ -166,6 +202,11 @@ class RoomState:
     learned_logged_pct: float | None = None
     """LRN-034: factor last written to the logbook."""
 
+    @property
+    def has_actuators(self) -> bool:
+        """Thermostats or heaters: something Thermogeist can plan for."""
+        return bool(self.thermostat_ids or self.heater_ids)
+
 
 class HouseRuntime:
     """Everything that changes while Home Assistant runs."""
@@ -179,6 +220,7 @@ class HouseRuntime:
         thermostats: dict[str, Thermostat] | None = None,
         clock: TimeProvider | None = None,
         profiles: list[DeviceProfile] | None = None,
+        heaters: dict[str, Heater] | None = None,
     ) -> None:
         self._hass = hass
         self._entry_id = entry_id
@@ -211,6 +253,11 @@ class HouseRuntime:
         for thermostat_id, thermostat in self.thermostats.items():
             if thermostat.room_id in self.rooms:
                 self.rooms[thermostat.room_id].thermostat_ids.append(thermostat_id)
+        self.heaters: dict[str, Heater] = heaters or {}
+        self.heater_live: dict[str, HeaterLive] = {hid: HeaterLive() for hid in self.heaters}
+        for heater_id, heater in self.heaters.items():
+            if heater.room_id in self.rooms:
+                self.rooms[heater.room_id].heater_ids.append(heater_id)
         for state in self.rooms.values():
             outputs = [
                 self.thermostats[t].rated_output_w
@@ -301,6 +348,8 @@ class HouseRuntime:
             watched.append(self.house.flow_temperature_entity)
         if self.house.return_temperature_entity:
             watched.append(self.house.return_temperature_entity)
+        for heater in self.heaters.values():
+            watched += [e for e in (heater.switch_entity, heater.stage_sensor) if e]
         self._unsubscribe.append(
             async_track_state_change_event(self._hass, watched, self._on_state_change)
         )
@@ -314,7 +363,11 @@ class HouseRuntime:
             async_call_later(self._hass, STARTUP_HOLD.total_seconds() + 1, self._on_delayed)
         )
         # Devices of thermostats that were removed while controlled get their settings back.
-        for orphan in [tid for tid in self.control.restore if tid not in self.thermostats]:
+        for orphan in [
+            tid
+            for tid in self.control.restore
+            if tid not in self.thermostats and tid not in self.heaters
+        ]:
             self._hass.async_create_task(self.control.async_restore_orphan(orphan))
         self._reevaluate()
         self._update_sizing()
@@ -493,7 +546,7 @@ class HouseRuntime:
         outdoor = self.outdoor_temperature_c()
         night = is_night(dt_util.as_local(now).hour)
         for room_id, state in self.rooms.items():
-            if not state.thermostat_ids:
+            if not state.has_actuators:
                 continue
             radiators = self.estimated_output(room_id).output_w
             room_c = state.current_temperature_c
@@ -616,6 +669,18 @@ class HouseRuntime:
     def estimated_output(self, room_id: str) -> OutputEstimate:
         """MDL-013: what the room's radiators give right now (estimate)."""
         state = self.rooms[room_id]
+        if state.heater_ids:
+            return estimate_heaters_output(
+                [
+                    HeaterReading(
+                        self.heaters[h], self.heater_live[h].stage, self.heater_live[h].fault
+                    )
+                    for h in state.heater_ids
+                ],
+                self.flow_used_c,
+                state.current_temperature_c,
+                self.spread_used_k,
+            )
         controlled = self.control.is_enabled(room_id) and state.plan is not None
         radiators = []
         for tid in state.thermostat_ids:
@@ -638,7 +703,7 @@ class HouseRuntime:
                 RoomBalanceInput(
                     state.room.name,
                     state.demand_w,
-                    self.estimated_output(room_id).output_w if state.thermostat_ids else None,
+                    self.estimated_output(room_id).output_w if state.has_actuators else None,
                     state.heat_from_sources_w,
                 )
                 for room_id, state in self.rooms.items()
@@ -816,6 +881,7 @@ class HouseRuntime:
         flow = self.flow_temperature_c()
         spread = self.spread_k(flow)
         settings = self.controller_settings()
+        self._sample_heaters()
         for room_id, state in self.rooms.items():
             before = state.decision
             previous = before.code if before else None
@@ -854,7 +920,7 @@ class HouseRuntime:
             state.demand_w = current_demand_w(
                 state.heat_loss_w_per_k, state.decision.target_setpoint_c, outdoor
             )
-            if state.thermostat_ids:
+            if state.has_actuators:
                 self._plan(state, flow, spread, settings)
                 self._save_later()
             self._update_sensor_issue(room_id, state)
@@ -941,40 +1007,124 @@ class HouseRuntime:
             actual = self._reported_valve_pct(state)
             if actual is not None:
                 state.controller.seed(actual)
+        heaters = [self.heaters[h] for h in state.heater_ids]
+        needs_flow = not heaters or any(
+            h.energy_source is EnergySource.HEATING_CIRCUIT for h in heaters
+        )
         state.feed_forward_missing = [
             name
             for name, value in (
                 ("heat_load", state.heat_loss_w_per_k),
-                ("radiator_output", state.rated_output_w),
-                ("flow_temperature", flow),
+                ("radiator_output", state.rated_output_w if not heaters else 1.0),
+                ("flow_temperature", flow if needs_flow else 0.0),
                 ("room_temperature", state.current_temperature_c),
             )
             if value is None
         ]
+        net = net_demand_w(
+            state.demand_w * self._learned_factor(state) if state.demand_w is not None else None,
+            state.heat_from_sources_w or 0.0,
+        )
+        # CTL-030: the position that holds the room at its target, so the output is computed
+        # at the target, not at a room warmed by sun or devices.
+        at_c = state.decision.target_setpoint_c or state.current_temperature_c
+        if heaters:
+            feed_forward = heater_feed_forward_pct(net, heaters, flow, at_c, spread)
+            # ACT-063: the minimum opening protects the flow through valves; heaters have none.
+            settings = replace(settings, min_opening_pct=0.0)
+        else:
+            feed_forward = feed_forward_pct(net, state.rated_output_w, flow, at_c, spread)
         state.plan = state.controller.step(
             ControllerInputs(
                 target_c=state.decision.target_setpoint_c,
                 room_c=state.current_temperature_c,
-                feed_forward_pct=feed_forward_pct(
-                    net_demand_w(
-                        state.demand_w * self._learned_factor(state)
-                        if state.demand_w is not None
-                        else None,
-                        state.heat_from_sources_w or 0.0,
-                    ),
-                    state.rated_output_w,
-                    flow,
-                    # CTL-030: the position that holds the room at its target, so the output
-                    # is computed at the target, not at a room warmed by sun or devices.
-                    state.decision.target_setpoint_c or state.current_temperature_c,
-                    spread,
-                ),
+                feed_forward_pct=feed_forward,
                 time_constant_h=time_constant_h(state.room.floor_area_m2, state.heat_loss_w_per_k),
                 safety=state.decision.code is ReasonCode.SAFETY_SENSOR_STALE,
                 settings=settings,
                 window_open=is_closed_for_window(state.decision),
             ),
             self._clock.now(),
+        )
+        if heaters:
+            self._plan_heaters(state, state.plan, now)
+
+    def _plan_heaters(self, state: RoomState, plan: ControllerResult, now: datetime) -> None:
+        """ACT-063: the room's share becomes time on two neighbouring stages per heater."""
+        interrupt = bool({Limit.WINDOW, Limit.STOPPED} & set(plan.limits))
+        for hid in state.heater_ids:
+            heater, live = self.heaters[hid], self.heater_live[hid]
+            running = None if heater.stage_setter else (live.last_running_stage or heater.stages)
+            live.plan = stage_plan(plan.output_pct, heater, running_stage=running)
+            if interrupt:
+                live.cycler.interrupt()
+                live.desired_stage = 0
+            else:
+                live.desired_stage = live.cycler.step(live.plan, now)
+
+    # ----- heaters with stages (ACT-064 to ACT-066) --------------------------------------------
+
+    def _sample_heaters(self) -> None:
+        now = self._clock.now()
+        for hid, heater in self.heaters.items():
+            live = self.heater_live[hid]
+            switch = self._hass.states.get(heater.switch_entity)
+            known = switch is not None and switch.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            live.switch_on = (switch.state == "on") if known and switch is not None else None
+            live.on_since = switch.last_changed if switch and live.switch_on else None
+            live.off_since = switch.last_changed if switch and live.switch_on is False else None
+            sensor_stage = (
+                parse_stage(self._state_value(heater.stage_sensor), heater.stages)
+                if heater.stage_sensor
+                else None
+            )
+            setter_stage = (
+                parse_stage(self._state_value(heater.stage_setter), heater.stages)
+                if heater.stage_setter
+                else None
+            )
+            live.stage, live.stage_source = current_stage(
+                heater,
+                switch_on=live.switch_on,
+                sensor_stage=sensor_stage,
+                setter_stage=setter_stage,
+            )
+            if live.stage:
+                live.last_running_stage = live.stage
+            if heater.stage_sensor:
+                self._update_heater_fault(hid, heater, live, sensor_stage, now)
+
+    def _state_value(self, entity_id: str | None) -> str | None:
+        state = self._hass.states.get(entity_id) if entity_id else None
+        return state.state if state is not None else None
+
+    def _update_heater_fault(
+        self, hid: str, heater: Heater, live: HeaterLive, sensor_stage: int | None, now: datetime
+    ) -> None:
+        """ACT-064: switched on, but nothing runs → problem, repair issue and logbook."""
+        fault = heater_fault(
+            on_since=live.on_since, stage=sensor_stage, now=now, was_fault=live.fault
+        )
+        if fault == live.fault:
+            return
+        live.fault = fault
+        room_name = self.rooms[heater.room_id].room.name if heater.room_id in self.rooms else ""
+        issue_id = f"heater_not_running_{hid}"
+        if not fault:
+            ir.async_delete_issue(self._hass, DOMAIN, issue_id)
+            return
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="heater_not_running",
+            translation_placeholders={"heater": heater.name, "room": room_name},
+            learn_more_url=f"{DOCS_URL}/en/faq/heater_not_running.md",
+        )
+        self._hass.async_create_task(
+            self.control.async_logbook(room_name, "logbook_heater_not_running", heater=heater.name)
         )
 
     @callback
@@ -985,7 +1135,12 @@ class HouseRuntime:
         await self._store.async_save(self._data())
 
     def _hardware_key(self, room_id: str) -> str:
-        return hardware_key(self.thermostats[t] for t in self.rooms[room_id].thermostat_ids)
+        state = self.rooms[room_id]
+        key = hardware_key(self.thermostats[t] for t in state.thermostat_ids)
+        if state.heater_ids:
+            # CTL-045: other heaters make the learned correction meaningless, too.
+            key += ";" + ";".join(sorted(heater_key(self.heaters[h]) for h in state.heater_ids))
+        return key
 
     @callback
     def _save_later(self) -> None:
