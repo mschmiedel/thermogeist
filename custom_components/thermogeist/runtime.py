@@ -124,6 +124,7 @@ from .core.sizing import (
 )
 from .core.smoothing import HEAT_SOURCE_WINDOW, MovingAverage, plausible_flow
 from .core.time_provider import SystemTimeProvider, TimeProvider
+from .firmware import FirmwareManager
 
 REEVALUATE_EVERY = timedelta(minutes=1)
 PLAN_EVERY = timedelta(seconds=55)
@@ -224,6 +225,7 @@ class HouseRuntime:
     ) -> None:
         self._hass = hass
         self._entry_id = entry_id
+        self.entry_id = entry_id
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}")
         self._clock = clock or SystemTimeProvider()
         self._unsubscribe: list[CALLBACK_TYPE] = []
@@ -270,6 +272,7 @@ class HouseRuntime:
         self.control = ControlManager(hass, self, profiles or [])
         self.child_lock = ChildLockManager(hass, self)
         self.calibration = CalibrationManager(hass, self, profiles or [])
+        self.firmware = FirmwareManager(hass, self, profiles or [])
         self._flow_average = MovingAverage()
         self.flow_used_c: float | None = None
         self._return_average = MovingAverage()
@@ -359,6 +362,7 @@ class HouseRuntime:
         self._unsubscribe += self.control.async_start()
         self._unsubscribe += self.child_lock.async_start()
         self._unsubscribe += self.calibration.async_start()
+        self._unsubscribe += self.firmware.async_start()
         self._unsubscribe.append(
             async_call_later(self._hass, STARTUP_HOLD.total_seconds() + 1, self._on_delayed)
         )

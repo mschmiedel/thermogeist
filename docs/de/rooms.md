@@ -21,10 +21,10 @@ flowchart TD
     D --> E
     E -- "ja" --> F["Faktor pro Gerät<br/>▸ Faktor aus einem Sensor"]
     E -- "nein" --> G
-    F --> G{"Thermostat hinzufügen?"}
+    F --> G{"Raum gespeichert.<br/>Thermostat hinzufügen?"}
     G -- "ja" --> H["Thermostat: Gerät und Rollen<br/>(siehe Thermostate)"]
     H --> G
-    G -- "fertig" --> I["Raum gespeichert – Beobachten"]
+    G -- "fertig" --> I["Beobachten"]
 
     P1["Raumtemperatursensor"] -.-> A
     P2["Fläche, Raumhöhe, Außenwände"] -.-> C

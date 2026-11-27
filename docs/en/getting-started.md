@@ -45,11 +45,11 @@ flowchart TD
     F --> G{"Share known?"}
     G -- "estimate" --> H["Size and position"]
     G -- "known" --> I["Share in %"]
-    H --> J{"Add a thermostat?"}
+    H --> J{"Room saved.<br/>Add a thermostat?"}
     I --> J
     J -- "yes" --> K["Device and radiator output,<br/>roles are detected"]
     K --> J
-    J -- "done" --> L["Room saved – observe mode"]
+    J -- "done" --> L["Observe mode"]
     L --> M["Switch Control on when you like the plan"]
 
     P1["Outdoor sensor or weather entity"] -.-> A

@@ -12,6 +12,10 @@ Thermostate gehören zu ihrem Raum. Wenn du **einen Raum anlegst**, fragt Thermo
 Später: Öffne den Thermogeist-Eintrag deines Hauses, klick auf das Zahnrad (⚙) neben dem Raum
 und wähle **Thermostat hinzufügen**. Ein Raum kann mehrere Thermostate haben.
 
+Der Raum ist gespeichert, sobald seine eigenen Schritte fertig sind, und jedes Thermostat, sobald
+sein letzter Schritt bestätigt ist. Fehlt dir ein Wert, schließ den Dialog einfach: Verloren geht
+nur das Gerät, das du gerade eingibst. Weiter geht es später über das Zahnrad des Raums.
+
 Dasselbe Menü bietet **Raum bearbeiten**, **Thermostat bearbeiten** und **Thermostat entfernen**.
 Um ein Thermostat in einen anderen Raum zu verschieben, entferne es hier und füge es dort hinzu;
 beim Entfernen bekommt es seine eigenen Geräteeinstellungen zurück.
@@ -68,7 +72,7 @@ Bekannte Modelle bisher:
 
 | Modell | Art | Hinweise |
 |---|---|---|
-| Sonoff TRVZB | Über Ventilstellung | Firmware 1.1.4 oder neuer. Thermogeist schaltet *Smart temperature control* aus, nutzt deinen Raumsensor und stellt *Temperature accuracy* auf −0,2 K, damit das Thermostat öffnet, sobald der Raum etwas unter dem Sollwert liegt (ab Werk: 1 K). |
+| Sonoff TRVZB | Über Ventilstellung | Firmware 1.3.0 oder neuer (ältere Firmware löst einen [Hinweis](faq/thermostat_firmware_old.md) aus). Thermogeist schaltet *Smart temperature control* aus, nutzt deinen Raumsensor und stellt *Temperature accuracy* auf −0,2 K, damit das Thermostat öffnet, sobald der Raum etwas unter dem Sollwert liegt (ab Werk: 1 K). |
 | Sonoff TRV-ZBT (Gen2) | Über Ventilstellung | *Smart temperature control* ausschalten. |
 | Bosch Heizkörperthermostat II (BTH-RA) | Über Ventilstellung | Keine Mindestöffnung im Gerät. Hält eine geschriebene Ventilstellung nur 15 Minuten; Thermogeist bestätigt sie alle 10 Minuten. |
 

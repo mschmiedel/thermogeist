@@ -12,6 +12,7 @@ Each page explains one reason Thermogeist can show for a room.
 - [Waiting after restart](startup_hold.md) – `startup_hold`
 - [Thermostat regulates on its own](device_overrides_valve.md) – `device_overrides_valve`
 - [Thermostat not calibrated](thermostat_not_calibrated.md) – repair issue *… is not calibrated*
+- [Thermostat firmware too old](thermostat_firmware_old.md) – repair issue *…: please update the firmware*
 - [Heater does not run](heater_not_running.md) – repair issue *… does not run*
 
 Diagnoses:

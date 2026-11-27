@@ -55,7 +55,8 @@ async def test_add_estimated_room(
 
     result = await _add_room(hass, entry.entry_id, basics, geometry)
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "room_saved"
     climate = hass.states.get(CLIMATE)
     assert climate.attributes["current_temperature"] == 19.5
     assert climate.attributes["temperature"] == 20.0
@@ -88,7 +89,8 @@ async def test_known_share_over_total_is_rejected(
         result["flow_id"], {"known_share": 30.0}
     )
     result = await finish_new_room(hass, result)
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "room_saved"
 
 
 async def test_silent_sensor_is_reported(
@@ -227,7 +229,8 @@ async def test_new_room_offers_thermostats(
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], geometry)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "new_room_thermostats"
-    assert not entry.subentries  # not saved yet
+    room = next(iter(entry.subentries.values()))  # saved already, without thermostats
+    assert not room.data.get("thermostats")
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"next_step_id": "add_new_room_thermostat"}
@@ -247,9 +250,48 @@ async def test_new_room_offers_thermostats(
     assert result["description_placeholders"]["count"] == "1"
 
     result = await finish_new_room(hass, result)
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "room_saved"
+    assert len(entry.subentries) == 1
     room = next(iter(entry.subentries.values()))
     assert len(room.data["thermostats"]) == 1
+    assert hass.states.get("sensor.living_room_planned_valve_position") is not None
+
+
+async def test_cancelled_dialog_keeps_the_new_room(
+    hass: HomeAssistant, outdoor_sensor: str, room_sensor: str
+) -> None:
+    """Scenario: SCN-ROOMS-015"""
+    entry = await setup_house(hass, HOUSE_WITH_LOAD)
+    device_id = sonoff(hass)
+    basics = {k: LIVING_ROOM[k] for k in ("name", "temperature_entity", "share_mode")}
+    geometry = {k: v for k, v in LIVING_ROOM.items() if k not in basics}
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "room"), context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], basics)
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], geometry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "add_new_room_thermostat"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"device": device_id}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], suggested(result)
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "add_new_room_thermostat"}
+    )
+    assert result["step_id"] == "thermostat"
+
+    hass.config_entries.subentries.async_abort(result["flow_id"])  # the user closes the dialog
+    await hass.async_block_till_done()
+
+    rooms = list(entry.subentries.values())
+    assert len(rooms) == 1
+    assert rooms[0].title == LIVING_ROOM["name"]
+    assert len(rooms[0].data["thermostats"]) == 1
     assert hass.states.get("sensor.living_room_planned_valve_position") is not None
 
 

@@ -21,10 +21,10 @@ flowchart TD
     D --> E
     E -- "yes" --> F["Factor per device<br/>▸ Factor from a sensor"]
     E -- "no" --> G
-    F --> G{"Add a thermostat?"}
+    F --> G{"Room saved.<br/>Add a thermostat?"}
     G -- "yes" --> H["Thermostat: device and roles<br/>(see Thermostats)"]
     H --> G
-    G -- "done" --> I["Room saved – observe mode"]
+    G -- "done" --> I["Observe mode"]
 
     P1["Room temperature sensor"] -.-> A
     P2["Floor area, ceiling height, exterior walls"] -.-> C

@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
@@ -13,6 +15,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentry,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
@@ -765,6 +768,7 @@ class RoomSubentryFlow(ThermostatSteps):
         self._factor_entities: dict[str, str] = {}
         self._heater_id: str | None = None
         self._heater_defaults: dict[str, Any] = {}
+        self._new_room_id: str | None = None
         self._init_thermostat()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
@@ -843,8 +847,9 @@ class RoomSubentryFlow(ThermostatSteps):
     async def _save_thermostat(self, thermostat: dict[str, Any]) -> SubentryFlowResult:
         assert self._thermostat_id is not None
         if self.source != SOURCE_RECONFIGURE:
-            # HAI-021: a new room collects its thermostats and is saved at "Done".
+            # HAI-021: a new room keeps each finished thermostat at once.
             self._data.setdefault(CONF_THERMOSTATS, {})[self._thermostat_id] = thermostat
+            self._store_new_room()
             return await self.async_step_new_room_thermostats()
         thermostats = self._room_thermostats()
         thermostats[self._thermostat_id] = thermostat
@@ -960,6 +965,7 @@ class RoomSubentryFlow(ThermostatSteps):
         assert self._heater_id is not None
         if self.source != SOURCE_RECONFIGURE:
             self._data.setdefault(CONF_HEATERS, {})[self._heater_id] = heater
+            self._store_new_room()
             return await self.async_step_new_room_thermostats()
         heaters = self._room_heaters()
         heaters[self._heater_id] = heater
@@ -968,7 +974,31 @@ class RoomSubentryFlow(ThermostatSteps):
     async def async_step_new_room_done(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        return self.async_create_entry(title=str(self._data[CONF_NAME]).strip(), data=self._data)
+        """HAI-021: everything is saved already; closing only says so."""
+        return self.async_abort(
+            reason="room_saved",
+            description_placeholders={"room": str(self._data[CONF_NAME]).strip()},
+        )
+
+    def _store_new_room(self) -> None:
+        """HAI-021: save the new room as it is now, so cancelling later loses nothing of it.
+
+        Home Assistant dialogs have no "Back" and closing one ends the whole dialog. The room is
+        therefore added as soon as its own steps are done and updated with every finished
+        device, instead of being created at "Done".
+        """
+        entry = self._get_entry()
+        title = str(self._data[CONF_NAME]).strip()
+        data = copy.deepcopy(self._data)
+        stored = entry.subentries.get(self._new_room_id or "")
+        if stored is not None:
+            self.hass.config_entries.async_update_subentry(entry, stored, data=data, title=title)
+            return
+        subentry = ConfigSubentry(
+            data=MappingProxyType(data), subentry_type=self.handler[1], title=title, unique_id=None
+        )
+        self.hass.config_entries.async_add_subentry(entry, subentry)
+        self._new_room_id = subentry.subentry_id
 
     def _update_room(self, changes: Mapping[str, Any]) -> SubentryFlowResult:
         subentry = self._get_reconfigure_subentry()
@@ -1210,6 +1240,7 @@ class RoomSubentryFlow(ThermostatSteps):
             return self.async_update_and_abort(
                 self._get_entry(), self._get_reconfigure_subentry(), title=title, data=self._data
             )
+        self._store_new_room()
         return await self.async_step_new_room_thermostats()
 
 

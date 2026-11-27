@@ -12,6 +12,10 @@ Thermostats belong to their room. When you **add a room**, Thermogeist asks at t
 Thermogeist entry of your house, click the gear icon (⚙) next to the room and choose **Add
 thermostat**. A room can have several thermostats.
 
+The room is saved as soon as its own steps are done, and every thermostat as soon as its last
+step is confirmed. If a value is not at hand, simply close the dialog: only the device you are
+entering is lost. Continue later from the room's gear icon.
+
 The same menu offers **Edit room**, **Edit thermostat** and **Remove thermostat**. To move a
 thermostat to another room, remove it here and add it there; on removal it gets its own device
 settings back.
@@ -68,7 +72,7 @@ Known models today:
 
 | Model | Kind | Notes |
 |---|---|---|
-| Sonoff TRVZB | Valve-based | Firmware 1.1.4 or newer. Thermogeist switches off *smart temperature control*, uses your room sensor and sets *temperature accuracy* to −0.2 K, so the thermostat opens as soon as the room is a little below its setpoint (factory: 1 K). |
+| Sonoff TRVZB | Valve-based | Firmware 1.3.0 or newer (older firmware raises a [warning](faq/thermostat_firmware_old.md)). Thermogeist switches off *smart temperature control*, uses your room sensor and sets *temperature accuracy* to −0.2 K, so the thermostat opens as soon as the room is a little below its setpoint (factory: 1 K). |
 | Sonoff TRV-ZBT (Gen2) | Valve-based | Switch off *smart temperature control*. |
 | Bosch Radiator Thermostat II (BTH-RA) | Valve-based | No minimum opening on the device. Keeps a written valve position for 15 minutes only; Thermogeist confirms it every 10 minutes. |
 

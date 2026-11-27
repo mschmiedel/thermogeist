@@ -6,10 +6,16 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
-from .conftest import HOUSE_WITH_LOAD, LIVING_ROOM, ROOM_SENSOR, finish_new_room, setup_house
+from .conftest import (
+    HOUSE_WITH_LOAD,
+    LIVING_ROOM,
+    ROOM_SENSOR,
+    finish_new_room,
+    saved_room,
+    setup_house,
+)
 from .test_thermostats import FLOW_SENSOR, PLANNED, assign, suggested, z2m_device
 
 PC = "sensor.gaming_pc_power"
@@ -45,8 +51,8 @@ async def test_room_dialog_asks_for_factors(
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {PC: 50.0})
     result = await finish_new_room(hass, result)
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["heat_sources"] == [{"entity": PC, "factor": 50.0}]
+    assert result["reason"] == "room_saved"
+    assert saved_room(entry).data["heat_sources"] == [{"entity": PC, "factor": 50.0}]
     assert float(hass.states.get(HEAT).state) == 150.0
     assert hass.states.get(HEAT).attributes["sources"] == {PC: 50.0}
 
@@ -127,7 +133,9 @@ async def test_factor_entity_sets_heat_from_devices(
     result = await finish_new_room(hass, result)
     await hass.async_block_till_done()
 
-    assert result["data"]["heat_sources"] == [{"entity": AC, "factor": 400.0, "factor_entity": COP}]
+    assert saved_room(entry).data["heat_sources"] == [
+        {"entity": AC, "factor": 400.0, "factor_entity": COP}
+    ]
     assert float(hass.states.get(HEAT).state) == 2100.0
     assert hass.states.get(HEAT).attributes["sources"] == {AC: 420.0}
     assert hass.states.get(HEAT).attributes["factor_entities"] == {AC: COP}

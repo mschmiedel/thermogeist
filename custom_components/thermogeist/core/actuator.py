@@ -77,6 +77,8 @@ class DeviceProfile:
     """ACT-054: the same for the setpoint strategy, where the device's own controller works."""
     valve_refresh: timedelta | None = None
     """ACT-047: some devices drop an external valve position after a while (Bosch: 15 min)."""
+    min_firmware: str | None = None
+    """ACT-017: oldest firmware with which all features of the profile work."""
 
     def matches(self, manufacturer: str | None, model_id: str | None) -> bool:
         if not model_id:
@@ -117,6 +119,7 @@ def parse_profile(data: Mapping[str, Any]) -> DeviceProfile:
         ),
         control_settings=_settings(data.get("control_settings", {})),
         setpoint_control_settings=_settings(data.get("setpoint_control_settings", {})),
+        min_firmware=str(data["min_firmware"]) if data.get("min_firmware") else None,
     )
 
 

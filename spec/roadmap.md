@@ -70,6 +70,20 @@ Thermogeist controls Sonoff TRVZB thermostats.
 | Logbook entries and repair issues | RSN-003, RSN-004 |
 | Device docs and FAQ for all reason codes en/de | DOC-004 |
 
+## M5 – Beta
+
+Thermogeist can be recommended to others. Features are not a criterion: versions stay 0.x until
+the planned features are in, then 1.0 marks feature completeness. The beta is about trust.
+
+| Scope | Requirements |
+|---|---|
+| No breaking change without migration: every change of stored settings comes with a config entry migration and a test; renamed entities keep their unique ids | to be specified |
+| Name check before the first beta (see `open-questions.md`) | – |
+| Setup dialogs never lose entered data on cancel | HAI-021 |
+| Minimum firmware from the profile, warning on older firmware | ACT-017, ACT-105 |
+| Every reason code and diagnosis has an FAQ page; install via HACS and zip documented | DOC-004, DST-005 |
+| Spec statuses honest: product goals and old placeholders reviewed (PRD-001 to PRD-007, CTL-003, TST-004), open questions up to date | – |
+
 ## After the MVP (order to be decided)
 
 - Schedules and away mode (RUL-011, RUL-020 to RUL-022)

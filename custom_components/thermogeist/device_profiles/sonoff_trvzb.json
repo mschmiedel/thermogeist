@@ -2,6 +2,7 @@
   "id": "sonoff_trvzb",
   "name": "Sonoff TRVZB",
   "kind": "valve",
+  "min_firmware": "1.3.0",
   "match": {
     "manufacturer": [
       "SONOFF"
@@ -34,7 +35,7 @@
     }
   },
   "notes": [
-    "Firmware 1.1.4 or newer is needed for valve_opening_degree and valve_closing_degree.",
+    "Firmware 1.3.0 or newer: valve_opening_degree and valve_closing_degree need 1.1.4, temperature_accuracy 1.3.0.",
     "Set temperature_sensor_select to remote_temperature to use the external temperature.",
     "Switch off smart_temperature_control: it disables manual valve positions.",
     "temperature_accuracy -0.2: the thermostat heats with the planned opening as soon as the room is 0.2 K below the setpoint (factory -1 K).",

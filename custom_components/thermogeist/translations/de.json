@@ -628,11 +628,11 @@
         },
         "new_room_thermostats": {
           "title": "Thermostate und Heizungen von {room}",
-          "description": "Füge jetzt die Thermostate oder Heizungen dieses Raums hinzu (bisher {count}) oder schließe ab. Ein Raum hat entweder Thermostate oder Heizungen.",
+          "description": "Füge jetzt die Thermostate oder Heizungen dieses Raums hinzu (bisher {count}) oder schließe ab. Ein Raum hat entweder Thermostate oder Heizungen. Der Raum und jedes fertige Gerät sind sofort gespeichert; schließt du den Dialog, geht nur das Gerät verloren, das du gerade eingibst.",
           "menu_options": {
             "add_new_room_thermostat": "Thermostat hinzufügen",
             "add_new_room_heater": "Eine Heizung hinzufügen",
-            "new_room_done": "Fertig – Raum speichern"
+            "new_room_done": "Fertig"
           }
         },
         "heater": {
@@ -711,7 +711,8 @@
       "abort": {
         "reconfigure_successful": "Erledigt.",
         "room_has_thermostats": "Dieser Raum hat bereits Thermostate. Ein Raum hat entweder Thermostate oder Heizungen; entferne zuerst die Thermostate.",
-        "room_has_heaters": "Dieser Raum hat bereits Heizungen. Ein Raum hat entweder Thermostate oder Heizungen; entferne zuerst die Heizungen."
+        "room_has_heaters": "Dieser Raum hat bereits Heizungen. Ein Raum hat entweder Thermostate oder Heizungen; entferne zuerst die Heizungen.",
+        "room_saved": "Der Raum {room} ist gespeichert. Über sein Zahnrad kannst du ihn jederzeit ändern und Geräte hinzufügen."
       }
     }
   },
@@ -790,6 +791,10 @@
     "heater_not_running": {
       "title": "{heater} läuft nicht",
       "description": "{heater} in {room} ist eingeschaltet, aber sein Stufen-Sensor sagt, dass es nicht läuft. Prüfe Sicherung, Gerät und das Template des Stufen-Sensors. Solange das so ist, rechnet Thermogeist keine Wärme von {heater}."
+    },
+    "thermostat_firmware_old": {
+      "title": "{thermostat}: bitte Firmware aktualisieren",
+      "description": "{thermostat} in {room} hat die Firmware {installed}. Bitte nutze mindestens Firmware {required}, sonst fehlen eventuell Funktionen. Aktualisieren kannst du sie über deine Zigbee-Bridge (Zigbee2MQTT: *OTA*). Der Hinweis verschwindet von selbst, sobald das Thermostat die neuere Version meldet."
     }
   }
 }

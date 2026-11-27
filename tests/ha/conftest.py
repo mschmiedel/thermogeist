@@ -91,6 +91,11 @@ async def setup_house(
     return entry
 
 
+def saved_room(entry: Any) -> Any:
+    """HAI-021: the room the dialog saved (the house in these tests has one)."""
+    return next(s for s in entry.subentries.values() if s.subentry_type == "room")
+
+
 async def finish_new_room(hass: HomeAssistant, result: Any) -> Any:
     """HAI-021: a new room ends with "add a thermostat / done"; choose done."""
     assert result["type"] is FlowResultType.MENU

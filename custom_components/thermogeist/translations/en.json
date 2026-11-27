@@ -628,11 +628,11 @@
         },
         "new_room_thermostats": {
           "title": "Thermostats and heaters of {room}",
-          "description": "Add the thermostats or heaters of this room now ({count} so far), or finish. A room has either thermostats or heaters.",
+          "description": "Add the thermostats or heaters of this room now ({count} so far), or finish. A room has either thermostats or heaters. The room and every finished device are saved right away; closing the dialog only loses the device you are entering.",
           "menu_options": {
             "add_new_room_thermostat": "Add a thermostat",
             "add_new_room_heater": "Add a heater",
-            "new_room_done": "Done – save the room"
+            "new_room_done": "Done"
           }
         },
         "heater": {
@@ -711,7 +711,8 @@
       "abort": {
         "reconfigure_successful": "Done.",
         "room_has_thermostats": "This room already has thermostats. A room has either thermostats or heaters; remove the thermostats first.",
-        "room_has_heaters": "This room already has heaters. A room has either thermostats or heaters; remove the heaters first."
+        "room_has_heaters": "This room already has heaters. A room has either thermostats or heaters; remove the heaters first.",
+        "room_saved": "The room {room} is saved. You can change it and add devices any time from its gear icon."
       }
     }
   },
@@ -790,6 +791,10 @@
     "heater_not_running": {
       "title": "{heater} does not run",
       "description": "{heater} in {room} is switched on, but its stage sensor says it does not run. Check the fuse, the device and the template of the stage sensor. While this lasts Thermogeist counts no heat from {heater}."
+    },
+    "thermostat_firmware_old": {
+      "title": "{thermostat}: please update the firmware",
+      "description": "{thermostat} in {room} runs firmware {installed}. Please use at least firmware {required}, otherwise some features may be missing. Update it in the app of your Zigbee bridge (Zigbee2MQTT: *OTA*). The issue disappears by itself once the thermostat reports the newer version."
     }
   }
 }

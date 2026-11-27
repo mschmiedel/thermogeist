@@ -45,11 +45,11 @@ flowchart TD
     F --> G{"Anteil bekannt?"}
     G -- "schätzen" --> H["Größe und Lage"]
     G -- "bekannt" --> I["Anteil in %"]
-    H --> J{"Thermostat hinzufügen?"}
+    H --> J{"Raum gespeichert.<br/>Thermostat hinzufügen?"}
     I --> J
     J -- "ja" --> K["Gerät und Heizkörperleistung,<br/>Rollen werden erkannt"]
     K --> J
-    J -- "fertig" --> L["Raum gespeichert – Beobachten"]
+    J -- "fertig" --> L["Beobachten"]
     L --> M["Regeln einschalten, wenn dir die Planung passt"]
 
     P1["Außensensor oder Wetter-Entität"] -.-> A

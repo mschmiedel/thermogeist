@@ -50,8 +50,9 @@ Test setup: pipe probe (e.g. SNZB-02LD) on the flow pipe at the valve, values in
 
 - Bosch BTH-RA: answered in the field – it keeps a written `pi_heating_demand` for 15 minutes,
   then its own regulation takes over. Confirmed every 10 minutes since ACT-047.
-- Sonoff TRVZB / TRV-ZBT: control is implemented through the same roles but not yet tested on a
-  real device.
+- Sonoff TRVZB: in daily field use since November 2026 (several rooms, valve strategy); findings
+  are in ACT-102, ACT-104 and DIA-024. Sonoff TRV-ZBT: implemented through the same roles, not
+  yet tested on a real device.
 - Bosch Smart Home radiator thermostats (HT I, via the Bosch SHC integration): the reported
   valve position (`valvetappet`) changes on average every 30–90 minutes, with gaps of up to
   7 hours; the valve visibly moves long before the report. Nothing on the device (e.g. silent
