@@ -191,3 +191,12 @@ async def test_heater_sensor_output_and_fault(
     await hass.async_block_till_done()
     assert hass.states.get(problem).state == "off"
     assert ir.async_get(hass).async_get_issue(DOMAIN, f"heater_not_running_{hid}") is None
+
+    # Stage changed by hand: a few seconds at 0 W while the switch has long been on.
+    await tick(hass, freezer, 600)
+    hass.states.async_set(STAGE_SENSOR, "0")
+    await tick(hass, freezer, 60)
+    hass.states.async_set(STAGE_SENSOR, "1")
+    await hass.async_block_till_done()
+    assert hass.states.get(problem).state == "off"
+    assert ir.async_get(hass).async_get_issue(DOMAIN, f"heater_not_running_{hid}") is None

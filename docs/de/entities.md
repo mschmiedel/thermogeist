@@ -83,7 +83,7 @@ Nach der Heizung benannt, am Raumgerät ([Heizungen mit Stufen](heaters.md)).
 | Entität | Bedeutung | Wann vorhanden | Unbekannt, wenn |
 |---|---|---|---|
 | Stufe *Heizung* | Die Stufe, die gerade läuft: 0 = aus. Attribute: `mode`, `planned_stage`, `lower_stage`, `upper_stage`, `upper_share_pct`, `cycle_started`, `on_since`, `off_since`, `heat_output_w`, `stage_source`, `energy_source`, `stage_outputs_w`, `off_output_w`, `exponent` und die verwendeten Entitäten. | immer | der Schalter ist nicht verfügbar, oder der Stufen-Sensor meldet etwas anderes als 0 … N |
-| *Heizung* läuft nicht | Problem: seit 3 Minuten eingeschaltet, aber der Stufen-Sensor meldet 0 ([FAQ](faq/heater_not_running.md)). | ein Stufen-Sensor ist gewählt | – |
+| *Heizung* läuft nicht | Problem: eingeschaltet, aber der Stufen-Sensor meldet seit 3 Minuten am Stück 0 ([FAQ](faq/heater_not_running.md)). | ein Stufen-Sensor ist gewählt | – |
 
 ## Geschätzte Heizleistung
 

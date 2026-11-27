@@ -1092,18 +1092,30 @@ class HouseRuntime:
             if live.stage:
                 live.last_running_stage = live.stage
             if heater.stage_sensor:
-                self._update_heater_fault(hid, heater, live, sensor_stage, now)
+                sensor = self._hass.states.get(heater.stage_sensor)
+                zero_since = sensor.last_changed if sensor and sensor_stage == 0 else None
+                self._update_heater_fault(hid, heater, live, sensor_stage, zero_since, now)
 
     def _state_value(self, entity_id: str | None) -> str | None:
         state = self._hass.states.get(entity_id) if entity_id else None
         return state.state if state is not None else None
 
     def _update_heater_fault(
-        self, hid: str, heater: Heater, live: HeaterLive, sensor_stage: int | None, now: datetime
+        self,
+        hid: str,
+        heater: Heater,
+        live: HeaterLive,
+        sensor_stage: int | None,
+        zero_since: datetime | None,
+        now: datetime,
     ) -> None:
         """ACT-064: switched on, but nothing runs → problem, repair issue and logbook."""
         fault = heater_fault(
-            on_since=live.on_since, stage=sensor_stage, now=now, was_fault=live.fault
+            on_since=live.on_since,
+            zero_since=zero_since,
+            stage=sensor_stage,
+            now=now,
+            was_fault=live.fault,
         )
         if fault == live.fault:
             return

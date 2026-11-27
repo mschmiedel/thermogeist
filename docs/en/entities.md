@@ -83,7 +83,7 @@ Named after the heater, on the room device ([Heaters with stages](heaters.md)).
 | Entity | Meaning | When it exists | Unknown when |
 |---|---|---|---|
 | Stage *heater* | The stage that runs now: 0 = off. Attributes: `mode`, `planned_stage`, `lower_stage`, `upper_stage`, `upper_share_pct`, `cycle_started`, `on_since`, `off_since`, `heat_output_w`, `stage_source`, `energy_source`, `stage_outputs_w`, `off_output_w`, `exponent` and the entities used. | always | the switch is unavailable, or the stage sensor reports something other than 0 … N |
-| *heater* not running | Problem: switched on for 3 minutes, but the stage sensor reports 0 ([FAQ](faq/heater_not_running.md)). | a stage sensor is chosen | – |
+| *heater* not running | Problem: switched on, but the stage sensor has reported 0 for 3 minutes in a row ([FAQ](faq/heater_not_running.md)). | a stage sensor is chosen | – |
 
 ## Estimated radiator output
 

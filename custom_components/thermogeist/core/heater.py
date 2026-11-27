@@ -274,16 +274,23 @@ class StageCycler:
 def heater_fault(
     *,
     on_since: datetime | None,
+    zero_since: datetime | None,
     stage: int | None,
     now: datetime,
     was_fault: bool,
 ) -> bool:
-    """ACT-064: switched on for a while, but the stage sensor says nothing runs."""
+    """ACT-064: switched on, but the stage sensor has said "nothing runs" for a while.
+
+    The time counts from the later of switching on and the sensor reaching 0, so a stage
+    changed by hand on the device (a few seconds at 0 W) is no fault.
+    """
     if stage is not None and stage > 0:
         return False
     if was_fault:
         return True
-    return on_since is not None and stage == 0 and now - on_since >= HEATER_FAULT_AFTER
+    if on_since is None or zero_since is None or stage != 0:
+        return False
+    return now - max(on_since, zero_since) >= HEATER_FAULT_AFTER
 
 
 def heater_key(heater: Heater) -> str:

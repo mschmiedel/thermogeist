@@ -9,7 +9,7 @@ erscheint, und das Logbuch sagt, dass die Heizung eingeschaltet ist, aber nicht 
 
 ## Was es bedeutet
 
-Der Schalter der Heizung ist seit 3 Minuten an, aber ihr Stufen-Sensor meldet weiter `0`. Die
+Der Schalter der Heizung ist an, aber ihr Stufen-Sensor meldet seit 3 Minuten am Stück `0`. Ein paar Sekunden bei `0` – etwa wenn du am Gerät die Stufe umschaltest – zählen nicht. Die
 Wärme, die Thermogeist erwartet, kommt nicht im Raum an; solange das so ist, rechnet es keine
 Wärme von dieser Heizung. Die Meldung verschwindet von selbst, sobald der Stufen-Sensor wieder
 eine Stufe meldet.

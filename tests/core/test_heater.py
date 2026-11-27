@@ -112,16 +112,24 @@ def test_heating_circuit_output_and_linear_feed_forward() -> None:
 def test_fault_when_switched_on_but_not_running() -> None:
     """Scenario: SCN-HEATER-006"""
 
-    def at(minutes: int) -> datetime:
+    def at(minutes: float) -> datetime:
         return START + timedelta(minutes=minutes)
 
-    fault = heater_fault(on_since=START, stage=0, now=at(2), was_fault=False)
+    zero = at(-30)
+    fault = heater_fault(on_since=START, zero_since=zero, stage=0, now=at(2), was_fault=False)
     assert fault is False
-    fault = heater_fault(on_since=START, stage=0, now=at(3), was_fault=fault)
+    fault = heater_fault(on_since=START, zero_since=zero, stage=0, now=at(3), was_fault=fault)
     assert fault is True
-    fault = heater_fault(on_since=None, stage=0, now=at(10), was_fault=fault)
+    fault = heater_fault(on_since=None, zero_since=zero, stage=0, now=at(10), was_fault=fault)
     assert fault is True
-    assert heater_fault(on_since=None, stage=1, now=at(20), was_fault=fault) is False
+    fault = heater_fault(on_since=None, zero_since=None, stage=1, now=at(20), was_fault=fault)
+    assert fault is False
+
+    by_hand = at(60)
+    assert (
+        heater_fault(on_since=START, zero_since=by_hand, stage=0, now=at(60.15), was_fault=False)
+        is False
+    )
 
 
 def test_heater_entries_are_checked() -> None:

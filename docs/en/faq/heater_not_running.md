@@ -9,7 +9,7 @@ the logbook says the heater is switched on but does not run.
 
 ## What it means
 
-The heater's switch has been on for 3 minutes, but its stage sensor still reports `0`. Heat
+The heater's switch is on, but its stage sensor has reported `0` for 3 minutes in a row. A few seconds at `0` – e.g. while you change the stage on the device – do not count. Heat
 Thermogeist expects does not reach the room, so while this lasts it counts no heat from this
 heater. The problem clears by itself as soon as the stage sensor reports a stage again.
 

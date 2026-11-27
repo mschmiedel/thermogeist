@@ -11,12 +11,14 @@ A living room with a two-stage fan convector on the heating circuit (1300 / 1700
 1. The stage sensor reports 2.
 2. The stage sensor reports 0 for 3 minutes.
 3. It reports 1 again.
+4. Ten minutes later it reports 0 for one minute (stage changed by hand), then 1.
 
 ## Expected result
 1. The heater sensor shows 2 with the available output of stage 2; the room's estimated output
    equals it.
 2. The problem binary sensor turns on, a repair issue appears, the estimated output is 0 W.
 3. The problem is cleared and the issue removed.
+4. No problem: the sensor was not at 0 for 3 minutes in a row.
 
 ## Why it matters
 Users see what the heater does and are told when it does not run although it should.
